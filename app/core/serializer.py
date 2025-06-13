@@ -1,0 +1,16 @@
+from pydantic import BaseModel
+
+from ..common.utils import to_camel_case
+
+
+class BaseSerializer(BaseModel):
+    """
+    Base serializer class that can be extended by other serializers.
+    It provides a common structure for all serializers in the application.
+    """
+
+    class Config:
+        # Use snake_case for field names in the serialized output
+        alias_generator = to_camel_case
+        allow_population_by_field_name = True
+        use_enum_values = True
