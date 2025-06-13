@@ -1,43 +1,41 @@
-# FastAPI Application
+# LUXTJ Backend App
+> follows the 12 factor app principles, listed down below. ([the 12 factors](https://12factor.net/))
 
-A stateless FastAPI application with basic setup.
 
-## Setup
 
-1. Create a virtual environment (recommended):
-```bash
-python -m venv venv
-source venv/bin/activate  # On Windows, use: venv\Scripts\activate
-```
+The Twelve Factors
+I. Codebase
+One codebase tracked in revision control, many deploys
 
-2. Install dependencies:
-```bash
-pip install -r requirements.txt
-```
+II. Dependencies
+Explicitly declare and isolate dependencies
 
-## Running the Application
+III. Config
+Store config in the environment
 
-To run the application, use one of the following methods:
+IV. Backing services
+Treat backing services as attached resources
 
-1. Using Python directly:
-```bash
-python main.py
-```
+V. Build, release, run
+Strictly separate build and run stages
 
-2. Using Uvicorn directly:
-```bash
-uvicorn main:app --reload
-```
+VI. Processes
+Execute the app as one or more stateless processes
 
-The application will be available at `http://localhost:8000`
+VII. Port binding
+Export services via port binding
 
-## API Documentation
+VIII. Concurrency
+Scale out via the process model
 
-Once the application is running, you can access:
-- Interactive API documentation (Swagger UI): `http://localhost:8000/docs`
-- Alternative API documentation (ReDoc): `http://localhost:8000/redoc`
+IX. Disposability
+Maximize robustness with fast startup and graceful shutdown
 
-## Available Endpoints
+X. Dev/prod parity
+Keep development, staging, and production as similar as possible
 
-- `GET /`: Welcome message
-- `GET /health`: Health check endpoint
+XI. Logs
+Treat logs as event streams
+
+XII. Admin processes
+Run admin/management tasks as one-off processes

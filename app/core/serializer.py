@@ -12,5 +12,5 @@ class BaseSerializer(BaseModel):
     class Config:
         # Use snake_case for field names in the serialized output
         alias_generator = to_camel_case
-        allow_population_by_field_name = True
+        populate_by_name = True
         use_enum_values = True
