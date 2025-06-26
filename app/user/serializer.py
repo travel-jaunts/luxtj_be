@@ -1,4 +1,4 @@
-from ..core.serializer import BaseSerializer
+from app.core.serializer import BaseSerializer
 
 
 class NewUserDetails(BaseSerializer):

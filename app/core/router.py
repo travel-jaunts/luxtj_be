@@ -1,7 +1,7 @@
 from fastapi import APIRouter
 
-from .serializer import BaseSerializer
-from ..user.router import user_router
+from app.core.serializer import BaseSerializer
+from app.user.router import user_router
 
 class HealthCheckResponse(BaseSerializer):
     """

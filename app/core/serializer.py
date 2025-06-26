@@ -1,6 +1,6 @@
 from pydantic import BaseModel
 
-from ..common.utils import to_camel_case
+from app.common.utils import to_camel_case
 
 
 class BaseSerializer(BaseModel):
