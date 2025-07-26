@@ -3,11 +3,11 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from sqlalchemy.ext.asyncio import create_async_engine
-from sqlalchemy.ext.asyncio import async_sessionmaker
 
 from app.core.router import v1_router
 from app.config import settings
+from app.core.middleware.request_context import ApplicationRequestContextMiddleware
+from app.core.datastore import DataStoreCore
 
 
 @asynccontextmanager
@@ -24,15 +24,12 @@ async def application_lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     Yields:
         None: This function does not yield any values.
     """
-    app.state._db_engine = create_async_engine(settings.DB_DSN, echo=settings.DEBUG)
-    app.state._db_session = async_sessionmaker(
-        app.state._db_engine, expire_on_commit=False
-    )
-    
+    await DataStoreCore.init_db_resources(app)
+
     yield  # Startup tasks can be added here
     
     # Shutdown tasks can be added here if needed
-    await app.state._db_engine.dispose()
+    await DataStoreCore.release_db_resources(app)
 
 
 def application_factory() -> FastAPI:
@@ -47,6 +44,7 @@ def application_factory() -> FastAPI:
         description="stateless backend process for luxtj",
         version="0.0.1alpha",
         lifespan=application_lifespan,
+        debug=settings.DEBUG,
     )
 
     # Configure CORS
@@ -57,6 +55,7 @@ def application_factory() -> FastAPI:
         allow_methods=["*"],
         allow_headers=["*"],
     )
+    app.add_middleware(ApplicationRequestContextMiddleware)
 
     app.include_router(v1_router)
 
