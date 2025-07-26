@@ -6,7 +6,9 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.router import v1_router
 from app.config import settings
-from app.core.middleware.request_context import ApplicationRequestContextMiddleware
+from app.core.middleware.request_context import (
+    ApplicationRequestContextMiddleware,
+)
 from app.core.datastore import DataStoreCore
 
 
@@ -27,7 +29,7 @@ async def application_lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     await DataStoreCore.init_db_resources(app)
 
     yield  # Startup tasks can be added here
-    
+
     # Shutdown tasks can be added here if needed
     await DataStoreCore.release_db_resources(app)
 

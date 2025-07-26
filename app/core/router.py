@@ -2,6 +2,8 @@ from fastapi import APIRouter
 
 from app.core.serializer import BaseSerializer
 from app.user.router import user_router
+from app.personal_travel_calendar.router import personal_travel_calendar
+
 
 class HealthCheckResponse(BaseSerializer):
     """
@@ -17,6 +19,11 @@ v1_router = APIRouter(
     tags=["v1"],
 )
 v1_router.include_router(user_router, prefix="/user", tags=["user"])
+v1_router.include_router(
+    personal_travel_calendar,
+    prefix="/personal-travel-calendar",
+    tags=["calendar"],
+)
 
 
 @v1_router.get("/health", response_model=HealthCheckResponse)

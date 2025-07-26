@@ -5,10 +5,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.exceptions import InvalidConfigurationException
 
-request_context_var: contextvars.ContextVar[Request] = contextvars.ContextVar("context_request")
+request_context_var: contextvars.ContextVar[Request] = contextvars.ContextVar(
+    "context_request"
+)
+
 
 class RequestContext:
-
     @staticmethod
     def set_request(request: Request) -> contextvars.Token[Request]:
         """
@@ -28,7 +30,7 @@ class RequestContext:
             AsyncSession: The database session if set, otherwise None.
         """
         request = request_context_var.get()
-        if request and hasattr(request.state, 'db_session'):
+        if request and hasattr(request.state, "db_session"):
             if isinstance(request.state.db_session, AsyncSession):
                 return request.state.db_session
         raise InvalidConfigurationException(

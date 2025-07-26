@@ -1,4 +1,3 @@
-
 from typing import AsyncGenerator
 
 from fastapi import Request, FastAPI
@@ -9,7 +8,6 @@ from app.config import settings
 
 
 class DataStoreCore:
-
     @staticmethod
     async def init_db_resources(app: FastAPI) -> None:
         """
@@ -24,7 +22,7 @@ class DataStoreCore:
         app.state._db_session_factory = async_sessionmaker(
             app.state._db_engine, expire_on_commit=False
         )
-    
+
     @staticmethod
     async def release_db_resources(app: FastAPI) -> None:
         """
@@ -33,16 +31,14 @@ class DataStoreCore:
         Args:
             app (FastAPI): The FastAPI application instance.
         """
-        if hasattr(app.state, '_db_session_factory'):
+        if hasattr(app.state, "_db_session_factory"):
             del app.state._db_session_factory
-        if hasattr(app.state, '_db_engine'):
+        if hasattr(app.state, "_db_engine"):
             await app.state._db_engine.dispose()
             del app.state._db_engine
 
     @staticmethod
-    def resource_db_session(
-        request: Request
-    ) -> AsyncSession:
+    def resource_db_session(request: Request) -> AsyncSession:
         """
         Dependency to provide a database connection for each request.
 
@@ -52,13 +48,14 @@ class DataStoreCore:
         Returns:
             AsyncSession: An asynchronous database session.
         """
-        db_session_factory: async_sessionmaker[AsyncSession] = \
+        db_session_factory: async_sessionmaker[AsyncSession] = (
             request.app.state._db_session_factory
+        )
         return db_session_factory()
 
     @staticmethod
     async def resource_db_session_transaction(
-        request: Request
+        request: Request,
     ) -> AsyncGenerator[AsyncSession, None]:
         """
         Dependency to provide a database connection for each request.
