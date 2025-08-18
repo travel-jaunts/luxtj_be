@@ -14,7 +14,20 @@ class SpecialDayEnum(Enum):
     SPOUSE_BIRTHDAY = "spouse_birthday", "Spouse's Birthday"
     MOTHER_BIRTHDAY = "mother_birthday", "Mother's Birthday"
     FATHER_BIRTHDAY = "father_birthday", "Father's Birthday"
-    CHILD_BIRTHDAY = "child_birthday", "Child's Birthday"
+    CHILD1_BIRTHDAY = "child1_birthday", "Child 1 Birthday"
+    CHILD2_BIRTHDAY = "child2_birthday", "Child 2 Birthday"
+    CHILD3_BIRTHDAY = "child3_birthday", "Child 3 Birthday"
+
+
+class HolidayPeriodEnum(Enum):
+    """
+    Enum for holiday breaks.
+    """
+
+    MY_WORK_BREAK = "my_work_break", "My Work Break"
+    SPOUSE_WORK_BREAK = "spouse_work_break", "Spouse's Work Break"
+    CHILD_VACATION = "child_vacation", "Child's Vacation Period"
+    PARENT_AVAILABILITY = "parent_availability", "Parent's Availability"
 
 
 class SpecialDayDetail(BaseSerializer):
@@ -46,23 +59,12 @@ class DefaultOcassionsView(BaseSerializer):
         )
 
 
-class HolidayPeriodEnum(Enum):
-    """
-    Enum for holiday breaks.
-    """
-
-    MY_WORK_BREAK = "my_work_break", "My Work Break"
-    SPOUSE_WORK_BREAK = "spouse_work_break", "Spouse's Work Break"
-    CHILD_VACATION = "child_vacation", "Child's Vacation Period"
-    PARENT_AVAILABILITY = "parent_availability", "Parent's Availability"
-
-
 class HolidayPeriodDetail(BaseSerializer):
     """
     Serializer for holiday break details.
     """
 
-    break_type: str
+    holiday_type: str
     render_text: str
 
 
@@ -80,7 +82,7 @@ class DefaultBreaksView(BaseSerializer):
         """
         return cls(
             available_breaks=[
-                HolidayPeriodDetail(break_type=k, render_text=str(v.value[1]))
+                HolidayPeriodDetail(holiday_type=k, render_text=str(v.value[1]))
                 for k, v in HolidayPeriodEnum._member_map_.items()
             ]
         )

@@ -8,3 +8,4 @@ class NewUserDetails(BaseSerializer):
 # -----------------------------------------------------------------------------
 class UserSignupResponse(BaseSerializer):
     user_id: str
+    phone_number: str
