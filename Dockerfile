@@ -23,4 +23,4 @@ USER appuser
 EXPOSE 8000
 
 # Default command (can be overridden at runtime)
-CMD ["gunicorn", "--bind", "0.0.0.0:8000", "-k", "uvicorn.workers.UvicornWorker", "-w", "1", "app.core.app:application_factory()"]
+CMD ["uvicorn", "app.core.app:application_factory", "--factory", "--host", "0.0.0.0", "--port", "8000"]
