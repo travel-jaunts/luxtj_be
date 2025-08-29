@@ -1,4 +1,4 @@
-from app.core.app import application_factory
+from app.core.main import application_factory
 
 if __name__ == "__main__":
     import uvicorn

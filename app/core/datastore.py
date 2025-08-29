@@ -3,7 +3,12 @@ import re
 
 from fastapi import Request, FastAPI
 from pydantic_core import to_json
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncAttrs, AsyncSession, async_sessionmaker
+from sqlalchemy.ext.asyncio import (
+    create_async_engine,
+    AsyncAttrs,
+    AsyncSession,
+    async_sessionmaker,
+)
 from sqlalchemy.orm import DeclarativeBase, declared_attr
 from sqlalchemy import MetaData
 
@@ -12,22 +17,24 @@ from app.config import settings
 
 metadata_obj = MetaData(schema="luxe")
 
+
 def resolve_table_name(name: str) -> str:
     """Resolves table names to their mapped names."""
     names = re.split("(?=[A-Z])", name)  # noqa
     return "_".join([x.lower() for x in names if x])
 
 
-class BaseModel(AsyncAttrs, DeclarativeBase):
+class BaseDataModel(AsyncAttrs, DeclarativeBase):
     """
     Base class for SQLAlchemy models.
     This class is used to define the base for all models in the application.
     It can be extended by other model classes.
     """
+
     @declared_attr.directive
     def __tablename__(cls) -> str:
         return resolve_table_name(cls.__name__)
-    
+
     metadata = metadata_obj
 
     def attribute_map(self) -> dict[str, Any]:
@@ -39,7 +46,6 @@ class BaseModel(AsyncAttrs, DeclarativeBase):
 
     def __repr__(self) -> str:
         return f"<{self.__class__.__name__} {to_json(self.attribute_map())}>"
-
 
 
 class DataStoreCore:
