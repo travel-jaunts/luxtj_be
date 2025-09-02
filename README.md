@@ -1,9 +1,9 @@
 # LUXTJ Backend App
 > follows the 12 factor app principles, listed down below. ([the 12 factors](https://12factor.net/))
 
-commnad to run the app: uvicorn app.core.app:application_factory --factory
+> command to run the app: uvicorn emporio.core.main:application_factory --factory
 
-
+```
 The Twelve Factors
 I. Codebase
 One codebase tracked in revision control, many deploys
@@ -40,3 +40,4 @@ Treat logs as event streams
 
 XII. Admin processes
 Run admin/management tasks as one-off processes
+```

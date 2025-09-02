@@ -12,7 +12,7 @@ from sqlalchemy.ext.asyncio import (
 from sqlalchemy.orm import DeclarativeBase, declared_attr
 from sqlalchemy import MetaData
 
-from app.config import settings
+from emporio.config import settings
 
 
 metadata_obj = MetaData(schema="luxe")

@@ -8,7 +8,7 @@ from starlette.middleware.base import (
 from starlette.requests import Request
 from starlette.responses import Response
 
-from app.core.context import request_context_var
+from emporio.core.context import request_context_var
 
 
 class RequestIdInjectorMiddleware(BaseHTTPMiddleware):

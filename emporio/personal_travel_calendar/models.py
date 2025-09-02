@@ -4,7 +4,7 @@ from enum import StrEnum
 from sqlalchemy.orm import mapped_column, Mapped
 from sqlalchemy import CheckConstraint
 
-from app.core.datastore import BaseDataModel
+from emporio.core.datastore import BaseDataModel
 
 
 class HolidayThemePreference(StrEnum):

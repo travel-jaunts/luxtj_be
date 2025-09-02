@@ -4,11 +4,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.sql import text
 from sqlalchemy.exc import SQLAlchemyError
 
-from app.core.serializer import BaseSerializer
-from app.user.router import user_router
-from app.personal_travel_calendar.router import personal_travel_calendar
-from app.core.context import RequestContext
-from app.config.logger import LOGGER
+from emporio.core.serializer import BaseSerializer
+from emporio.user.router import user_router
+from emporio.personal_travel_calendar.router import personal_travel_calendar
+from emporio.core.context import RequestContext
+from emporio.config.logger import LOGGER
 
 
 class DatabaseHealthResponse(BaseSerializer):

@@ -1,6 +1,6 @@
 from sqlalchemy.sql import text
 
-from app.core.context import RequestContext
+from emporio.core.context import RequestContext
 from sqlalchemy.ext.asyncio import AsyncSession
 
 

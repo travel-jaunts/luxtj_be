@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 
-from app.personal_travel_calendar.serializers import (
+from emporio.personal_travel_calendar.serializers import (
     DefaultOcassionsView,
     DefaultBreaksView,
 )

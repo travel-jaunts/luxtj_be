@@ -3,7 +3,7 @@ import contextvars
 from starlette.requests import Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.exceptions import InvalidConfigurationException
+from emporio.core.exceptions import InvalidConfigurationException
 
 request_context_var: contextvars.ContextVar[Request] = contextvars.ContextVar(
     "context_request"

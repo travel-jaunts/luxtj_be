@@ -5,8 +5,8 @@ from starlette.middleware.base import (
 from starlette.requests import Request
 from starlette.responses import Response
 
-from app.core.context import RequestContext
-from app.core.datastore import DataStoreCore
+from emporio.core.context import RequestContext
+from emporio.core.datastore import DataStoreCore
 
 
 class ApplicationRequestContextMiddleware(BaseHTTPMiddleware):

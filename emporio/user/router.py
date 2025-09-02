@@ -3,10 +3,10 @@ from uuid import uuid4
 from fastapi import APIRouter, Depends, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.user.serializer import NewUserDetails, UserSignupResponse
-from app.core.context import RequestContext
+from emporio.user.serializer import NewUserDetails, UserSignupResponse
+from emporio.core.context import RequestContext
 
-from app.user.service import UserService
+from emporio.user.service import UserService
 
 user_router = APIRouter()
 

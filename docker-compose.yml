@@ -9,4 +9,4 @@ services:
       - "8000:8000"
     env_file:
       - ./.env
-    command: uvicorn --factory --host 0.0.0.0 --port 8000 app.core.main:application_factory
+    command: uvicorn --factory --host 0.0.0.0 --port 8000 emporio.core.main:application_factory

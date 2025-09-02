@@ -1,7 +1,7 @@
 from typing import List
 from enum import Enum
 
-from app.core.serializer import BaseSerializer
+from emporio.core.serializer import BaseSerializer
 
 
 class SpecialDayEnum(Enum):

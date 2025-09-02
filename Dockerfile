@@ -14,7 +14,7 @@ RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir .
 
 # Copy the application code
-COPY ./app ./app
+COPY ./emporio ./emporio
 
 # Create a non-root user and switch to it
 RUN useradd -m appuser
@@ -24,4 +24,4 @@ USER appuser
 EXPOSE 8000
 
 # Default command (can be overridden at runtime)
-CMD ["uvicorn", "app.core.main:application_factory", "--factory", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["uvicorn", "emporio.core.main:application_factory", "--factory", "--host", "0.0.0.0", "--port", "8000"]

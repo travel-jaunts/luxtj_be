@@ -1,4 +1,4 @@
-from app.core.serializer import BaseSerializer
+from emporio.core.serializer import BaseSerializer
 
 
 class NewUserDetails(BaseSerializer):
