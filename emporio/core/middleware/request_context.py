@@ -14,11 +14,10 @@ class ApplicationRequestContextMiddleware(BaseHTTPMiddleware):
         self, request: Request, call_next: RequestResponseEndpoint
     ) -> Response:
         async with DataStoreCore.resource_db_session(request) as db_session:
-            async with db_session.begin():
-                request.state.db_session = db_session
-                RequestContext.set_request(
-                    request
-                )  # Store the request in the context variable
-                response = await call_next(request)
+            request.state.db_session = db_session
+            RequestContext.set_request(
+                request
+            )  # Store the request in the context variable
+            response = await call_next(request)
 
         return response

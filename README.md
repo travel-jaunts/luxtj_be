@@ -1,7 +1,10 @@
 # LUXTJ Backend App
-> follows the 12 factor app principles, listed down below. ([the 12 factors](https://12factor.net/))
 
-> command to run the app: uvicorn emporio.core.main:application_factory --factory
+### development
+> command: uvicorn --factory --host 0.0.0.0 --port 8000 --env-file .env emporio.core.main:application_factory
+
+### Annexure
+> follows the 12 factor app principles, listed down below. ([the 12 factors](https://12factor.net/))
 
 ```
 The Twelve Factors
