@@ -18,6 +18,6 @@ class ApplicationRequestContextMiddleware(BaseHTTPMiddleware):
             RequestContext.set_request(
                 request
             )  # Store the request in the context variable
-            response = await call_next(request)
+            response: Response = await call_next(request)
 
         return response

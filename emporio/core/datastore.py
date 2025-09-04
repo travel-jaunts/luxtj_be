@@ -1,4 +1,4 @@
-from typing import AsyncGenerator, Any
+from typing import Any
 import re
 
 from fastapi import Request, FastAPI
@@ -58,10 +58,15 @@ class DataStoreCore:
             app (FastAPI): The FastAPI application instance.
         """
         app.state._db_engine = create_async_engine(
-            settings.DB_DSN, echo=settings.DEBUG
+            settings.DB_DSN,
+            echo=settings.DEBUG,
+            pool_size=10,
+            max_overflow=20,
+            pool_pre_ping=True,
+            pool_recycle=1800,
         )
         app.state._db_session_factory = async_sessionmaker(
-            app.state._db_engine, expire_on_commit=False
+            app.state._db_engine, class_=AsyncSession, expire_on_commit=False
         )
 
     @staticmethod
@@ -93,20 +98,3 @@ class DataStoreCore:
             request.app.state._db_session_factory
         )
         return db_session_factory()
-
-    @staticmethod
-    async def resource_db_session_transaction(
-        request: Request,
-    ) -> AsyncGenerator[AsyncSession, None]:
-        """
-        Dependency to provide a database connection for each request.
-
-        Args:
-            request (Request): The FastAPI request object.
-
-        Returns:
-            AsyncSession: An asynchronous database session.
-        """
-        async with DataStoreCore.resource_db_session(request) as session:
-            async with session.begin():
-                yield session  # This will be used in the route handlers
