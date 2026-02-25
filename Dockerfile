@@ -35,7 +35,7 @@ COPY --from=builder /app/src ./src
 
 USER app
 
-EXPOSE 8000
+EXPOSE 9000
 
 # uvicorn is installed inside the venv; reference app via module path
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "9000"]
