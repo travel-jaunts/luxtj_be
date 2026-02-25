@@ -35,7 +35,7 @@ async def lifespan(app: FastAPI):
 
 def create_app() -> FastAPI:
     app = FastAPI(
-        title="FastAPI App",
+        title="LuxTJ Backend",
         version="0.1.0",
         lifespan=lifespan,
         # Hide docs in production if desired

@@ -1,0 +1,21 @@
+# Development image – mounts source from host for hot-reload
+FROM python:3.11-slim AS dev
+
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1
+
+WORKDIR /app
+
+# Install all deps including dev extras
+COPY pyproject.toml uv.lock* ./
+RUN uv sync --frozen
+
+# Source is volume-mounted at runtime (see docker-compose.dev.yml)
+# so we don't COPY src here – keeps rebuilds fast.
+
+EXPOSE 8000
+
+CMD ["uv", "run", "uvicorn", "app.main:app", \
+     "--host", "0.0.0.0", "--port", "8000", "--reload"]

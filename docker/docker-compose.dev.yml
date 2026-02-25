@@ -1,0 +1,30 @@
+services:
+  api:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.dev
+    image: luxtj_backend:dev
+    container_name: luxtj_backend_dev
+    env_file:
+      - ../.dev.env
+    environment:
+      APP_ENV: development
+      AUTH_ENABLED: "false"
+    ports:
+      - "8000:8000"
+    volumes:
+      # Hot-reload: mount source code into the container
+      - ../src:/app/src:ro
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+    networks:
+      - app-net
+
+networks:
+  app-net:
+    driver: bridge
