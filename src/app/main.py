@@ -9,7 +9,7 @@ Starlette wraps each layer from the outside in:
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, PlainTextResponse
 
 from app.api.v1 import router as v1_router
 from app.core.config import get_settings
@@ -47,10 +47,14 @@ def create_app() -> FastAPI:
     app.add_middleware(KeycloakAuthMiddleware, settings=settings)
     app.add_middleware(RequestLoggingMiddleware, settings=settings)
 
-    # ── Routers ───────────────────────────────────────────────────────
+    # Routers
     app.include_router(v1_router)
 
-    # ── Built-in health endpoint ──────────────────────────────────────
+    # Built-in status check endpoints
+    @app.get("/ping", tags=["ops"])
+    async def _() -> PlainTextResponse:
+        return PlainTextResponse("pong")
+
     @app.get("/health", tags=["ops"])
     async def _() -> JSONResponse:
         return JSONResponse({"status": "ok"})
