@@ -6,7 +6,6 @@ Starlette wraps each layer from the outside in:
   1. RequestLoggingMiddleware  – outermost (logs first/last)
   2. KeycloakAuthMiddleware    – runs after logging, before route handlers
 """
-
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
@@ -23,7 +22,7 @@ logger = get_logger(__name__)
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI):
+async def app_lifespan(app: FastAPI):
     logger.info(
         "Starting up | env=%s auth=%s",
         settings.app_env,
@@ -37,7 +36,7 @@ def create_app() -> FastAPI:
     app = FastAPI(
         title="LuxTJ Backend",
         version="0.1.0",
-        lifespan=lifespan,
+        lifespan=app_lifespan,
         # Hide docs in production if desired
         docs_url="/docs" if settings.is_dev else None,
         redoc_url="/redoc" if settings.is_dev else None,
