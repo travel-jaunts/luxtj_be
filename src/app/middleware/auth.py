@@ -27,9 +27,7 @@ from app.core.config import Settings
 from app.middleware.base import BaseAppMiddleware
 
 # Paths that never require authentication
-_DEFAULT_EXCLUDED_PATHS: frozenset[str] = frozenset(
-    {"/health", "/docs", "/openapi.json", "/redoc"}
-)
+_DEFAULT_EXCLUDED_PATHS: frozenset[str] = frozenset({"/health", "/docs", "/openapi.json", "/redoc"})
 
 
 class KeycloakAuthMiddleware(BaseAppMiddleware):
@@ -56,7 +54,7 @@ class KeycloakAuthMiddleware(BaseAppMiddleware):
         """Pull the Bearer token from the Authorization header."""
         auth_header = request.headers.get("Authorization", "")
         if auth_header.startswith("Bearer "):
-            return auth_header[len("Bearer "):]
+            return auth_header[len("Bearer ") :]
         return None
 
     # ------------------------------------------------------------------
@@ -100,14 +98,10 @@ class KeycloakAuthMiddleware(BaseAppMiddleware):
         url = self.settings.keycloak_userinfo_endpoint
         try:
             async with httpx.AsyncClient(timeout=5.0) as client:
-                resp = await client.get(
-                    url, headers={"Authorization": f"Bearer {token}"}
-                )
+                resp = await client.get(url, headers={"Authorization": f"Bearer {token}"})
             if resp.status_code == 200:
                 return resp.json()
-            self.logger.warning(
-                "Keycloak returned %s for userinfo request", resp.status_code
-            )
+            self.logger.warning("Keycloak returned %s for userinfo request", resp.status_code)
         except httpx.RequestError as exc:
             self.logger.error("Could not reach Keycloak: %s", exc)
         return None

@@ -28,7 +28,9 @@ class BaseAppMiddleware(BaseHTTPMiddleware):
         self.settings = settings or get_settings()
         self.logger = get_logger(self.__class__.__module__)
 
-    async def dispatch(self, request: Request, call_next: RequestResponseEndpoint) -> Response:  # pragma: no cover
+    async def dispatch(
+        self, request: Request, call_next: RequestResponseEndpoint
+    ) -> Response:  # pragma: no cover
         raise NotImplementedError
 
 

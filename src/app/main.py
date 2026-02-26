@@ -6,6 +6,7 @@ Starlette wraps each layer from the outside in:
   1. RequestLoggingMiddleware  – outermost (logs first/last)
   2. KeycloakAuthMiddleware    – runs after logging, before route handlers
 """
+
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
@@ -14,7 +15,7 @@ from fastapi.responses import JSONResponse, PlainTextResponse
 from app.api.v1 import router as v1_router
 from app.core.config import get_settings
 from app.core.logging import configure_logging, get_logger
-from app.middleware import KeycloakAuthMiddleware, RequestLoggingMiddleware
+from app.middleware import KeycloakAuthMiddleware, RequestLoggingMiddleware, RRCycleExceptionHandler
 
 settings = get_settings()
 configure_logging(settings.app_log_level)
@@ -45,6 +46,7 @@ def create_app() -> FastAPI:
     # ── Middleware (registered outermost → innermost) ─────────────────
     # Keycloak auth is registered first so logging wraps around it
     app.add_middleware(KeycloakAuthMiddleware, settings=settings)
+    app.add_middleware(RRCycleExceptionHandler, settings=settings)
     app.add_middleware(RequestLoggingMiddleware, settings=settings)
 
     # Routers

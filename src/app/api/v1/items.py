@@ -18,3 +18,9 @@ async def list_items(request: Request) -> Dict[str, Any]:
 @router.get("/{item_id}")
 async def get_item(item_id: int, request: Request) -> Dict[str, Any]:
     return {"item_id": item_id, "request_id": getattr(request.state, "request_id", None)}
+
+
+@router.get("/{item_id}/details")
+async def get_item_details(item_id: int, request: Request) -> Dict[str, Any]:
+    raise Exception("Simulated exception in get_item_details")
+    # return {"item_id": item_id, "details": {}, "request_id": getattr(request.state, "request_id", None)}
