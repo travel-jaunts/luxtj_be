@@ -1,21 +1,14 @@
-"""
-Application factory.
-
-Middleware is registered in *reverse* order of desired execution because
-Starlette wraps each layer from the outside in:
-  1. RequestLoggingMiddleware  – outermost (logs first/last)
-  2. KeycloakAuthMiddleware    – runs after logging, before route handlers
-"""
-
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse, PlainTextResponse
 
-from app.api.v1 import router as v1_router
-from app.core.config import get_settings
 from app.core.logging import configure_logging, get_logger
-from app.middleware import KeycloakAuthMiddleware, RequestLoggingMiddleware, RRCycleExceptionHandler
+from app.core.config import get_settings
+from app.api.v1 import router as v1_router
+from app.middleware.logging import RequestLoggingMiddleware
+from app.middleware.exceptions import RRCycleExceptionHandler
+
 
 settings = get_settings()
 configure_logging(settings.app_log_level)
@@ -23,11 +16,11 @@ logger = get_logger(__name__)
 
 
 @asynccontextmanager
-async def app_lifespan(app: FastAPI):
+async def app_lifespan(_: FastAPI):
     logger.info(
         "Starting up | env=%s auth=%s",
-        settings.app_env,
-        settings.auth_enabled,
+        settings.app_exec_env,
+        settings.app_auth_enabled,
     )
     yield
     logger.info("Shutting down")
@@ -35,17 +28,14 @@ async def app_lifespan(app: FastAPI):
 
 def create_app() -> FastAPI:
     app = FastAPI(
-        title="LuxTJ Backend",
-        version="0.1.0",
+        title=settings.app_title,
+        version=settings.app_version,
         lifespan=app_lifespan,
-        # Hide docs in production if desired
-        docs_url="/docs" if settings.is_dev else None,
-        redoc_url="/redoc" if settings.is_dev else None,
     )
 
     # ── Middleware (registered outermost → innermost) ─────────────────
     # Keycloak auth is registered first so logging wraps around it
-    app.add_middleware(KeycloakAuthMiddleware, settings=settings)
+    # app.add_middleware(KeycloakAuthMiddleware, settings=settings)
     app.add_middleware(RRCycleExceptionHandler, settings=settings)
     app.add_middleware(RequestLoggingMiddleware, settings=settings)
 
