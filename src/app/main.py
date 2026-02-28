@@ -8,6 +8,8 @@ from app.core.config import get_settings
 from app.api.v1 import router as v1_router
 from app.middleware.logging import RequestLoggingMiddleware
 from app.middleware.exceptions import RRCycleExceptionHandler
+from app.middleware.method_validator import MethodValidatorMiddleware
+from app.core.response_models import SuccessResponse, RequestProcessStatus
 
 
 settings = get_settings()
@@ -36,6 +38,7 @@ def create_app() -> FastAPI:
     # ── Middleware (registered outermost → innermost) ─────────────────
     # Keycloak auth is registered first so logging wraps around it
     # app.add_middleware(KeycloakAuthMiddleware, settings=settings)
+    app.add_middleware(MethodValidatorMiddleware, settings=settings)
     app.add_middleware(RRCycleExceptionHandler, settings=settings)
     app.add_middleware(RequestLoggingMiddleware, settings=settings)
 
@@ -43,13 +46,19 @@ def create_app() -> FastAPI:
     app.include_router(v1_router)
 
     # Built-in status check endpoints
-    @app.get("/ping", tags=["ops"])
+    @app.post("/ping", tags=["ops"])
     async def _() -> PlainTextResponse:
         return PlainTextResponse("pong")
 
-    @app.get("/health", tags=["ops"])
+    @app.post("/health", tags=["ops"])
     async def _() -> JSONResponse:
-        return JSONResponse({"status": "ok"})
+        return JSONResponse(
+            status_code=200,
+            content=SuccessResponse(
+                status=RequestProcessStatus.OK,
+                output=None
+            ).model_dump(exclude_none=True)
+        )
 
     return app
 
