@@ -15,5 +15,6 @@ class BaseResponse(BaseModel):
 class ErrorResponse(BaseResponse):
     errorMessage: str
 
+
 class SuccessResponse(BaseResponse):
     output: BaseModel | None = None

@@ -1,6 +1,7 @@
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
+from httpx import AsyncClient
 from fastapi.responses import JSONResponse, PlainTextResponse
 
 from app.core.logging import configure_logging, get_logger
@@ -18,13 +19,15 @@ logger = get_logger(__name__)
 
 
 @asynccontextmanager
-async def app_lifespan(_: FastAPI):
+async def app_lifespan(app: FastAPI):
     logger.info(
         "Starting up | env=%s auth=%s",
         settings.app_exec_env,
         settings.app_auth_enabled,
     )
-    yield
+    async with AsyncClient() as client:
+        app.state.http_client = client
+        yield
     logger.info("Shutting down")
 
 
@@ -54,10 +57,9 @@ def create_app() -> FastAPI:
     async def _() -> JSONResponse:
         return JSONResponse(
             status_code=200,
-            content=SuccessResponse(
-                status=RequestProcessStatus.OK,
-                output=None
-            ).model_dump(exclude_none=True)
+            content=SuccessResponse(status=RequestProcessStatus.OK, output=None).model_dump(
+                exclude_none=True
+            ),
         )
 
     return app
