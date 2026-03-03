@@ -1,8 +1,6 @@
 from dataclasses import dataclass
 import os
 
-from app.__version__ import __version__
-
 
 @dataclass(frozen=True)
 class Settings:
@@ -20,7 +18,7 @@ class Settings:
 
     # constants
     app_title: str = "LuxTJ Backend"
-    app_version: str = __version__
+    app_version: str = "0.1.0"
 
 
 def get_settings() -> Settings:
