@@ -8,6 +8,26 @@ router = APIRouter(prefix="/hotels", tags=["hotels"])
 logger = get_logger(__name__)
 
 
-@router.post("/id/{hotel_id}")
-async def get_hotel_by_id(hotel_id: int, request: Request) -> Dict[str, Any]:
-    return {"hotel_id": hotel_id, "request_id": getattr(request.state, "request_id", None)}
+@router.post("/search")
+async def get_hotels(request: Request) -> Dict[str, Any]:
+    return {
+        "status": "ok",
+        "data": {
+            "hotels": [
+                {
+                    "id": "hotel_1",
+                    "name": "Hotel Sunshine",
+                    "location": "Beach City",
+                    "rating": 4.5,
+                    "price_per_night": 150.0,
+                },
+                {
+                    "id": "hotel_2",
+                    "name": "Mountain View Inn",
+                    "location": "Hill Town",
+                    "rating": 4.0,
+                    "price_per_night": 120.0,
+                },
+            ]
+        },
+    }
