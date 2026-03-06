@@ -16,6 +16,8 @@ class Settings:
     app_tourradar_oauth_client_secret: str
     app_tourradar_api_base_url: str
 
+    app_db_url: str
+
     # constants
     app_title: str = "LuxTJ Backend"
     app_version: str = "0.1.0"
@@ -52,4 +54,5 @@ def get_settings() -> Settings:
         app_tourradar_oauth_client_id=_env_tourradar_oauth_client_id,
         app_tourradar_oauth_client_secret=_env_tourradar_oauth_client_secret,
         app_tourradar_api_base_url=_env_tourradar_api_base_url,
+        app_db_url=os.getenv("LTJBE_DB_URL", ""),
     )

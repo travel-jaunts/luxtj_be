@@ -11,6 +11,7 @@ from app.middleware.logging import RequestLoggingMiddleware
 from app.middleware.exceptions import RRCycleExceptionHandler
 from app.middleware.method_validator import MethodValidatorMiddleware
 from app.core.response_models import SuccessResponse, RequestProcessStatus
+from app.core.database import engine, Base
 
 
 settings = get_settings()
@@ -27,7 +28,9 @@ async def app_lifespan(app: FastAPI):
     )
     async with AsyncClient() as client:
         app.state.http_client = client
-        yield
+        async with engine.begin() as conn:
+            await conn.run_sync(Base.metadata.create_all)
+            yield
     logger.info("Shutting down")
 
 
