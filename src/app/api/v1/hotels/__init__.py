@@ -117,6 +117,7 @@ from pydantic import BaseModel, Field, field_validator
 
 # ── Request Payloads ──────────────────────────────────────────────────────────
 
+
 class HotelCreateRequest(BaseModel):
     name: str = Field(..., min_length=1, max_length=255)
     address: str = Field(..., min_length=1, max_length=500)
@@ -160,6 +161,7 @@ class HotelListRequest(BaseModel):
 
 
 # ── Response Payloads ─────────────────────────────────────────────────────────
+
 
 class HotelResponse(BaseModel):
     id: int
@@ -220,9 +222,7 @@ class HotelService:
             limit=filters.limit,
         )
 
-    async def update_hotel(
-        self, hotel_id: int, payload: HotelUpdateRequest
-    ) -> HotelResponse:
+    async def update_hotel(self, hotel_id: int, payload: HotelUpdateRequest) -> HotelResponse:
         changes = payload.model_dump(exclude_none=True)
         if not changes:
             raise HotelUpdateEmptyError()
@@ -252,9 +252,9 @@ def get_hotel_service(
 # =================================================================================================
 @router.post("/search")
 async def get_hotels(request: Request, service: HotelService = Depends(get_hotel_service)):
-    data = await service.list_hotels(filters=HotelListRequest(
-        min_stars=1, max_price=10000, offset=0, limit=10
-    ))
+    data = await service.list_hotels(
+        filters=HotelListRequest(min_stars=1, max_price=10000, offset=0, limit=10)
+    )
     return {
         "status": "ok",
         "data": {
@@ -265,19 +265,24 @@ async def get_hotels(request: Request, service: HotelService = Depends(get_hotel
                     "location": f"{item.city}, {item.country}",
                     "rating": item.stars,
                     "price_per_night": item.price_per_night,
-                } for item in data.items
+                }
+                for item in data.items
             ]
         },
     }
 
 
 @router.post("/create")
-async def create_hotel(payload: HotelCreateRequest, service: HotelService = Depends(get_hotel_service)):
+async def create_hotel(
+    payload: HotelCreateRequest, service: HotelService = Depends(get_hotel_service)
+):
     return await service.create_hotel(payload)
 
 
 @router.post("/update/{hotel_id}")
-async def update_hotel(hotel_id: int, payload: HotelUpdateRequest, service: HotelService = Depends(get_hotel_service)):
+async def update_hotel(
+    hotel_id: int, payload: HotelUpdateRequest, service: HotelService = Depends(get_hotel_service)
+):
     return await service.update_hotel(hotel_id, payload)
 
 

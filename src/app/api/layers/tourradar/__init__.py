@@ -19,7 +19,4 @@ async def get_hotel_by_id(request: Request) -> Dict[str, Any]:
         ),
         request.app.state.http_client,
     )
-    return {
-        "status": "ok",
-        "data": await service.get_currencies()
-    }
+    return {"status": "ok", "data": await service.get_currencies()}
