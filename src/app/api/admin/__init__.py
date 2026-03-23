@@ -23,7 +23,7 @@ class ApiBaseModel(BaseModel):
         alias_generator=lambda s: "".join(
             word.capitalize() if i > 0 else word for i, word in enumerate(s.split("_"))
         ),
-        populate_by_name=True 
+        populate_by_name=True,
     )
 
 
@@ -43,7 +43,7 @@ class ApiResponse(ApiBaseModel):
         alias_generator=lambda s: "".join(
             word.capitalize() if i > 0 else word for i, word in enumerate(s.split("_"))
         ),
-        populate_by_name=True 
+        populate_by_name=True,
     )
 
 
@@ -82,14 +82,38 @@ class CustomerBookingLineItem(ApiBaseModel):
     booking_transaction_reference: str
 
 
+class PaymentsLineItem(ApiBaseModel):
+    payment_id: str
+    customer_id: str
+    booking_id: str
+    payment_date: AwareDatetime
+    payment_currency: str
+    payment_amount: float
+    payment_transaction_reference: str
+
+
+class RefundsLineItem(ApiBaseModel):
+    refund_id: str
+    customer_id: str
+    booking_id: str
+    payment_id: str
+    refund_date: AwareDatetime
+    payment_currency: str
+    payment_amount: float
+    payment_transaction_reference: str
+
+
 class OfferLineItem(ApiBaseModel):
     offer_id: str
     offer_type: str
-    offer_is_active: bool = Field(False, description="Indicates if the offer is currently active or not")
+    offer_is_active: bool = Field(
+        False, description="Indicates if the offer is currently active or not"
+    )
     offer_title: str
     offer_description: str
     offer_valid_from: AwareDatetime
     offer_valid_to: AwareDatetime | None
+
 
 class SupportTicketLineItem(ApiBaseModel):
     ticket_id: str
@@ -98,6 +122,7 @@ class SupportTicketLineItem(ApiBaseModel):
     ticket_status: str
     ticket_subject: str
     ticket_description: str
+
 
 # =================================================================================================
 customer_router = APIRouter(prefix="/customers", tags=["customers"])
@@ -143,6 +168,7 @@ async def list_customers(
     )
 
 
+# TODO:
 @customer_router.post(
     "/bookings/list",
     response_model=ApiSuccessResponse[PaginatedResult[CustomerBookingLineItem]],
@@ -179,6 +205,86 @@ async def list_customer_bookings(
                     booking_currency="USD",
                     booking_amount=150.0,
                     booking_transaction_reference="txn_67890",
+                ),
+            ],
+        ),
+    )
+
+
+@customer_router.post(
+    "/payments/list",
+    response_model=ApiSuccessResponse[PaginatedResult[PaymentsLineItem]],
+    status_code=200,
+    summary="List payments for all customers with pagination and filtering",
+    name="List Customer Payments",
+)
+async def list_customer_payments(
+    query: PaginationParams = Query(...),
+) -> ApiSuccessResponse[PaginatedResult[PaymentsLineItem]]:
+    """
+    List payments and refunds for all customers with pagination
+    """
+
+    return ApiSuccessResponse(
+        status=RequestProcessStatus.OK,
+        output=PaginatedResult(
+            total=30,  # Replace with actual total count from database
+            page=query.page,
+            size=query.size,
+            items=[
+                PaymentsLineItem(
+                    payment_id="p1",
+                    customer_id="1",
+                    booking_id="b1",
+                    payment_date=datetime.now(tz=timezone.utc),
+                    payment_currency="USD",
+                    payment_amount=100.0,
+                    payment_transaction_reference="txn_12345",
+                ),  # Replace with actual payment/refund models
+                PaymentsLineItem(
+                    payment_id="r1",
+                    customer_id="2",
+                    booking_id="b2",
+                    payment_date=datetime.now(tz=timezone.utc),
+                    payment_currency="USD",
+                    payment_amount=-50.0,
+                    payment_transaction_reference="txn_67890",
+                ),
+            ],
+        ),
+    )
+
+
+@customer_router.post(
+    "/refunds/list",
+    response_model=ApiSuccessResponse[PaginatedResult[RefundsLineItem]],
+    status_code=200,
+    summary="List refunds for all customers with pagination and filtering",
+    name="List Customer Refunds",
+)
+async def list_customer_refunds(
+    query: PaginationParams = Query(...),
+) -> ApiSuccessResponse[PaginatedResult[RefundsLineItem]]:
+    """
+    List refunds for all customers with pagination
+    """
+
+    return ApiSuccessResponse(
+        status=RequestProcessStatus.OK,
+        output=PaginatedResult(
+            total=10,  # Replace with actual total count from database
+            page=query.page,
+            size=query.size,
+            items=[
+                RefundsLineItem(
+                    refund_id="r1",
+                    customer_id="2",
+                    booking_id="b2",
+                    payment_id="p2",
+                    refund_date=datetime.now(tz=timezone.utc),
+                    payment_currency="USD",
+                    payment_amount=-50.0,
+                    payment_transaction_reference="txn_67890",
                 ),
             ],
         ),
