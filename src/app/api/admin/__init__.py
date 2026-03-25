@@ -79,8 +79,11 @@ class UserTierEnum(StrEnum):
     - more tiers to be added
     """
 
-    STANDARD = "Standard"
-    WORLD_WISE = "World Wise"
+    NOVUS = "Novus"
+    AUREA = "Aurea"
+    PRIVE = "Privé"
+    ELITE = "Elite"
+    ECHELON = "Échelon"
 
 
 class SupportTicketPriorityEnum(StrEnum):
@@ -149,7 +152,7 @@ class UserListItem(ApiBaseModel):
     user_registration_date: AwareDatetime
     user_is_active: bool = Field(True, description="Indicates if the user account is active or not")
     user_tier: UserTierEnum = Field(
-        UserTierEnum.STANDARD, description="The tier of the user (e.g., Bronze, Silver, Gold)"
+        UserTierEnum.NOVUS, description="The tier of the user (Novus, Aurea, Privé, Elite, Échelon)"
     )
     user_phone_number: str
     user_base_location: str
@@ -273,7 +276,7 @@ async def list_customers(
                     user_email="john.doe@example.com",
                     user_registration_date=datetime.now(tz=timezone.utc),
                     user_is_active=True,
-                    user_tier=UserTierEnum.STANDARD,
+                    user_tier=UserTierEnum.NOVUS,
                     user_phone_number="+1234567890",
                     user_base_location="New York, USA",
                 ),
@@ -284,7 +287,7 @@ async def list_customers(
                     user_email="jane.smith@example.com",
                     user_registration_date=datetime.now(tz=timezone.utc),
                     user_is_active=False,
-                    user_tier=UserTierEnum.WORLD_WISE,
+                    user_tier=UserTierEnum.AUREA,
                     user_phone_number="+0987654321",
                     user_base_location="London, UK",
                 ),
@@ -324,7 +327,7 @@ async def list_customer_bookings(
                         user_email="john.doe@example.com",
                         user_registration_date=datetime.now(tz=timezone.utc),
                         user_is_active=True,
-                        user_tier=UserTierEnum.STANDARD,
+                        user_tier=UserTierEnum.NOVUS,
                         user_phone_number="+1234567890",
                         user_base_location="New York, USA",
                     ),
@@ -349,7 +352,7 @@ async def list_customer_bookings(
                         user_email="jane.smith@example.com",
                         user_registration_date=datetime.now(tz=timezone.utc),
                         user_is_active=False,
-                        user_tier=UserTierEnum.WORLD_WISE,
+                        user_tier=UserTierEnum.AUREA,
                         user_phone_number="+0987654321",
                         user_base_location="London, UK",
                     ),
@@ -402,7 +405,7 @@ async def list_customer_payments(
                         user_email="john.doe@example.com",
                         user_registration_date=datetime.now(tz=timezone.utc),
                         user_is_active=True,
-                        user_tier=UserTierEnum.STANDARD,
+                        user_tier=UserTierEnum.NOVUS,
                         user_phone_number="+1234567890",
                         user_base_location="New York, USA",
                     ),
@@ -424,7 +427,7 @@ async def list_customer_payments(
                         user_email="jane.smith@example.com",
                         user_registration_date=datetime.now(tz=timezone.utc),
                         user_is_active=False,
-                        user_tier=UserTierEnum.WORLD_WISE,
+                        user_tier=UserTierEnum.AUREA,
                         user_phone_number="+0987654321",
                         user_base_location="London, UK",
                     ),
@@ -470,7 +473,7 @@ async def list_customer_refunds(
                         user_email="jane.smith@example.com",
                         user_registration_date=datetime.now(tz=timezone.utc),
                         user_is_active=False,
-                        user_tier=UserTierEnum.WORLD_WISE,
+                        user_tier=UserTierEnum.AUREA,
                         user_phone_number="+0987654321",
                         user_base_location="London, UK",
                     ),
@@ -486,7 +489,7 @@ async def list_customer_refunds(
                             user_email="jane.smith@example.com",
                             user_registration_date=datetime.now(tz=timezone.utc),
                             user_is_active=False,
-                            user_tier=UserTierEnum.WORLD_WISE,
+                            user_tier=UserTierEnum.AUREA,
                             user_phone_number="+0987654321",
                             user_base_location="London, UK",
                         ),
@@ -532,7 +535,7 @@ async def get_refund_details(
                 user_email="jane.smith@example.com",
                 user_registration_date=datetime.now(tz=timezone.utc),
                 user_is_active=False,
-                user_tier=UserTierEnum.WORLD_WISE,
+                user_tier=UserTierEnum.ECHELON,
                 user_phone_number="+0987654321",
                 user_base_location="London, UK",
             ),
@@ -545,7 +548,7 @@ async def get_refund_details(
                     user_email="jane.smith@example.com",
                     user_registration_date=datetime.now(tz=timezone.utc),
                     user_is_active=False,
-                    user_tier=UserTierEnum.WORLD_WISE,
+                    user_tier=UserTierEnum.ECHELON,
                     user_phone_number="+0987654321",
                     user_base_location="London, UK",
                 ),
@@ -572,7 +575,7 @@ async def get_refund_details(
                     user_email="jane.smith@example.com",
                     user_registration_date=datetime.now(tz=timezone.utc),
                     user_is_active=False,
-                    user_tier=UserTierEnum.WORLD_WISE,
+                    user_tier=UserTierEnum.AUREA,
                     user_phone_number="+0987654321",
                     user_base_location="London, UK",
                 ),
@@ -666,7 +669,7 @@ async def list_customer_support_tickets(
                         user_email="john.doe@example.com",
                         user_registration_date=datetime.now(tz=timezone.utc),
                         user_is_active=True,
-                        user_tier=UserTierEnum.WORLD_WISE,
+                        user_tier=UserTierEnum.NOVUS,
                         user_phone_number="+1234567890",
                         user_base_location="New York, USA",
                     ),
@@ -694,7 +697,7 @@ async def list_customer_support_tickets(
                         user_email="jane.smith@example.com",
                         user_registration_date=datetime.now(tz=timezone.utc),
                         user_is_active=False,
-                        user_tier=UserTierEnum.WORLD_WISE,
+                        user_tier=UserTierEnum.AUREA,
                         user_phone_number="+0987654321",
                         user_base_location="London, UK",
                     ),
