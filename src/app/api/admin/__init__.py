@@ -29,6 +29,17 @@ class BookingStatusEnum(StrEnum):
     PENDING = "pending"
 
 
+class BookingSourceEnum(StrEnum):
+    """Enum to represent different booking sources (e.g., Website, Mobile App, Third-Party)
+    - more sources to be added
+    """
+
+    AFFILIATE = "affiliate"
+    MOBILE_APP = "mobile_app"
+    WEB_APP = "web_app"
+    B2B_AGENT = "b2b_agent"
+
+
 class PaymentStatusEnum(StrEnum):
     """Enum to represent different payment statuses (e.g., Completed, Failed, Refunded)
     - more statuses to be added
@@ -37,6 +48,29 @@ class PaymentStatusEnum(StrEnum):
     COMPLETED = "completed"
     FAILED = "failed"
     REFUNDED = "refunded"
+
+
+class PaymentMethodEnum(StrEnum):
+    """Enum to represent different payment methods (e.g., Credit Card, PayPal, Bank Transfer)
+    - more methods to be added
+    """
+
+    CREDIT_CARD = "credit_card"
+    DEBIT_CARD = "debit_card"
+    PAYPAL = "paypal"
+    UPI = "upi"
+    WALLET = "wallet"
+    NET_BANKING = "net_banking"
+
+
+class PaymentSourceEnum(StrEnum):
+    """Enum to represent different payment sources (e.g., Website, Mobile App, Third-Party)
+    - more sources to be added
+    """
+
+    STRIPE = "stripe"
+    PAYPAL = "paypal"
+    RAZORPAY = "razorpay"
 
 
 class UserTierEnum(StrEnum):
@@ -125,6 +159,7 @@ class CustomerBookingLineItem(ApiBaseModel):
     booking_id: str
     customer_id: str
     booking_type: str
+    booking_source: BookingSourceEnum
     booking_created_date: AwareDatetime
     booking_currency: str
     booking_amount: float
@@ -138,11 +173,13 @@ class CustomerBookingLineItem(ApiBaseModel):
 
 class PaymentsLineItem(ApiBaseModel):
     payment_id: str
+    payment_method: PaymentMethodEnum
+    payment_source: PaymentSourceEnum
     customer_id: str
     booking_id: str
     payment_date: AwareDatetime
     payment_currency: str
-    payment_amount: float
+    payment_amount: float = Field(..., description="Amount of the payment", ge=0)
     payment_status: PaymentStatusEnum
     payment_transaction_reference: str
 
@@ -154,7 +191,7 @@ class RefundsLineItem(ApiBaseModel):
     payment_id: str
     refund_date: AwareDatetime
     payment_currency: str
-    payment_amount: float
+    payment_amount: float = Field(..., description="Amount of the payment", ge=0)
     payment_transaction_reference: str
 
 
@@ -282,6 +319,7 @@ async def list_customer_bookings(
                     booking_id="b1",
                     customer_id="1",
                     booking_type="flight",
+                    booking_source=BookingSourceEnum.WEB_APP,
                     booking_created_date=datetime.now(tz=timezone.utc),
                     booking_currency="USD",
                     booking_amount=100.0,
@@ -296,6 +334,7 @@ async def list_customer_bookings(
                     booking_id="b2",
                     customer_id="2",
                     booking_type="hotel",
+                    booking_source=BookingSourceEnum.B2B_AGENT,
                     booking_created_date=datetime.now(tz=timezone.utc),
                     booking_currency="USD",
                     booking_amount=150.0,
@@ -334,6 +373,8 @@ async def list_customer_payments(
             items=[
                 PaymentsLineItem(
                     payment_id="p1",
+                    payment_method=PaymentMethodEnum.CREDIT_CARD,
+                    payment_source=PaymentSourceEnum.STRIPE,
                     customer_id="1",
                     booking_id="b1",
                     payment_date=datetime.now(tz=timezone.utc),
@@ -344,11 +385,13 @@ async def list_customer_payments(
                 ),  # Replace with actual payment/refund models
                 PaymentsLineItem(
                     payment_id="r1",
+                    payment_method=PaymentMethodEnum.CREDIT_CARD,
+                    payment_source=PaymentSourceEnum.STRIPE,
                     customer_id="2",
                     booking_id="b2",
                     payment_date=datetime.now(tz=timezone.utc),
                     payment_currency="USD",
-                    payment_amount=-50.0,
+                    payment_amount=50.0,
                     payment_transaction_reference="txn_67890",
                     payment_status=PaymentStatusEnum.REFUNDED,
                 ),
@@ -385,7 +428,7 @@ async def list_customer_refunds(
                     payment_id="p2",
                     refund_date=datetime.now(tz=timezone.utc),
                     payment_currency="USD",
-                    payment_amount=-50.0,
+                    payment_amount=50.0,
                     payment_transaction_reference="txn_67890",
                 ),
             ],
@@ -426,6 +469,7 @@ async def get_refund_details(
                 booking_id="b2",
                 customer_id="2",
                 booking_type="hotel",
+                booking_source=BookingSourceEnum.MOBILE_APP,
                 booking_created_date=datetime.now(tz=timezone.utc),
                 booking_currency="USD",
                 booking_amount=150.0,
@@ -438,6 +482,8 @@ async def get_refund_details(
             ),
             payment=PaymentsLineItem(
                 payment_id="p2",
+                payment_method=PaymentMethodEnum.CREDIT_CARD,
+                payment_source=PaymentSourceEnum.STRIPE,
                 customer_id="2",
                 booking_id="b2",
                 payment_date=datetime.now(tz=timezone.utc),
