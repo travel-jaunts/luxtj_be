@@ -157,7 +157,7 @@ class UserListItem(ApiBaseModel):
 
 class CustomerBookingLineItem(ApiBaseModel):
     booking_id: str
-    customer_id: str
+    customer: UserListItem
     booking_type: str
     booking_source: BookingSourceEnum
     booking_created_date: AwareDatetime
@@ -175,7 +175,7 @@ class PaymentsLineItem(ApiBaseModel):
     payment_id: str
     payment_method: PaymentMethodEnum
     payment_source: PaymentSourceEnum
-    customer_id: str
+    customer: UserListItem
     booking_id: str
     payment_date: AwareDatetime
     payment_currency: str
@@ -186,9 +186,9 @@ class PaymentsLineItem(ApiBaseModel):
 
 class RefundsLineItem(ApiBaseModel):
     refund_id: str
-    customer_id: str
+    customer: UserListItem
     booking_id: str
-    payment_id: str
+    payment: PaymentsLineItem
     refund_date: AwareDatetime
     payment_currency: str
     payment_amount: float = Field(..., description="Amount of the payment", ge=0)
@@ -217,7 +217,7 @@ class AgentDetailModel(ApiBaseModel):
 
 class SupportTicketLineItem(ApiBaseModel):
     ticket_id: str
-    customer_id: str
+    customer: UserListItem
     ticket_created_date: AwareDatetime
     ticket_status: str
     ticket_subject: str
@@ -317,7 +317,17 @@ async def list_customer_bookings(
             items=[
                 CustomerBookingLineItem(
                     booking_id="b1",
-                    customer_id="1",
+                    customer=UserListItem(
+                        user_id="1",
+                        user_first_name="John",
+                        user_last_name="Doe",
+                        user_email="john.doe@example.com",
+                        user_registration_date=datetime.now(tz=timezone.utc),
+                        user_is_active=True,
+                        user_tier=UserTierEnum.STANDARD,
+                        user_phone_number="+1234567890",
+                        user_base_location="New York, USA",
+                    ),
                     booking_type="flight",
                     booking_source=BookingSourceEnum.WEB_APP,
                     booking_created_date=datetime.now(tz=timezone.utc),
@@ -332,7 +342,17 @@ async def list_customer_bookings(
                 ),
                 CustomerBookingLineItem(
                     booking_id="b2",
-                    customer_id="2",
+                    customer=UserListItem(
+                        user_id="2",
+                        user_first_name="Jane",
+                        user_last_name="Smith",
+                        user_email="jane.smith@example.com",
+                        user_registration_date=datetime.now(tz=timezone.utc),
+                        user_is_active=False,
+                        user_tier=UserTierEnum.WORLD_WISE,
+                        user_phone_number="+0987654321",
+                        user_base_location="London, UK",
+                    ),
                     booking_type="hotel",
                     booking_source=BookingSourceEnum.B2B_AGENT,
                     booking_created_date=datetime.now(tz=timezone.utc),
@@ -375,7 +395,17 @@ async def list_customer_payments(
                     payment_id="p1",
                     payment_method=PaymentMethodEnum.CREDIT_CARD,
                     payment_source=PaymentSourceEnum.STRIPE,
-                    customer_id="1",
+                    customer=UserListItem(
+                        user_id="1",
+                        user_first_name="John",
+                        user_last_name="Doe",
+                        user_email="john.doe@example.com",
+                        user_registration_date=datetime.now(tz=timezone.utc),
+                        user_is_active=True,
+                        user_tier=UserTierEnum.STANDARD,
+                        user_phone_number="+1234567890",
+                        user_base_location="New York, USA",
+                    ),
                     booking_id="b1",
                     payment_date=datetime.now(tz=timezone.utc),
                     payment_currency="USD",
@@ -387,7 +417,17 @@ async def list_customer_payments(
                     payment_id="r1",
                     payment_method=PaymentMethodEnum.CREDIT_CARD,
                     payment_source=PaymentSourceEnum.STRIPE,
-                    customer_id="2",
+                    customer=UserListItem(
+                        user_id="2",
+                        user_first_name="Jane",
+                        user_last_name="Smith",
+                        user_email="jane.smith@example.com",
+                        user_registration_date=datetime.now(tz=timezone.utc),
+                        user_is_active=False,
+                        user_tier=UserTierEnum.WORLD_WISE,
+                        user_phone_number="+0987654321",
+                        user_base_location="London, UK",
+                    ),
                     booking_id="b2",
                     payment_date=datetime.now(tz=timezone.utc),
                     payment_currency="USD",
@@ -423,9 +463,40 @@ async def list_customer_refunds(
             items=[
                 RefundsLineItem(
                     refund_id="r1",
-                    customer_id="2",
+                    customer=UserListItem(
+                        user_id="2",
+                        user_first_name="Jane",
+                        user_last_name="Smith",
+                        user_email="jane.smith@example.com",
+                        user_registration_date=datetime.now(tz=timezone.utc),
+                        user_is_active=False,
+                        user_tier=UserTierEnum.WORLD_WISE,
+                        user_phone_number="+0987654321",
+                        user_base_location="London, UK",
+                    ),
                     booking_id="b2",
-                    payment_id="p2",
+                    payment=PaymentsLineItem(
+                        payment_id="r1",
+                        payment_method=PaymentMethodEnum.CREDIT_CARD,
+                        payment_source=PaymentSourceEnum.STRIPE,
+                        customer=UserListItem(
+                            user_id="2",
+                            user_first_name="Jane",
+                            user_last_name="Smith",
+                            user_email="jane.smith@example.com",
+                            user_registration_date=datetime.now(tz=timezone.utc),
+                            user_is_active=False,
+                            user_tier=UserTierEnum.WORLD_WISE,
+                            user_phone_number="+0987654321",
+                            user_base_location="London, UK",
+                        ),
+                        booking_id="b2",
+                        payment_date=datetime.now(tz=timezone.utc),
+                        payment_currency="USD",
+                        payment_amount=150.0,
+                        payment_transaction_reference="txn_67890",
+                        payment_status=PaymentStatusEnum.REFUNDED,
+                    ),
                     refund_date=datetime.now(tz=timezone.utc),
                     payment_currency="USD",
                     payment_amount=50.0,
@@ -467,7 +538,17 @@ async def get_refund_details(
             ),
             booking=CustomerBookingLineItem(
                 booking_id="b2",
-                customer_id="2",
+                customer=UserListItem(
+                    user_id="2",
+                    user_first_name="Jane",
+                    user_last_name="Smith",
+                    user_email="jane.smith@example.com",
+                    user_registration_date=datetime.now(tz=timezone.utc),
+                    user_is_active=False,
+                    user_tier=UserTierEnum.WORLD_WISE,
+                    user_phone_number="+0987654321",
+                    user_base_location="London, UK",
+                ),
                 booking_type="hotel",
                 booking_source=BookingSourceEnum.MOBILE_APP,
                 booking_created_date=datetime.now(tz=timezone.utc),
@@ -484,7 +565,17 @@ async def get_refund_details(
                 payment_id="p2",
                 payment_method=PaymentMethodEnum.CREDIT_CARD,
                 payment_source=PaymentSourceEnum.STRIPE,
-                customer_id="2",
+                customer=UserListItem(
+                    user_id="2",
+                    user_first_name="Jane",
+                    user_last_name="Smith",
+                    user_email="jane.smith@example.com",
+                    user_registration_date=datetime.now(tz=timezone.utc),
+                    user_is_active=False,
+                    user_tier=UserTierEnum.WORLD_WISE,
+                    user_phone_number="+0987654321",
+                    user_base_location="London, UK",
+                ),
                 booking_id="b2",
                 payment_date=datetime.now(tz=timezone.utc),
                 payment_currency="USD",
@@ -568,7 +659,17 @@ async def list_customer_support_tickets(
             items=[
                 SupportTicketLineItem(
                     ticket_id="t1",
-                    customer_id="1",
+                    customer=UserListItem(
+                        user_id="1",
+                        user_first_name="John",
+                        user_last_name="Doe",
+                        user_email="john.doe@example.com",
+                        user_registration_date=datetime.now(tz=timezone.utc),
+                        user_is_active=True,
+                        user_tier=UserTierEnum.WORLD_WISE,
+                        user_phone_number="+1234567890",
+                        user_base_location="New York, USA",
+                    ),
                     ticket_created_date=datetime.now(tz=timezone.utc),
                     ticket_status="open",
                     ticket_subject="Issue with booking",
@@ -586,7 +687,17 @@ async def list_customer_support_tickets(
                 ),  # Replace with actual support ticket models
                 SupportTicketLineItem(
                     ticket_id="t2",
-                    customer_id="2",
+                    customer=UserListItem(
+                        user_id="2",
+                        user_first_name="Jane",
+                        user_last_name="Smith",
+                        user_email="jane.smith@example.com",
+                        user_registration_date=datetime.now(tz=timezone.utc),
+                        user_is_active=False,
+                        user_tier=UserTierEnum.WORLD_WISE,
+                        user_phone_number="+0987654321",
+                        user_base_location="London, UK",
+                    ),
                     ticket_created_date=datetime.now(tz=timezone.utc),
                     ticket_status="closed",
                     ticket_subject="Refund request",
