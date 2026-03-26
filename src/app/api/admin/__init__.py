@@ -221,6 +221,7 @@ class AgentDetailModel(ApiBaseModel):
 class SupportTicketLineItem(ApiBaseModel):
     ticket_id: str
     customer: UserListItem
+    booking_id: str | None
     ticket_created_date: AwareDatetime
     ticket_status: str
     ticket_subject: str
@@ -673,6 +674,7 @@ async def list_customer_support_tickets(
                         user_phone_number="+1234567890",
                         user_base_location="New York, USA",
                     ),
+                    booking_id="b1",
                     ticket_created_date=datetime.now(tz=timezone.utc),
                     ticket_status="open",
                     ticket_subject="Issue with booking",
@@ -701,6 +703,7 @@ async def list_customer_support_tickets(
                         user_phone_number="+0987654321",
                         user_base_location="London, UK",
                     ),
+                    booking_id="b2",
                     ticket_created_date=datetime.now(tz=timezone.utc),
                     ticket_status="closed",
                     ticket_subject="Refund request",
