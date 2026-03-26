@@ -1,5 +1,5 @@
 # Development image – mounts source from host for hot-reload
-FROM python:3.11-slim AS dev
+FROM python:3.14-slim AS dev
 
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
 
@@ -17,5 +17,5 @@ RUN uv sync --frozen
 
 EXPOSE 8000
 
-CMD ["uv", "run", "uvicorn", "app.main:app", \
+CMD ["uv", "run", "uvicorn", "api.main:server_factory", "--factory",\
      "--host", "0.0.0.0", "--port", "8000", "--reload"]

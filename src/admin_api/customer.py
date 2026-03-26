@@ -1,22 +1,17 @@
-# Customers (B2C) (Main page to contain profiles) (a)
-# - Bookings
-# - Payments & Refunds
-#     - Filtered Search, to slice and dice
-# - Pricing, Offers & Discounts
-#     - LuxTJ initiated discounts
-# - Support (tickets & Complaints)
-
 from datetime import datetime, timezone
 from enum import StrEnum
-from typing import TypeVar, Annotated
+from typing import Annotated
 
 from fastapi import APIRouter, Query, Path
-from pydantic import BaseModel, Field, AwareDatetime, ConfigDict
+from pydantic import Field, AwareDatetime
 
-from app.core.response_models import RequestProcessStatus
-
-
-GenericResponseModel = TypeVar("GenericResponseModel", bound=BaseModel)
+from common.serializerlib import (
+    ApiSerializerBaseModel,
+    RequestProcessStatus,
+    ApiSuccessResponse,
+    PaginationParams,
+    PaginatedResult,
+)
 
 
 class BookingStatusEnum(StrEnum):
@@ -96,55 +91,8 @@ class SupportTicketPriorityEnum(StrEnum):
     HIGH = "High"
 
 
-# -------------------------------------------------------------------------------------------------
-class ApiBaseModel(BaseModel):
-    model_config = ConfigDict(
-        alias_generator=lambda s: "".join(
-            word.capitalize() if i > 0 else word for i, word in enumerate(s.split("_"))
-        ),
-        populate_by_name=True,
-    )
-
-
-# query modesl ------------------------------------------------------------------------------------
-class PaginationParams(ApiBaseModel):
-    page: int = Field(1, description="Page number")
-    size: int = Field(10, description="Number of items per page")
-    search_query: str | None = Field(None, alias="q", description="Search query to filter results")
-
-
-# response models ---------------------------------------------------------------------------------
-class ApiResponse(ApiBaseModel):
-    status: RequestProcessStatus
-
-    # TODO: add camel case alias generator for output field
-    model_config = ConfigDict(
-        alias_generator=lambda s: "".join(
-            word.capitalize() if i > 0 else word for i, word in enumerate(s.split("_"))
-        ),
-        populate_by_name=True,
-    )
-
-
-class ApiSuccessResponse[GenericResponseModel](ApiResponse):
-    output: GenericResponseModel | None = None
-
-
-class ApiErrorResponse(ApiResponse):
-    error_message: str
-
-
-class PaginatedResult[GenericResponseModel](ApiBaseModel):
-    total: int = Field(..., description="Total number of items available")
-    page: int = Field(..., description="Current page number")
-    size: int = Field(..., description="Number of items per page")
-    items: list[GenericResponseModel] = Field(
-        ..., description="List of elements for the current page"
-    )
-
-
 # line item models --------------------------------------------------------------------------------
-class UserListItem(ApiBaseModel):
+class UserListItem(ApiSerializerBaseModel):
     user_id: str
     user_first_name: str
     user_last_name: str
@@ -158,7 +106,7 @@ class UserListItem(ApiBaseModel):
     user_base_location: str
 
 
-class CustomerBookingLineItem(ApiBaseModel):
+class CustomerBookingLineItem(ApiSerializerBaseModel):
     booking_id: str
     customer: UserListItem
     booking_type: str
@@ -174,7 +122,7 @@ class CustomerBookingLineItem(ApiBaseModel):
     booking_transaction_reference: str | None
 
 
-class PaymentsLineItem(ApiBaseModel):
+class PaymentsLineItem(ApiSerializerBaseModel):
     payment_id: str
     payment_method: PaymentMethodEnum
     payment_source: PaymentSourceEnum
@@ -187,7 +135,7 @@ class PaymentsLineItem(ApiBaseModel):
     payment_transaction_reference: str
 
 
-class RefundsLineItem(ApiBaseModel):
+class RefundsLineItem(ApiSerializerBaseModel):
     refund_id: str
     customer: UserListItem
     booking_id: str
@@ -198,7 +146,7 @@ class RefundsLineItem(ApiBaseModel):
     payment_transaction_reference: str
 
 
-class OfferLineItem(ApiBaseModel):
+class OfferLineItem(ApiSerializerBaseModel):
     offer_id: str
     offer_type: str
     offer_is_active: bool = Field(
@@ -210,7 +158,7 @@ class OfferLineItem(ApiBaseModel):
     offer_valid_to: AwareDatetime | None
 
 
-class AgentDetailModel(ApiBaseModel):
+class AgentDetailModel(ApiSerializerBaseModel):
     agent_id: str
     agent_first_name: str
     agent_last_name: str
@@ -218,7 +166,7 @@ class AgentDetailModel(ApiBaseModel):
     agent_phone_number: str
 
 
-class SupportTicketLineItem(ApiBaseModel):
+class SupportTicketLineItem(ApiSerializerBaseModel):
     ticket_id: str
     customer: UserListItem
     booking_id: str | None
@@ -233,7 +181,7 @@ class SupportTicketLineItem(ApiBaseModel):
 
 
 # -------------------------------------------------------------------------------------------------
-class RefundDetailSerializer(ApiBaseModel):
+class RefundDetailSerializer(ApiSerializerBaseModel):
     refund_id: str
     customer: UserListItem
     booking: CustomerBookingLineItem
@@ -703,7 +651,7 @@ async def list_customer_support_tickets(
                         user_phone_number="+0987654321",
                         user_base_location="London, UK",
                     ),
-                    booking_id="b2",
+                    booking_id=None,
                     ticket_created_date=datetime.now(tz=timezone.utc),
                     ticket_status="closed",
                     ticket_subject="Refund request",
@@ -722,7 +670,3 @@ async def list_customer_support_tickets(
             ],
         ),
     )
-
-
-admin_base_router = APIRouter(prefix="/admin")
-admin_base_router.include_router(customer_router)
