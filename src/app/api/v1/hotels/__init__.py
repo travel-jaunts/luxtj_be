@@ -1,7 +1,8 @@
-from typing import Dict, Any, Annotated, Optional
+from typing import Annotated, Optional
 from datetime import datetime
 
 from sqlalchemy import DateTime, Float, Integer, String, func, select
+from pydantic import BaseModel, Field, field_validator
 from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi import APIRouter, Request, Depends
@@ -107,12 +108,6 @@ def get_hotel_repository(
     session: Annotated[AsyncSession, Depends(get_db)],
 ) -> HotelRepository:
     return HotelRepository(session)
-
-
-from datetime import datetime
-from typing import Optional
-
-from pydantic import BaseModel, Field, field_validator
 
 
 # ── Request Payloads ──────────────────────────────────────────────────────────

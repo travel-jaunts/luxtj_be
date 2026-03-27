@@ -2,7 +2,6 @@ from contextlib import asynccontextmanager
 from typing import Annotated
 
 from fastapi import FastAPI, Depends
-from httpx import AsyncClient
 
 from common.serializerlib import ApiSuccessResponse, HealthStatusResult
 from common.injectorlib import fastapi_app_handle
@@ -14,10 +13,7 @@ from admin_api.customer import customer_router
 async def admin_api_application_lifespan(app: FastAPI):
     print("Admin API application startup: Initializing resources...")
 
-    await init_app_state(app)
-
-    async with AsyncClient() as client:
-        app.state.http_client = client
+    async with init_app_state(app):
         yield
 
 

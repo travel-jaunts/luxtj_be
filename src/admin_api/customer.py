@@ -69,7 +69,6 @@ class PaymentSourceEnum(StrEnum):
 
 
 class UserTierEnum(StrEnum):
-    # TODO: define user tiers based on actual business requirements and customer segmentation strategy
     """Enum to represent different user tiers (e.g., Standard, World Wise)
     - more tiers to be added
     """
@@ -194,7 +193,7 @@ class RefundDetailSerializer(ApiSerializerBaseModel):
 
 
 # =================================================================================================
-customer_router = APIRouter(prefix="/customers", tags=["customers"])
+customer_router = APIRouter(prefix="/customers")
 
 
 @customer_router.post(
@@ -245,7 +244,6 @@ async def list_customers(
     )
 
 
-# TODO:
 @customer_router.post(
     "/bookings/list",
     response_model=ApiSuccessResponse[PaginatedResult[CustomerBookingLineItem]],
