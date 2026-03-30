@@ -1,7 +1,8 @@
+from typing import TypeVar, Annotated
 from enum import StrEnum
-from typing import TypeVar
 
 from pydantic import BaseModel, ConfigDict, Field
+from fastapi import Query
 
 GenericResponseModel = TypeVar("GenericResponseModel", bound=BaseModel)
 
@@ -59,3 +60,22 @@ class PaginatedResult[GenericResponseModel](ApiSerializerBaseModel):
     items: list[GenericResponseModel] = Field(
         ..., description="List of elements for the current page"
     )
+
+
+# common serializers ------------------------------------------------------------------------------
+class AmountSerializer(ApiSerializerBaseModel):
+    amount: float = Field(..., description="Monetary amount")
+    currency: str = Field(..., description="Currency code (e.g., USD, EUR)")
+
+
+# common query parameters -------------------------------------------------------------------------
+CurrencyQuery = Annotated[
+    str,
+    Query(
+        ...,
+        alias="currency",
+        description="ISO currency code for the KPI summary (e.g., USD, EUR)",
+    ),
+]
+"""Query parameter for specifying the ISO currency code in API requests that require it 
+(e.g., for KPI summaries)."""

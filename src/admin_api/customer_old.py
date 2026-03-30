@@ -1,5 +1,5 @@
 from datetime import datetime, timezone
-from enum import StrEnum
+
 from typing import Annotated
 
 from fastapi import APIRouter, Query, Path
@@ -14,95 +14,11 @@ from common.serializerlib import (
 )
 
 
-class BookingStatusEnum(StrEnum):
-    """Enum to represent different booking statuses (e.g., Confirmed, Cancelled, Pending)
-    - more statuses to be added
-    """
 
-    CONFIRMED = "confirmed"
-    CANCELLED = "cancelled"
-    PENDING = "pending"
-
-
-class BookingSourceEnum(StrEnum):
-    """Enum to represent different booking sources (e.g., Website, Mobile App, Third-Party)
-    - more sources to be added
-    """
-
-    AFFILIATE = "affiliate"
-    MOBILE_APP = "mobile_app"
-    WEB_APP = "web_app"
-    B2B_AGENT = "b2b_agent"
-
-
-class PaymentStatusEnum(StrEnum):
-    """Enum to represent different payment statuses (e.g., Completed, Failed, Refunded)
-    - more statuses to be added
-    """
-
-    COMPLETED = "completed"
-    FAILED = "failed"
-    REFUNDED = "refunded"
-
-
-class PaymentMethodEnum(StrEnum):
-    """Enum to represent different payment methods (e.g., Credit Card, PayPal, Bank Transfer)
-    - more methods to be added
-    """
-
-    CREDIT_CARD = "credit_card"
-    DEBIT_CARD = "debit_card"
-    PAYPAL = "paypal"
-    UPI = "upi"
-    WALLET = "wallet"
-    NET_BANKING = "net_banking"
-
-
-class PaymentSourceEnum(StrEnum):
-    """Enum to represent different payment sources (e.g., Website, Mobile App, Third-Party)
-    - more sources to be added
-    """
-
-    STRIPE = "stripe"
-    PAYPAL = "paypal"
-    RAZORPAY = "razorpay"
-
-
-class UserTierEnum(StrEnum):
-    """Enum to represent different user tiers (e.g., Standard, World Wise)
-    - more tiers to be added
-    """
-
-    NOVUS = "Novus"
-    AUREA = "Aurea"
-    PRIVE = "Privé"
-    ELITE = "Elite"
-    ECHELON = "Échelon"
-
-
-class SupportTicketPriorityEnum(StrEnum):
-    """Enum to represent different support ticket priorities (e.g., Low, Medium, High)
-    - more priorities to be added
-    """
-
-    LOW = "Low"
-    MEDIUM = "Medium"
-    HIGH = "High"
 
 
 # line item models --------------------------------------------------------------------------------
-class UserListItem(ApiSerializerBaseModel):
-    user_id: str
-    user_first_name: str
-    user_last_name: str
-    user_email: str
-    user_registration_date: AwareDatetime
-    user_is_active: bool = Field(True, description="Indicates if the user account is active or not")
-    user_tier: UserTierEnum = Field(
-        UserTierEnum.NOVUS, description="The tier of the user (Novus, Aurea, Privé, Elite, Échelon)"
-    )
-    user_phone_number: str
-    user_base_location: str
+
 
 
 class CustomerBookingLineItem(ApiSerializerBaseModel):
@@ -192,56 +108,10 @@ class RefundDetailSerializer(ApiSerializerBaseModel):
     payment_status: PaymentStatusEnum
 
 
-# =================================================================================================
-customer_router = APIRouter(prefix="/customers")
 
 
-@customer_router.post(
-    "/list",
-    response_model=ApiSuccessResponse[PaginatedResult[UserListItem]],
-    status_code=200,
-    summary="List customers with pagination and filtering",
-    name="List Customers",
-)
-async def list_customers(
-    query: PaginationParams = Query(...),
-) -> ApiSuccessResponse[PaginatedResult[UserListItem]]:
-    """
-    List customers with pagination
-    """
 
-    return ApiSuccessResponse(
-        status=RequestProcessStatus.OK,
-        output=PaginatedResult(
-            total=100,  # Replace with actual total count from database
-            page=query.page,
-            size=query.size,
-            items=[
-                UserListItem(
-                    user_id="1",
-                    user_first_name="John",
-                    user_last_name="Doe",
-                    user_email="john.doe@example.com",
-                    user_registration_date=datetime.now(tz=timezone.utc),
-                    user_is_active=True,
-                    user_tier=UserTierEnum.NOVUS,
-                    user_phone_number="+1234567890",
-                    user_base_location="New York, USA",
-                ),
-                UserListItem(
-                    user_id="2",
-                    user_first_name="Jane",
-                    user_last_name="Smith",
-                    user_email="jane.smith@example.com",
-                    user_registration_date=datetime.now(tz=timezone.utc),
-                    user_is_active=False,
-                    user_tier=UserTierEnum.AUREA,
-                    user_phone_number="+0987654321",
-                    user_base_location="London, UK",
-                ),
-            ],
-        ),
-    )
+
 
 
 @customer_router.post(
@@ -251,7 +121,7 @@ async def list_customers(
     summary="List bookings for all customers with pagination and filtering",
     name="List Customer Bookings",
 )
-async def list_customer_bookings(
+def list_customer_bookings(
     query: PaginationParams = Query(...),
 ) -> ApiSuccessResponse[PaginatedResult[CustomerBookingLineItem]]:
     """
@@ -327,7 +197,7 @@ async def list_customer_bookings(
     summary="List payments for all customers with pagination and filtering",
     name="List Customer Payments",
 )
-async def list_customer_payments(
+def list_customer_payments(
     query: PaginationParams = Query(...),
 ) -> ApiSuccessResponse[PaginatedResult[PaymentsLineItem]]:
     """
@@ -397,7 +267,7 @@ async def list_customer_payments(
     summary="List refunds for all customers with pagination and filtering",
     name="List Customer Refunds",
 )
-async def list_customer_refunds(
+def list_customer_refunds(
     query: PaginationParams = Query(...),
 ) -> ApiSuccessResponse[PaginatedResult[RefundsLineItem]]:
     """
@@ -464,7 +334,7 @@ async def list_customer_refunds(
     summary="Get refund details for a specific refund",
     name="Get Refund Details",
 )
-async def get_refund_details(
+def get_refund_details(
     refund_id: Annotated[str, Path(..., description="The ID of the refund")],
 ) -> ApiSuccessResponse[RefundDetailSerializer]:
     """
@@ -549,7 +419,7 @@ async def get_refund_details(
     summary="List pricing, offers and discounts for all customers with pagination and filtering",
     name="List Customer Pricing, Offers & Discounts",
 )
-async def list_customer_pricing_offers_discounts(
+def list_customer_pricing_offers_discounts(
     query: PaginationParams = Query(...),
 ) -> ApiSuccessResponse[PaginatedResult[OfferLineItem]]:
     """
@@ -593,7 +463,7 @@ async def list_customer_pricing_offers_discounts(
     summary="List support tickets for all customers with pagination and filtering",
     name="List Customer Support Tickets",
 )
-async def list_customer_support_tickets(
+def list_customer_support_tickets(
     query: PaginationParams = Query(...),
 ) -> ApiSuccessResponse[PaginatedResult[SupportTicketLineItem]]:
     """

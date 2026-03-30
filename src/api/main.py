@@ -16,7 +16,7 @@ from common.middlewarelib import EnforcePostMethodOnly
 from common.telemetry.niquests import NiquestsInstrumentor
 
 from api import config
-from admin_api.main import customer_router
+from admin_api.customer import customer_router
 
 
 @asynccontextmanager
@@ -35,7 +35,7 @@ def server_factory() -> FastAPI:
         lifespan=api_application_lifespan,
     )
 
-    admin_router = APIRouter(prefix="/admin", tags=["admin"])
+    admin_router = APIRouter(prefix="/v1/admin", tags=["admin"])
     admin_router.include_router(customer_router)
     api_application.include_router(admin_router)
     # CAUTION: in case admin apis need to be removed, comment above lines
