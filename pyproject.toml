@@ -34,6 +34,35 @@ src = [
     "tests"
 ]
 
+[tool.ruff.lint]
+# Enable popular sets of rules
+select = [
+    "E",    # pycodestyle errors
+    "W",    # pycodestyle warnings
+    "F",    # pyflakes
+    "I",    # isort (import sorting)
+    "B",    # flake8-bugbear (potential bugs)
+    "C4",   # flake8-comprehensions
+    "UP",   # pyupgrade (syntax modernization)
+    "PTH",  # flake8-use-pathlib (best practices)
+    "N",    # pep8-naming
+    "RUF",  # ruff-specific rules
+]
+ignore = [
+    "E501", # Ignore line-length violations (let formatter handle it)
+]
+
+[tool.ruff.format]
+# Use double quotes for strings
+quote-style = "double"
+# Indent with spaces
+indent-style = "space"
+# Ensure compatibility with Black
+skip-magic-trailing-comma = false
+
+[tool.ruff.lint.isort]
+known-first-party = ["src"]
+
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 testpaths = [
