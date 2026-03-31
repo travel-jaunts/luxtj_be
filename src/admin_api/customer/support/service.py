@@ -28,10 +28,5 @@ class CustomerSupportService:
         return customer_list, PaginationMeta(total=num_items, page=page, size=page_size)
 
     def get_kpi_summary(self) -> SupportKpiSummary:
-        # Placeholder implementation
-        return SupportKpiSummary(
-            total_tickets=0,
-            open_tickets=0,
-            average_resolution_time_hours=0.0,
-            escalation_rate_percent=0.0,
-        )
+        # TODO: Implement actual fetching logic here
+        return SupportKpiSummary.generate_mock()

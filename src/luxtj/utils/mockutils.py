@@ -45,6 +45,7 @@ mock_support_ticket_descriptions = [
     "My payment failed during checkout. What should I do?",
     "I have a general inquiry about your services.",
 ]
+mock_offer_title = ["Summer Sale", "Winter Discount", "Festive Offer"]
 
 
 def random_user_id() -> str:
@@ -95,3 +96,7 @@ def random_support_ticket_subject() -> str:
 
 def random_support_ticket_description() -> str:
     return random.choice(mock_support_ticket_descriptions)
+
+
+def random_offer_title() -> str:
+    return random.choice(mock_offer_title)
