@@ -1,5 +1,5 @@
-from datetime import datetime, timezone
 from contextlib import asynccontextmanager
+from datetime import UTC, datetime
 
 from fastapi import FastAPI
 from niquests import Session
@@ -9,7 +9,7 @@ from common.serializerlib import HealthStatusResult
 
 @asynccontextmanager
 async def init_app_state(fastapi_app: FastAPI):
-    fastapi_app.state.start_timestamp = datetime.now(timezone.utc)
+    fastapi_app.state.start_timestamp = datetime.now(UTC)
     with Session() as client:
         fastapi_app.state.http_client = client
         yield
@@ -31,8 +31,6 @@ def get_http_client(fastapi_app: FastAPI) -> Session:
 
 def health_check(fastapi_app: FastAPI) -> HealthStatusResult:
     return HealthStatusResult(
-        uptime_seconds=int(
-            (datetime.now(timezone.utc) - get_start_timestamp(fastapi_app)).total_seconds()
-        ),
+        uptime_seconds=int((datetime.now(UTC) - get_start_timestamp(fastapi_app)).total_seconds()),
         database_connected=False,  # TODO: implement actual database connectivity check
     )

@@ -1,17 +1,17 @@
 from pydantic import AwareDatetime
 
 from admin_api.customer.transactions.domainmodel import (
-    PaymentRefundKpiSummaryDomainModel,
     CustomerPaymentDomainModel,
+    PaymentRefundKpiSummaryDomainModel,
 )
 from admin_api.customer.users.domainmodel import CustomerDomainModel
-from common.serializerlib import ApiSerializerBaseModel, AmountSerializer
+from common.serializerlib import AmountSerializer, ApiSerializerBaseModel
 from luxtj.domain.enums import (
     CustomerTierEnum,
-    TransactionTypeEnum,
-    PaymentStatusEnum,
     PaymentMethodEnum,
     PaymentSourceEnum,
+    PaymentStatusEnum,
+    TransactionTypeEnum,
 )
 
 
@@ -24,7 +24,7 @@ class TransactionCustomer(ApiSerializerBaseModel):
     user_phone_number: str
 
     @classmethod
-    def from_domain_model(cls, customer_model: CustomerDomainModel) -> "TransactionCustomer":
+    def from_domain_model(cls, customer_model: CustomerDomainModel) -> TransactionCustomer:
         return cls(
             user_id=customer_model.user_id,
             user_first_name=customer_model.user_first_name,
@@ -47,7 +47,7 @@ class PaymentRefundKpiSummarySerializer(ApiSerializerBaseModel):
     @classmethod
     def from_domain_model(
         cls, payment_summary_domain_model: PaymentRefundKpiSummaryDomainModel
-    ) -> "PaymentRefundKpiSummarySerializer":
+    ) -> PaymentRefundKpiSummarySerializer:
         return cls(
             gross_booking_value=AmountSerializer(
                 amount=payment_summary_domain_model.gross_booking_value,
@@ -83,7 +83,7 @@ class PaymentsLineItem(ApiSerializerBaseModel):
     @classmethod
     def from_domain_model(
         cls, payment_domain_model: CustomerPaymentDomainModel
-    ) -> "PaymentsLineItem":
+    ) -> PaymentsLineItem:
         return cls(
             transaction_id=payment_domain_model.transaction_id,
             customer=TransactionCustomer.from_domain_model(payment_domain_model.customer),

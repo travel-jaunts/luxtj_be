@@ -1,22 +1,21 @@
 from contextlib import asynccontextmanager
 from typing import Annotated
 
-from fastapi import FastAPI, APIRouter, Depends
+from fastapi import APIRouter, Depends, FastAPI
 from opentelemetry import trace
-from opentelemetry.sdk.trace import TracerProvider
-from opentelemetry.sdk.trace.export import BatchSpanProcessor
 from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
 from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
 from opentelemetry.sdk.resources import Resource
+from opentelemetry.sdk.trace import TracerProvider
+from opentelemetry.sdk.trace.export import BatchSpanProcessor
 
-from common.serializerlib import ApiSuccessResponse, HealthStatusResult
-from common.injectorlib import fastapi_app_handle
-from common.kernellib import init_app_state, health_check
-from common.middlewarelib import EnforcePostMethodOnly
-from common.telemetry.niquests import NiquestsInstrumentor
-
-from api import config
 from admin_api.customer import customer_router
+from api import config
+from common.injectorlib import fastapi_app_handle
+from common.kernellib import health_check, init_app_state
+from common.middlewarelib import EndpointExceptionHandler, EnforcePostMethodOnly
+from common.serializerlib import ApiSuccessResponse, HealthStatusResult
+from common.telemetry.niquests import NiquestsInstrumentor
 
 
 @asynccontextmanager
@@ -52,6 +51,7 @@ def server_factory() -> FastAPI:
             output=health_check(app_core),
         )
 
+    api_application.add_middleware(EndpointExceptionHandler)
     api_application.add_middleware(EnforcePostMethodOnly)  # outermost
 
     # init tracing --------------------------------------------------------------------------------

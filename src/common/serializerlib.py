@@ -1,8 +1,8 @@
-from typing import TypeVar, Annotated
 from enum import StrEnum
+from typing import Annotated, TypeVar
 
-from pydantic import BaseModel, ConfigDict, Field
 from fastapi import Query
+from pydantic import BaseModel, ConfigDict, Field
 
 GenericResponseModel = TypeVar("GenericResponseModel", bound=BaseModel)
 
@@ -77,5 +77,4 @@ CurrencyQuery = Annotated[
         description="ISO currency code for the KPI summary (e.g., USD, EUR)",
     ),
 ]
-"""Query parameter for specifying the ISO currency code in API requests that require it 
-(e.g., for KPI summaries)."""
+"""Query parameter for specifying the ISO currency code in API requests that require it (e.g., for KPI summaries)."""

@@ -1,11 +1,11 @@
-from pydantic import Field, AwareDatetime
+from pydantic import AwareDatetime, Field
 
-from common.serializerlib import ApiSerializerBaseModel, AmountSerializer
 from admin_api.customer.users.domainmodel import (
+    CustomerBizKpiSummaryDomainModel,
     CustomerDomainModel,
     CustomerTierEnum,
-    CustomerBizKpiSummaryDomainModel,
 )
+from common.serializerlib import AmountSerializer, ApiSerializerBaseModel
 
 
 class CustomerBizKpiSummary(ApiSerializerBaseModel):
@@ -22,7 +22,7 @@ class CustomerBizKpiSummary(ApiSerializerBaseModel):
     @classmethod
     def from_domain_model(
         cls, biz_summary_model: CustomerBizKpiSummaryDomainModel
-    ) -> "CustomerBizKpiSummary":
+    ) -> CustomerBizKpiSummary:
         return cls(
             total_revenue=AmountSerializer(
                 amount=biz_summary_model.total_revenue, currency=biz_summary_model.amount_currency
@@ -71,7 +71,7 @@ class CustomerListItem(ApiSerializerBaseModel):
     status: str = Field(..., description="Current status of the user (e.g., Active, Inactive)")
 
     @classmethod
-    def from_domain_model(cls, customer_model: CustomerDomainModel) -> "CustomerListItem":
+    def from_domain_model(cls, customer_model: CustomerDomainModel) -> CustomerListItem:
         return cls(
             customer_id=customer_model.user_id,
             first_name=customer_model.user_first_name,

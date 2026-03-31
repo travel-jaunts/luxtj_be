@@ -1,17 +1,18 @@
 from typing import Annotated
+
 from fastapi import APIRouter, Depends
 
-from common.serializerlib import (
-    RequestProcessStatus,
-    ApiSuccessResponse,
-    PaginationParams,
-    PaginatedResult,
-    CurrencyQuery,
+from admin_api.customer.offers.serializers import (
+    OfferLineItemSerializer,
+    OffersKpiSummarySerializer,
 )
 from admin_api.customer.offers.service import CustomerOffersService
-from admin_api.customer.offers.serializers import (
-    OffersKpiSummarySerializer,
-    OfferLineItemSerializer,
+from common.serializerlib import (
+    ApiSuccessResponse,
+    CurrencyQuery,
+    PaginatedResult,
+    PaginationParams,
+    RequestProcessStatus,
 )
 
 offers_router = APIRouter(prefix="/offers")

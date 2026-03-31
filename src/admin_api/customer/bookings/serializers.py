@@ -1,17 +1,15 @@
 from pydantic import AwareDatetime
 
-from common.serializerlib import ApiSerializerBaseModel, AmountSerializer
-
 from admin_api.customer.bookings.domainmodel import (
-    CustomerBookingDomainModel,
     BookingBizKpiSummaryDomainModel,
+    CustomerBookingDomainModel,
 )
-
+from common.serializerlib import AmountSerializer, ApiSerializerBaseModel
 from luxtj.domain.enums import (
-    CustomerTierEnum,
-    BookingTypeEnum,
     BookingSourceEnum,
     BookingStatusEnum,
+    BookingTypeEnum,
+    CustomerTierEnum,
     PaymentStatusEnum,
     RefundStatusEnum,
 )
@@ -28,7 +26,7 @@ class BookingBizKpiSummary(ApiSerializerBaseModel):
     @classmethod
     def from_domain_model(
         cls, biz_summary_model: BookingBizKpiSummaryDomainModel
-    ) -> "BookingBizKpiSummary":
+    ) -> BookingBizKpiSummary:
         return cls(
             total_bookings=biz_summary_model.total_bookings,
             total_booking_value=AmountSerializer(
@@ -53,7 +51,7 @@ class BookingCustomer(ApiSerializerBaseModel):
     user_phone_number: str
 
     @classmethod
-    def from_domain_model(cls, domain_model: CustomerBookingDomainModel) -> "BookingCustomer":
+    def from_domain_model(cls, domain_model: CustomerBookingDomainModel) -> BookingCustomer:
         return cls(
             user_id=domain_model.customer.user_id,
             user_first_name=domain_model.customer.user_first_name,
@@ -83,7 +81,7 @@ class CustomerBookingLineItem(ApiSerializerBaseModel):
     @classmethod
     def from_domain_model(
         cls, booking_domain_model: CustomerBookingDomainModel
-    ) -> "CustomerBookingLineItem":
+    ) -> CustomerBookingLineItem:
         _cancellation_status = (
             "Yes" if booking_domain_model.booking_status == BookingStatusEnum.CANCELLED else "No"
         )

@@ -1,12 +1,12 @@
 from contextlib import asynccontextmanager
 from typing import Annotated
 
-from fastapi import FastAPI, Depends
+from fastapi import Depends, FastAPI
 
-from common.serializerlib import ApiSuccessResponse, HealthStatusResult
-from common.injectorlib import fastapi_app_handle
-from common.kernellib import init_app_state, health_check
 from admin_api.customer import customer_router
+from common.injectorlib import fastapi_app_handle
+from common.kernellib import health_check, init_app_state
+from common.serializerlib import ApiSuccessResponse, HealthStatusResult
 
 
 @asynccontextmanager

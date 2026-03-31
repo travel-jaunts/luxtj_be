@@ -2,13 +2,12 @@ from dataclasses import dataclass
 from datetime import datetime
 
 from admin_api.customer.users.domainmodel import CustomerDomainModel
-
 from luxtj.domain.enums import (
-    BookingTypeEnum,
+    BookingSourceEnum,
     BookingStatusEnum,
+    BookingTypeEnum,
     PaymentStatusEnum,
     RefundStatusEnum,
-    BookingSourceEnum,
 )
 from luxtj.utils import mockutils
 
@@ -25,7 +24,7 @@ class BookingBizKpiSummaryDomainModel:
     refund_rate: float
 
     @classmethod
-    def generate_mock(cls, *, mock_currency: str) -> "BookingBizKpiSummaryDomainModel":
+    def generate_mock(cls, *, mock_currency: str) -> BookingBizKpiSummaryDomainModel:
         return cls(
             amount_currency=mock_currency,
             total_bookings=mockutils.random.randint(100, 1000),
@@ -55,7 +54,7 @@ class CustomerBookingDomainModel:
     booking_source: BookingSourceEnum
 
     @classmethod
-    def generate_mock(cls, *, mock_currency: str) -> "CustomerBookingDomainModel":
+    def generate_mock(cls, *, mock_currency: str) -> CustomerBookingDomainModel:
         return cls(
             booking_id="b1",
             customer=CustomerDomainModel.generate_mock(mock_currency=mock_currency),

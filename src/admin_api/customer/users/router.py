@@ -2,16 +2,15 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends
 
-from common.serializerlib import (
-    RequestProcessStatus,
-    ApiSuccessResponse,
-    PaginationParams,
-    PaginatedResult,
-    CurrencyQuery,
-)
-from admin_api.customer.users.serializers import CustomerListItem, CustomerBizKpiSummary
+from admin_api.customer.users.serializers import CustomerBizKpiSummary, CustomerListItem
 from admin_api.customer.users.service import CustomerUserService
-
+from common.serializerlib import (
+    ApiSuccessResponse,
+    CurrencyQuery,
+    PaginatedResult,
+    PaginationParams,
+    RequestProcessStatus,
+)
 
 user_router = APIRouter()
 

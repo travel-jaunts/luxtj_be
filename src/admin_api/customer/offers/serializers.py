@@ -1,13 +1,13 @@
 from pydantic import AwareDatetime
 
-from common.serializerlib import ApiSerializerBaseModel, AmountSerializer
-from admin_api.customer.offers.domainmodel import OffersKpiSummaryDomainModel, OfferDomainModel
+from admin_api.customer.offers.domainmodel import OfferDomainModel, OffersKpiSummaryDomainModel
+from common.serializerlib import AmountSerializer, ApiSerializerBaseModel
 from luxtj.domain.enums import (
-    OfferTypeEnum,
     BookingTypeEnum,
+    OfferApplicabilityEnum,
     OfferCostBearerEnum,
     OfferStatusEnum,
-    OfferApplicabilityEnum,
+    OfferTypeEnum,
 )
 
 
@@ -21,7 +21,7 @@ class OffersKpiSummarySerializer(ApiSerializerBaseModel):
     @classmethod
     def from_domain_model(
         cls, offers_kpi_summary: OffersKpiSummaryDomainModel
-    ) -> "OffersKpiSummarySerializer":
+    ) -> OffersKpiSummarySerializer:
         return cls(
             total_discount_given=AmountSerializer(
                 amount=offers_kpi_summary.total_discount_amount,
@@ -62,7 +62,7 @@ class OfferLineItemSerializer(ApiSerializerBaseModel):
     offer_status: OfferStatusEnum
 
     @classmethod
-    def from_domain_model(cls, offer: OfferDomainModel) -> "OfferLineItemSerializer":
+    def from_domain_model(cls, offer: OfferDomainModel) -> OfferLineItemSerializer:
         return cls(
             offer_id=offer.offer_id,
             title=offer.title,

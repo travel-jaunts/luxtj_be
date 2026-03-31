@@ -2,11 +2,11 @@ from dataclasses import dataclass
 from datetime import datetime
 
 from luxtj.domain.enums import (
-    OfferTypeEnum,
     BookingTypeEnum,
+    OfferApplicabilityEnum,
     OfferCostBearerEnum,
     OfferStatusEnum,
-    OfferApplicabilityEnum,
+    OfferTypeEnum,
 )
 from luxtj.utils import mockutils
 
@@ -21,7 +21,7 @@ class OffersKpiSummaryDomainModel:
     net_revenue_after_discount: float
 
     @classmethod
-    def generate_mock(cls, *, mock_currency: str = "INR") -> "OffersKpiSummaryDomainModel":
+    def generate_mock(cls, *, mock_currency: str = "INR") -> OffersKpiSummaryDomainModel:
         return cls(
             amount_currency=mock_currency,
             total_discount_amount=mockutils.random.uniform(1000.0, 10000.0),
@@ -54,7 +54,7 @@ class OfferDomainModel:
     offer_status: OfferStatusEnum
 
     @classmethod
-    def generate_mock(cls, *, mock_currency: str = "INR") -> "OfferDomainModel":
+    def generate_mock(cls, *, mock_currency: str = "INR") -> OfferDomainModel:
         return cls(
             offer_id=mockutils.random_booking_id(),
             title=mockutils.random_offer_title(),

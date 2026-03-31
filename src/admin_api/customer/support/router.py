@@ -1,19 +1,18 @@
 from typing import Annotated
+
 from fastapi import APIRouter, Depends
 
-from common.serializerlib import (
-    RequestProcessStatus,
-    ApiSuccessResponse,
-    PaginationParams,
-    PaginatedResult,
-)
-
-from admin_api.customer.support.service import CustomerSupportService
 from admin_api.customer.support.serializers import (
     SupportKpiSummarySerializer,
     SupportTicketLineItem,
 )
-
+from admin_api.customer.support.service import CustomerSupportService
+from common.serializerlib import (
+    ApiSuccessResponse,
+    PaginatedResult,
+    PaginationParams,
+    RequestProcessStatus,
+)
 
 support_router = APIRouter(prefix="/support")
 

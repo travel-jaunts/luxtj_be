@@ -1,12 +1,8 @@
-from typing import List, Tuple
-
-from common.service.metadata import PaginationMeta
-
 from admin_api.customer.transactions.domainmodel import (
     CustomerPaymentDomainModel,
     PaymentRefundKpiSummaryDomainModel,
 )
-
+from common.service.metadata import PaginationMeta
 from luxtj.utils import mockutils
 
 
@@ -16,7 +12,7 @@ class CustomerPaymentService:
 
     def get_list(
         self, page: int, page_size: int, *, iso_currency_str: str
-    ) -> Tuple[List[CustomerPaymentDomainModel], PaginationMeta]:
+    ) -> tuple[list[CustomerPaymentDomainModel], PaginationMeta]:
         """
         Fetch a paginated list of customer payments from the database.
         - page: The page number to fetch (starting from 1)

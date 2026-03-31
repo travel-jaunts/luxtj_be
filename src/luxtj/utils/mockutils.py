@@ -1,7 +1,6 @@
-from datetime import datetime, timezone
-import uuid
 import random
-
+import uuid
+from datetime import UTC, datetime
 
 _random_seed: int = 0
 random.seed(_random_seed)
@@ -73,8 +72,8 @@ def random_user_base_location() -> str:
 
 
 def random_registration_date() -> datetime:
-    start_date = datetime(2020, 1, 1, tzinfo=timezone.utc)
-    end_date = datetime(2023, 12, 31, tzinfo=timezone.utc)
+    start_date = datetime(2020, 1, 1, tzinfo=UTC)
+    end_date = datetime(2023, 12, 31, tzinfo=UTC)
     return start_date + (end_date - start_date) * random.random()
 
 

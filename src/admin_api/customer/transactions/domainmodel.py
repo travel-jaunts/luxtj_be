@@ -2,12 +2,11 @@ from dataclasses import dataclass
 from datetime import datetime
 
 from admin_api.customer.bookings.domainmodel import CustomerDomainModel
-
 from luxtj.domain.enums import (
-    TransactionTypeEnum,
     PaymentMethodEnum,
-    PaymentStatusEnum,
     PaymentSourceEnum,
+    PaymentStatusEnum,
+    TransactionTypeEnum,
 )
 from luxtj.utils import mockutils
 
@@ -26,7 +25,7 @@ class PaymentRefundKpiSummaryDomainModel:
     unsuccessfull_payments_count: int  # number of payments that failed due to various reasons (e.g. card declined, insufficient funds, etc.)
 
     @classmethod
-    def generate_mock(cls, *, mock_currency: str) -> "PaymentRefundKpiSummaryDomainModel":
+    def generate_mock(cls, *, mock_currency: str) -> PaymentRefundKpiSummaryDomainModel:
         return cls(
             amount_currency=mock_currency,
             gross_booking_value=mockutils.random_booking_amount(10000.0, 100000.0),
@@ -54,7 +53,7 @@ class CustomerPaymentDomainModel:
     transaction_source_reference: str
 
     @classmethod
-    def generate_mock(cls, *, mock_currency: str) -> "CustomerPaymentDomainModel":
+    def generate_mock(cls, *, mock_currency: str) -> CustomerPaymentDomainModel:
         return cls(
             transaction_id=mockutils.random_transaction_id(),
             transaction_currency=mock_currency,

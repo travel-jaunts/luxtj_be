@@ -1,16 +1,15 @@
 from pydantic import AwareDatetime
 
+from admin_api.customer.support.domainmodel import SupportKpiSummary, SupportTicketDomainModel
+from admin_api.customer.users.domainmodel import CustomerDomainModel
 from common.serializerlib import (
     ApiSerializerBaseModel,
 )
-
-from admin_api.customer.support.domainmodel import SupportKpiSummary, SupportTicketDomainModel
-from admin_api.customer.users.domainmodel import CustomerDomainModel
 from luxtj.domain.enums import (
     CustomerTierEnum,
     SupportCategoryEnum,
-    SupportTicketStatusEnum,
     SupportTicketPriorityEnum,
+    SupportTicketStatusEnum,
 )
 
 
@@ -23,7 +22,7 @@ class SupportKpiSummarySerializer(ApiSerializerBaseModel):
     @classmethod
     def from_domain_model(
         cls, support_kpi_summary: SupportKpiSummary
-    ) -> "SupportKpiSummarySerializer":
+    ) -> SupportKpiSummarySerializer:
         return cls(
             total_tickets=support_kpi_summary.total_tickets,
             open_tickets=support_kpi_summary.open_tickets,
@@ -40,7 +39,7 @@ class AgentDetailModel(ApiSerializerBaseModel):
     agent_phone_number: str
 
     @classmethod
-    def from_domain_model(cls, agent_model: CustomerDomainModel) -> "AgentDetailModel":
+    def from_domain_model(cls, agent_model: CustomerDomainModel) -> AgentDetailModel:
         return cls(
             agent_id=agent_model.user_id,
             agent_first_name=agent_model.user_first_name,
@@ -59,7 +58,7 @@ class SupportCustomer(ApiSerializerBaseModel):
     user_phone_number: str
 
     @classmethod
-    def from_domain_model(cls, customer_model: CustomerDomainModel) -> "SupportCustomer":
+    def from_domain_model(cls, customer_model: CustomerDomainModel) -> SupportCustomer:
         return cls(
             user_id=customer_model.user_id,
             user_first_name=customer_model.user_first_name,
@@ -84,7 +83,7 @@ class SupportTicketLineItem(ApiSerializerBaseModel):
     assigned_agent: AgentDetailModel | None
 
     @classmethod
-    def from_domain_model(cls, ticket_model: SupportTicketDomainModel) -> "SupportTicketLineItem":
+    def from_domain_model(cls, ticket_model: SupportTicketDomainModel) -> SupportTicketLineItem:
         return cls(
             ticket_id=ticket_model.ticket_id,
             customer=SupportCustomer.from_domain_model(ticket_model.customer),

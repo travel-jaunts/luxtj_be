@@ -1,12 +1,8 @@
-from typing import List, Tuple
-
-from common.service.metadata import PaginationMeta
-
 from admin_api.customer.bookings.domainmodel import (
-    CustomerBookingDomainModel,
     BookingBizKpiSummaryDomainModel,
+    CustomerBookingDomainModel,
 )
-
+from common.service.metadata import PaginationMeta
 from luxtj.utils import mockutils
 
 
@@ -16,7 +12,7 @@ class CustomerBookingService:
 
     def get_list(
         self, page: int, page_size: int, *, iso_currency_str: str
-    ) -> Tuple[List[CustomerBookingDomainModel], PaginationMeta]:
+    ) -> tuple[list[CustomerBookingDomainModel], PaginationMeta]:
         """
         Fetch a paginated list of customer bookings from the database.
         - page: The page number to fetch (starting from 1)

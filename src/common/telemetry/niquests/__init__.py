@@ -4,15 +4,14 @@ from __future__ import annotations
 
 import functools
 import types
+from collections.abc import Callable, Collection
 from timeit import default_timer
-from typing import Any, Callable, Collection, Optional
+from typing import Any
 from urllib.parse import urlparse
 
 from niquests.models import PreparedRequest, Response
 from niquests.sessions import Session
 from niquests.structures import CaseInsensitiveDict
-
-
 from opentelemetry.instrumentation._semconv import (
     HTTP_DURATION_HISTOGRAM_BUCKETS_NEW,
     HTTP_DURATION_HISTOGRAM_BUCKETS_OLD,
@@ -35,8 +34,6 @@ from opentelemetry.instrumentation._semconv import (
     _StabilityMode,
 )
 from opentelemetry.instrumentation.instrumentor import BaseInstrumentor
-from common.telemetry.niquests.package import _instruments
-from common.telemetry.niquests.version import __version__
 from opentelemetry.instrumentation.utils import (
     is_http_instrumentation_enabled,
     suppress_http_instrumentation,
@@ -78,10 +75,13 @@ from opentelemetry.util.http import (
 )
 from opentelemetry.util.http.httplib import set_ip_on_next_http_connection
 
+from common.telemetry.niquests.package import _instruments
+from common.telemetry.niquests.version import __version__
+
 _excluded_urls_from_env = get_excluded_urls("REQUESTS")
 
-_RequestHookT = Optional[Callable[[Span, PreparedRequest], None]]
-_ResponseHookT = Optional[Callable[[Span, PreparedRequest, Response], None]]
+_RequestHookT = Callable[[Span, PreparedRequest], None] | None
+_ResponseHookT = Callable[[Span, PreparedRequest, Response], None] | None
 
 
 def _set_http_status_code_attribute(

@@ -1,8 +1,5 @@
-from typing import List, Tuple
-
-from common.service.metadata import PaginationMeta
-
 from admin_api.customer.support.domainmodel import SupportKpiSummary, SupportTicketDomainModel
+from common.service.metadata import PaginationMeta
 from luxtj.utils import mockutils
 
 
@@ -14,7 +11,7 @@ class CustomerSupportService:
         self,
         page: int,
         page_size: int,
-    ) -> Tuple[List[SupportTicketDomainModel], PaginationMeta]:
+    ) -> tuple[list[SupportTicketDomainModel], PaginationMeta]:
         """
         Fetch a paginated list of customers from the database.
         - page: The page number to fetch (starting from 1)

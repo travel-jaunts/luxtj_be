@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from datetime import datetime
 
-from luxtj.domain.enums import CustomerTierEnum, CustomerStatusEnum
+from luxtj.domain.enums import CustomerStatusEnum, CustomerTierEnum
 from luxtj.utils import mockutils
 
 
@@ -17,7 +17,7 @@ class CustomerBizKpiSummaryDomainModel:
     customers_by_tier: dict[CustomerTierEnum, int]
 
     @classmethod
-    def generate_mock(cls, *, mock_currency: str = "INR") -> "CustomerBizKpiSummaryDomainModel":
+    def generate_mock(cls, *, mock_currency: str = "INR") -> CustomerBizKpiSummaryDomainModel:
         return cls(
             amount_currency=mock_currency,
             total_revenue=mockutils.random_booking_amount(10000, 1000000),
@@ -58,7 +58,7 @@ class CustomerDomainModel:
         return (self.user_cancellation_count / self.user_booking_count) * 100
 
     @classmethod
-    def generate_mock(cls, *, mock_currency: str = "INR") -> "CustomerDomainModel":
+    def generate_mock(cls, *, mock_currency: str = "INR") -> CustomerDomainModel:
         is_user_active: bool = mockutils.random.choice([True, False])
         return cls(
             user_id=mockutils.random_user_id(),

@@ -2,16 +2,15 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends
 
-from common.serializerlib import (
-    RequestProcessStatus,
-    ApiSuccessResponse,
-    PaginationParams,
-    PaginatedResult,
-    CurrencyQuery,
-)
-
-from admin_api.customer.bookings.serializers import CustomerBookingLineItem, BookingBizKpiSummary
+from admin_api.customer.bookings.serializers import BookingBizKpiSummary, CustomerBookingLineItem
 from admin_api.customer.bookings.service import CustomerBookingService
+from common.serializerlib import (
+    ApiSuccessResponse,
+    CurrencyQuery,
+    PaginatedResult,
+    PaginationParams,
+    RequestProcessStatus,
+)
 
 bookings_router = APIRouter(prefix="/bookings")
 

@@ -2,13 +2,12 @@ from dataclasses import dataclass
 from datetime import datetime
 
 from admin_api.customer.users.domainmodel import CustomerDomainModel
-
-from luxtj.utils import mockutils
 from luxtj.domain.enums import (
     SupportCategoryEnum,
-    SupportTicketStatusEnum,
     SupportTicketPriorityEnum,
+    SupportTicketStatusEnum,
 )
+from luxtj.utils import mockutils
 
 
 @dataclass
@@ -19,7 +18,7 @@ class SupportKpiSummary:
     escalation_rate_percent: float
 
     @classmethod
-    def generate_mock(cls) -> "SupportKpiSummary":
+    def generate_mock(cls) -> SupportKpiSummary:
         return cls(
             total_tickets=mockutils.random.randint(10, 20),
             open_tickets=mockutils.random.randint(1, 10),
@@ -43,7 +42,7 @@ class SupportTicketDomainModel:
     assigned_agent: CustomerDomainModel | None
 
     @classmethod
-    def generate_mock(cls) -> "SupportTicketDomainModel":
+    def generate_mock(cls) -> SupportTicketDomainModel:
         return cls(
             ticket_id=mockutils.random_booking_id(),
             customer=CustomerDomainModel.generate_mock(mock_currency="INR"),

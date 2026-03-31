@@ -1,13 +1,12 @@
-from typing import List, TypeVar, ParamSpec
-from base64 import b64encode
 from asyncio import Lock as CoroutineLock
+from base64 import b64encode
+from typing import ParamSpec, TypeVar
 
-from httpx import HTTPStatusError, AsyncClient, Response
+from httpx import AsyncClient, HTTPStatusError, Response
 
+from app.core.bases import IAsyncCachingProvider, SingletonMeta
 from app.core.config import get_settings
 from app.core.logging import get_logger
-from app.core.bases import SingletonMeta, IAsyncCachingProvider
-
 
 P = ParamSpec("P")
 R = TypeVar("R")
@@ -16,7 +15,7 @@ settings = get_settings()
 logger = get_logger(__name__)
 
 
-async def fetch_access_token(http_client: AsyncClient, scopes: List[str]) -> str:
+async def fetch_access_token(http_client: AsyncClient, scopes: list[str]) -> str:
     """makes the api call to tourradar to fetch the access token for authentication"""
     _invalid_token_placeholder: str = ""
 
@@ -80,7 +79,7 @@ class TourradarApiAccessManager(metaclass=SingletonMeta):
     def _cache_key(cls) -> str:
         return "tourradar_api_access_token"
 
-    async def get_access_token(self, scopes: List[str]) -> str:
+    async def get_access_token(self, scopes: list[str]) -> str:
         """Returns a valid access token, either from cache or by making a new request if not present/expired"""
         _cached_token: str | None = await self._cache_client.get(self._cache_key())
         if _cached_token:
