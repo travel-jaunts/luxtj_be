@@ -70,11 +70,12 @@ def server_factory() -> FastAPI:
     api_trace_provider.add_span_processor(span_processor)
     trace.set_tracer_provider(api_trace_provider)
 
-    NiquestsInstrumentor().instrument(tracer_provider=api_trace_provider)
-    FastAPIInstrumentor.instrument_app(
-        api_application,
-        tracer_provider=api_trace_provider,
-    )
+    if config.OTEL_ENDPOINT:
+        NiquestsInstrumentor().instrument(tracer_provider=api_trace_provider)
+        FastAPIInstrumentor.instrument_app(
+            api_application,
+            tracer_provider=api_trace_provider,
+        )
 
     return api_application
 
