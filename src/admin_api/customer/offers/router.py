@@ -9,7 +9,10 @@ from common.serializerlib import (
     CurrencyQuery,
 )
 from admin_api.customer.offers.service import CustomerOffersService
-from admin_api.customer.offers.serializers import OffersKpiSummarySerializer, OfferLineItemSerializer
+from admin_api.customer.offers.serializers import (
+    OffersKpiSummarySerializer,
+    OfferLineItemSerializer,
+)
 
 offers_router = APIRouter(prefix="/offers")
 
@@ -56,7 +59,9 @@ def list_customer_offers(
     return ApiSuccessResponse(
         status=RequestProcessStatus.OK,
         output=PaginatedResult[OfferLineItemSerializer](
-            items=[OfferLineItemSerializer.from_domain_model(offer) for offer in customer_offers_list],
+            items=[
+                OfferLineItemSerializer.from_domain_model(offer) for offer in customer_offers_list
+            ],
             total=pagination_meta.total,
             page=pagination_meta.page,
             size=pagination_meta.size,

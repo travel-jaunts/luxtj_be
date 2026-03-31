@@ -1,8 +1,15 @@
 from dataclasses import dataclass
 from datetime import datetime
 
-from luxtj.domain.enums import OfferTypeEnum, BookingTypeEnum, OfferCostBearerEnum, OfferStatusEnum, OfferApplicabilityEnum
+from luxtj.domain.enums import (
+    OfferTypeEnum,
+    BookingTypeEnum,
+    OfferCostBearerEnum,
+    OfferStatusEnum,
+    OfferApplicabilityEnum,
+)
 from luxtj.utils import mockutils
+
 
 @dataclass
 class OffersKpiSummaryDomainModel:
