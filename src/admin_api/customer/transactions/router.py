@@ -9,17 +9,17 @@ from common.serializerlib import (
     PaginatedResult,
     CurrencyQuery,
 )
-from admin_api.customer.payments.serializers import (
+from admin_api.customer.transactions.serializers import (
     PaymentsLineItem,
     PaymentRefundKpiSummarySerializer,
 )
-from admin_api.customer.payments.service import CustomerPaymentService
+from admin_api.customer.transactions.service import CustomerPaymentService
 
 
-payments_router = APIRouter(prefix="/payments")
+transactions_router = APIRouter(prefix="/transactions")
 
 
-@payments_router.post(
+@transactions_router.post(
     "/kpi-summary",
     response_model=ApiSuccessResponse[PaymentRefundKpiSummarySerializer],
     status_code=200,
@@ -42,7 +42,7 @@ def payments_kpi_summary(
     )
 
 
-@payments_router.post(
+@transactions_router.post(
     "/list",
     response_model=ApiSuccessResponse[PaginatedResult[PaymentsLineItem]],
     status_code=200,

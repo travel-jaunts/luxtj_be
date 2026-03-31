@@ -1,6 +1,6 @@
 from pydantic import AwareDatetime
 
-from admin_api.customer.payments.domainmodel import (
+from admin_api.customer.transactions.domainmodel import (
     PaymentRefundKpiSummaryDomainModel,
     CustomerPaymentDomainModel,
 )

@@ -2,7 +2,7 @@ from typing import List, Tuple
 
 from common.service.metadata import PaginationMeta
 
-from admin_api.customer.payments.domainmodel import (
+from admin_api.customer.transactions.domainmodel import (
     CustomerPaymentDomainModel,
     PaymentRefundKpiSummaryDomainModel,
 )
