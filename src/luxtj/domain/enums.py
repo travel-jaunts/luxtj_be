@@ -47,6 +47,13 @@ class BookingSourceEnum(StrEnum):
     B2B_AGENT = "b2b_agent"
 
 
+class TransactionTypeEnum(StrEnum):
+    """Enum to represent different transaction types (e.g., Payment, Refund)"""
+
+    PAYMENT = "payment"
+    REFUND = "refund"
+
+
 class PaymentStatusEnum(StrEnum):
     """Enum to represent different payment statuses (e.g., Completed, Failed, Refunded)"""
 

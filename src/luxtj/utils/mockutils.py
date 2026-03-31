@@ -63,5 +63,13 @@ def random_registration_date() -> datetime:
     return start_date + (end_date - start_date) * random.random()
 
 
+def random_booking_id() -> str:
+    return random.choice(mock_user_ids)
+
+
 def random_booking_amount(start: float = 100.0, end: float = 1000.0) -> float:
     return round(random.uniform(start, end), 2)
+
+
+def random_transaction_id() -> str:
+    return random.choice(mock_user_ids)

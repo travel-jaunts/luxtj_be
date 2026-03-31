@@ -15,19 +15,6 @@ from common.serializerlib import (
 
 
 # line item models --------------------------------------------------------------------------------
-class PaymentsLineItem(ApiSerializerBaseModel):
-    payment_id: str
-    payment_method: PaymentMethodEnum
-    payment_source: PaymentSourceEnum
-    customer: UserListItem
-    booking_id: str
-    payment_date: AwareDatetime
-    payment_currency: str
-    payment_amount: float = Field(..., description="Amount of the payment", ge=0)
-    payment_status: PaymentStatusEnum
-    payment_transaction_reference: str
-
-
 class RefundsLineItem(ApiSerializerBaseModel):
     refund_id: str
     customer: UserListItem
@@ -84,76 +71,6 @@ class RefundDetailSerializer(ApiSerializerBaseModel):
     payment_amount: float
     payment_transaction_reference: str
     payment_status: PaymentStatusEnum
-
-
-@customer_router.post(
-    "/payments/list",
-    response_model=ApiSuccessResponse[PaginatedResult[PaymentsLineItem]],
-    status_code=200,
-    summary="List payments for all customers with pagination and filtering",
-    name="List Customer Payments",
-)
-def list_customer_payments(
-    query: PaginationParams = Query(...),
-) -> ApiSuccessResponse[PaginatedResult[PaymentsLineItem]]:
-    """
-    List payments and refunds for all customers with pagination
-    """
-
-    return ApiSuccessResponse(
-        status=RequestProcessStatus.OK,
-        output=PaginatedResult(
-            total=30,  # Replace with actual total count from database
-            page=query.page,
-            size=query.size,
-            items=[
-                PaymentsLineItem(
-                    payment_id="p1",
-                    payment_method=PaymentMethodEnum.CREDIT_CARD,
-                    payment_source=PaymentSourceEnum.STRIPE,
-                    customer=UserListItem(
-                        user_id="1",
-                        user_first_name="John",
-                        user_last_name="Doe",
-                        user_email="john.doe@example.com",
-                        user_registration_date=datetime.now(tz=timezone.utc),
-                        user_is_active=True,
-                        user_tier=UserTierEnum.NOVUS,
-                        user_phone_number="+1234567890",
-                        user_base_location="New York, USA",
-                    ),
-                    booking_id="b1",
-                    payment_date=datetime.now(tz=timezone.utc),
-                    payment_currency="USD",
-                    payment_amount=100.0,
-                    payment_transaction_reference="txn_12345",
-                    payment_status=PaymentStatusEnum.COMPLETED,
-                ),  # Replace with actual payment/refund models
-                PaymentsLineItem(
-                    payment_id="r1",
-                    payment_method=PaymentMethodEnum.CREDIT_CARD,
-                    payment_source=PaymentSourceEnum.STRIPE,
-                    customer=UserListItem(
-                        user_id="2",
-                        user_first_name="Jane",
-                        user_last_name="Smith",
-                        user_email="jane.smith@example.com",
-                        user_registration_date=datetime.now(tz=timezone.utc),
-                        user_is_active=False,
-                        user_tier=UserTierEnum.AUREA,
-                        user_phone_number="+0987654321",
-                        user_base_location="London, UK",
-                    ),
-                    booking_id="b2",
-                    payment_date=datetime.now(tz=timezone.utc),
-                    payment_currency="USD",
-                    payment_amount=50.0,
-                    payment_transaction_reference="txn_67890",
-                    payment_status=PaymentStatusEnum.REFUNDED,
-                ),
-            ],
-        ),
-    )
 
 
 @customer_router.post(
