@@ -31,11 +31,11 @@ WORKDIR /app
 
 # Copy the virtualenv and source from builder
 COPY --from=builder /app/.venv ./.venv
-COPY --from=builder /app/src ./src
+COPY --from=builder /app/src ./
 
 USER app
 
 EXPOSE 9000
 
 # uvicorn is installed inside the venv; reference app via module path
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "9000"]
+CMD ["uvicorn", "api.main:server_factory", "--factory", "--host", "0.0.0.0", "--port", "9000"]

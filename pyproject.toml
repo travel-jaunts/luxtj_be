@@ -5,12 +5,16 @@ description = "LuxTJ backend"
 requires-python = ">=3.14"
 dependencies = [
     "fastapi>=0.130.0",
-    "uvicorn[standard]>=0.32.0",
-    "python-jose[cryptography]>=3.3.0",
-    "httpx>=0.28.1",
-    "sqlalchemy>=2.0.48",
-    "asyncpg>=0.31.0",
     "greenlet>=3.3.2",
+    "httpx>=0.28.1",
+    "niquests>=3.18.3",
+    "opentelemetry-api>=1.40.0",
+    "opentelemetry-sdk>=1.40.0",
+    "opentelemetry-instrumentation-fastapi>=0.61b0",
+    "opentelemetry-exporter-otlp>=1.40.0",
+    "python-jose[cryptography]>=3.3.0",
+    "sqlalchemy>=2.0.48",
+    "uvicorn[standard]>=0.32.0",
 ]
 
 [build-system]
@@ -28,6 +32,35 @@ src = [
     "src",
     "tests"
 ]
+
+[tool.ruff.lint]
+# Enable popular sets of rules
+select = [
+    "E",    # pycodestyle errors
+    "W",    # pycodestyle warnings
+    "F",    # pyflakes
+    "I",    # isort (import sorting)
+    "B",    # flake8-bugbear (potential bugs)
+    "C4",   # flake8-comprehensions
+    "UP",   # pyupgrade (syntax modernization)
+    "PTH",  # flake8-use-pathlib (best practices)
+    "N",    # pep8-naming
+    "RUF",  # ruff-specific rules
+]
+ignore = [
+    "E501", # Ignore line-length violations (let formatter handle it)
+]
+
+[tool.ruff.format]
+# Use double quotes for strings
+quote-style = "double"
+# Indent with spaces
+indent-style = "space"
+# Ensure compatibility with Black
+skip-magic-trailing-comma = false
+
+[tool.ruff.lint.isort]
+known-first-party = ["src"]
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
