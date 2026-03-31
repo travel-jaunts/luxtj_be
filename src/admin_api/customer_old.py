@@ -14,29 +14,7 @@ from common.serializerlib import (
 )
 
 
-
-
-
 # line item models --------------------------------------------------------------------------------
-
-
-
-class CustomerBookingLineItem(ApiSerializerBaseModel):
-    booking_id: str
-    customer: UserListItem
-    booking_type: str
-    booking_source: BookingSourceEnum
-    booking_created_date: AwareDatetime
-    booking_currency: str
-    booking_amount: float
-    travel_from_date: AwareDatetime
-    travel_from_location: str
-    travel_to_location: str
-    travel_to_date: AwareDatetime
-    booking_status: BookingStatusEnum
-    booking_transaction_reference: str | None
-
-
 class PaymentsLineItem(ApiSerializerBaseModel):
     payment_id: str
     payment_method: PaymentMethodEnum
@@ -106,88 +84,6 @@ class RefundDetailSerializer(ApiSerializerBaseModel):
     payment_amount: float
     payment_transaction_reference: str
     payment_status: PaymentStatusEnum
-
-
-
-
-
-
-
-
-@customer_router.post(
-    "/bookings/list",
-    response_model=ApiSuccessResponse[PaginatedResult[CustomerBookingLineItem]],
-    status_code=200,
-    summary="List bookings for all customers with pagination and filtering",
-    name="List Customer Bookings",
-)
-def list_customer_bookings(
-    query: PaginationParams = Query(...),
-) -> ApiSuccessResponse[PaginatedResult[CustomerBookingLineItem]]:
-    """
-    List bookings for all customers with pagination
-    """
-
-    return ApiSuccessResponse(
-        status=RequestProcessStatus.OK,
-        output=PaginatedResult(
-            total=50,  # Replace with actual total count from database
-            page=query.page,
-            size=query.size,
-            items=[
-                CustomerBookingLineItem(
-                    booking_id="b1",
-                    customer=UserListItem(
-                        user_id="1",
-                        user_first_name="John",
-                        user_last_name="Doe",
-                        user_email="john.doe@example.com",
-                        user_registration_date=datetime.now(tz=timezone.utc),
-                        user_is_active=True,
-                        user_tier=UserTierEnum.NOVUS,
-                        user_phone_number="+1234567890",
-                        user_base_location="New York, USA",
-                    ),
-                    booking_type="flight",
-                    booking_source=BookingSourceEnum.WEB_APP,
-                    booking_created_date=datetime.now(tz=timezone.utc),
-                    booking_currency="USD",
-                    booking_amount=100.0,
-                    travel_from_date=datetime(2024, 7, 1, tzinfo=timezone.utc),
-                    travel_to_date=datetime(2024, 7, 10, tzinfo=timezone.utc),
-                    travel_from_location="New York, USA",
-                    travel_to_location="Los Angeles, USA",
-                    booking_status=BookingStatusEnum.CONFIRMED,
-                    booking_transaction_reference="txn_12345",
-                ),
-                CustomerBookingLineItem(
-                    booking_id="b2",
-                    customer=UserListItem(
-                        user_id="2",
-                        user_first_name="Jane",
-                        user_last_name="Smith",
-                        user_email="jane.smith@example.com",
-                        user_registration_date=datetime.now(tz=timezone.utc),
-                        user_is_active=False,
-                        user_tier=UserTierEnum.AUREA,
-                        user_phone_number="+0987654321",
-                        user_base_location="London, UK",
-                    ),
-                    booking_type="hotel",
-                    booking_source=BookingSourceEnum.B2B_AGENT,
-                    booking_created_date=datetime.now(tz=timezone.utc),
-                    booking_currency="USD",
-                    booking_amount=150.0,
-                    travel_from_date=datetime(2024, 8, 1, tzinfo=timezone.utc),
-                    travel_to_date=datetime(2024, 8, 10, tzinfo=timezone.utc),
-                    travel_from_location="London, UK",
-                    travel_to_location="Paris, France",
-                    booking_status=BookingStatusEnum.CANCELLED,
-                    booking_transaction_reference="txn_67890",
-                ),
-            ],
-        ),
-    )
 
 
 @customer_router.post(
