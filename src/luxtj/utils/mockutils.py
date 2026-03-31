@@ -31,6 +31,20 @@ mock_base_locations = [
     "San Antonio",
     "San Diego",
 ]
+mock_support_ticket_subjects = [
+    "Issue with booking",
+    "Refund request",
+    "Account access problem",
+    "Payment failure",
+    "General inquiry",
+]
+mock_support_ticket_descriptions = [
+    "I have an issue with my recent booking. Please assist",
+    "I would like to request a refund for my last booking.",
+    "I am unable to access my account. Please help.",
+    "My payment failed during checkout. What should I do?",
+    "I have a general inquiry about your services.",
+]
 
 
 def random_user_id() -> str:
@@ -73,3 +87,11 @@ def random_booking_amount(start: float = 100.0, end: float = 1000.0) -> float:
 
 def random_transaction_id() -> str:
     return random.choice(mock_user_ids)
+
+
+def random_support_ticket_subject() -> str:
+    return random.choice(mock_support_ticket_subjects)
+
+
+def random_support_ticket_description() -> str:
+    return random.choice(mock_support_ticket_descriptions)

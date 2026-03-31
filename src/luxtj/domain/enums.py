@@ -95,3 +95,19 @@ class SupportTicketPriorityEnum(StrEnum):
     LOW = "Low"
     MEDIUM = "Medium"
     HIGH = "High"
+
+
+class SupportTicketStatusEnum(StrEnum):
+    """Enum to represent different support ticket statuses (e.g., Open, In Progress, Closed)"""
+
+    OPEN = "Open"
+    IN_PROGRESS = "In Progress"
+    CLOSED = "Closed"
+
+
+class SupportCategoryEnum(StrEnum):
+    """Enum to represent different support ticket categories (e.g., Booking Issue, Payment Issue, General Inquiry)"""
+
+    BOOKING_ISSUE = "Booking Issue"
+    PAYMENT_ISSUE = "Payment Issue"
+    GENERAL_INQUIRY = "General Inquiry"
