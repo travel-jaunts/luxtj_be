@@ -37,11 +37,7 @@ class EndpointExceptionHandler(BaseHTTPMiddleware):
         self, request: Request, call_next: RequestResponseEndpoint
     ) -> Response | JSONResponse:
 
-        span = trace.get_current_span()
-        if span and span.is_recording():
-            trace_id = span.get_span_context().trace_id
-        else:
-            trace_id = 0
+        trace_id: int = trace.get_current_span().get_span_context().trace_id
 
         try:
             return await call_next(request)
