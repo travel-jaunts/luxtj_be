@@ -1,0 +1,20 @@
+# docker build command, that builds images locally and pushes it to ghcr.io at 'ghcr.io/travel-jaunts/luxtjbe'
+
+# 1. Authenticate with ghcr.io
+echo <github_key> | docker login ghcr.io -u <github_username> --password-stdin
+
+# 2. build for linux
+docker buildx build \
+  --platform linux/amd64 \
+  --provenance=false \
+  -t ghcr.io/travel-jaunts/luxtjbe:latest \
+  -t ghcr.io/travel-jaunts/luxtjbe:$(git rev-parse --short HEAD) \
+  --push \
+  .
+
+# 3. if buildx is not setup
+docker buildx create --name multiarch --use
+docker buildx inspect --bootstrap
+
+# 4. Verify pushed image
+docker buildx imagetools inspect ghcr.io/travel-jaunts/luxtjbe:latest
