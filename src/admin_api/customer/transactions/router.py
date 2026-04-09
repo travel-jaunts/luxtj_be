@@ -25,7 +25,7 @@ transactions_router = APIRouter(prefix="/transactions")
     summary="Get customer KPI summary",
     name="Customer KPI Summary",
 )
-def payments_kpi_summary(
+async def payments_kpi_summary(
     payments_service: Annotated[CustomerPaymentService, Depends(CustomerPaymentService)],
     iso_currency_str: CurrencyQuery = "INR",
 ) -> ApiSuccessResponse[PaymentRefundKpiSummarySerializer]:
@@ -33,7 +33,7 @@ def payments_kpi_summary(
     Get customer KPI summary
     """
     # TODO: access control: restrict this endpoint to admin users only
-    kpi_summary = payments_service.get_biz_kpi_summary(iso_currency_str=iso_currency_str)
+    kpi_summary = await payments_service.get_biz_kpi_summary(iso_currency_str=iso_currency_str)
 
     return ApiSuccessResponse(
         status=RequestProcessStatus.OK,
@@ -48,7 +48,7 @@ def payments_kpi_summary(
     summary="List payments for all customers with pagination and filtering",
     name="List Customer Payments",
 )
-def list_customer_payments(
+async def list_customer_payments(
     payments_service: Annotated[CustomerPaymentService, Depends(CustomerPaymentService)],
     query: Annotated[PaginationParams, Depends()],
     iso_currency_str: CurrencyQuery = "INR",
@@ -57,7 +57,7 @@ def list_customer_payments(
     List payments and refunds for all customers with pagination
     """
     # TODO: access control: restrict this endpoint to admin users only
-    payments_list, pagination_meta = payments_service.get_list(
+    payments_list, pagination_meta = await payments_service.get_list(
         page=query.page, page_size=query.size, iso_currency_str=iso_currency_str
     )
 

@@ -10,7 +10,7 @@ class CustomerPaymentService:
     def __init__(self):
         pass
 
-    def get_list(
+    async def get_list(
         self, page: int, page_size: int, *, iso_currency_str: str
     ) -> tuple[list[CustomerPaymentDomainModel], PaginationMeta]:
         """
@@ -28,7 +28,9 @@ class CustomerPaymentService:
         ]
         return payments_list, PaginationMeta(total=num_items, page=page, size=page_size)
 
-    def get_biz_kpi_summary(self, *, iso_currency_str: str) -> PaymentRefundKpiSummaryDomainModel:
+    async def get_biz_kpi_summary(
+        self, *, iso_currency_str: str
+    ) -> PaymentRefundKpiSummaryDomainModel:
         """
         Fetch payment-related business KPI summary data.
         Returns a PaymentRefundKpiSummaryDomainModel instance containing the KPI data.

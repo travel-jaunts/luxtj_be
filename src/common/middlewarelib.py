@@ -1,3 +1,5 @@
+import traceback
+
 from fastapi import Request, Response
 from fastapi.responses import JSONResponse
 from opentelemetry import trace
@@ -44,6 +46,7 @@ class EndpointExceptionHandler(BaseHTTPMiddleware):
 
         except Exception:
             # Log the exception here if needed
+            print(traceback.format_exc())
             return JSONResponse(
                 status_code=200,
                 content=ApiErrorResponse(

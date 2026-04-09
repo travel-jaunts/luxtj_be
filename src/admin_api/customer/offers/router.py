@@ -25,14 +25,14 @@ offers_router = APIRouter(prefix="/offers")
     summary="Get customer KPI summary",
     name="Customer KPI Summary",
 )
-def offers_kpi_summary(
+async def offers_kpi_summary(
     offers_service: Annotated[CustomerOffersService, Depends(CustomerOffersService)],
     iso_currency: CurrencyQuery = "INR",
 ) -> ApiSuccessResponse[OffersKpiSummarySerializer]:
     """
     Get customer offers KPI summary
     """
-    offers_kpi_summary = offers_service.get_kpi_summary()
+    offers_kpi_summary = await offers_service.get_kpi_summary()
     return ApiSuccessResponse(
         status=RequestProcessStatus.OK,
         output=OffersKpiSummarySerializer.from_domain_model(offers_kpi_summary),
@@ -46,7 +46,7 @@ def offers_kpi_summary(
     summary="List offers for all customers with pagination and filtering",
     name="List Customer Offers",
 )
-def list_customer_offers(
+async def list_customer_offers(
     offers_service: Annotated[CustomerOffersService, Depends(CustomerOffersService)],
     query: Annotated[PaginationParams, Depends()],
     iso_currency: CurrencyQuery = "INR",
@@ -54,7 +54,7 @@ def list_customer_offers(
     """
     List offers for all customers with pagination
     """
-    customer_offers_list, pagination_meta = offers_service.get_offers_list(
+    customer_offers_list, pagination_meta = await offers_service.get_offers_list(
         page=query.page, page_size=query.size, iso_currency_str=iso_currency
     )
     return ApiSuccessResponse(

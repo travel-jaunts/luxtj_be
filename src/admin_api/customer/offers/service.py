@@ -7,11 +7,11 @@ class CustomerOffersService:
     def __init__(self) -> None:
         return
 
-    def get_kpi_summary(self) -> OffersKpiSummaryDomainModel:
+    async def get_kpi_summary(self) -> OffersKpiSummaryDomainModel:
         # TODO: Implement actual fetching logic here
         return OffersKpiSummaryDomainModel.generate_mock()
 
-    def get_offers_list(
+    async def get_offers_list(
         self, page: int, page_size: int, iso_currency_str: str
     ) -> tuple[list[OfferDomainModel], PaginationMeta]:
         # TODO: Implement actual fetching logic here

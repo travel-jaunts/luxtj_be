@@ -24,14 +24,14 @@ support_router = APIRouter(prefix="/support")
     summary="Get customer KPI summary",
     name="Customer KPI Summary",
 )
-def customer_support_kpi_summary(
+async def customer_support_kpi_summary(
     support_service: Annotated[CustomerSupportService, Depends(CustomerSupportService)],
 ) -> ApiSuccessResponse[SupportKpiSummarySerializer]:
     """
     Get customer KPI summary
     """
     # TODO: access control: restrict this endpoint to admin users only
-    support_kpi_summary = support_service.get_kpi_summary()
+    support_kpi_summary = await support_service.get_kpi_summary()
 
     return ApiSuccessResponse(
         status=RequestProcessStatus.OK,
@@ -46,7 +46,7 @@ def customer_support_kpi_summary(
     summary="List support tickets for all customers with pagination and filtering",
     name="List Customer Support Tickets",
 )
-def list_customer_support_tickets(
+async def list_customer_support_tickets(
     support_service: Annotated[CustomerSupportService, Depends(CustomerSupportService)],
     query: Annotated[PaginationParams, Depends()],
 ) -> ApiSuccessResponse[PaginatedResult[SupportTicketLineItem]]:
@@ -54,7 +54,7 @@ def list_customer_support_tickets(
     List support tickets for all customers with pagination
     """
     # TODO: access control: restrict this endpoint to support users only
-    support_ticket_list, pagination_meta = support_service.get_support_tickets(
+    support_ticket_list, pagination_meta = await support_service.get_support_tickets(
         page=query.page, page_size=query.size
     )
 

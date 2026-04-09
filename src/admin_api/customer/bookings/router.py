@@ -22,7 +22,7 @@ bookings_router = APIRouter(prefix="/bookings")
     summary="Get customer KPI summary",
     name="Customer KPI Summary",
 )
-def bookings_kpi_summary(
+async def bookings_kpi_summary(
     booking_service: Annotated[CustomerBookingService, Depends(CustomerBookingService)],
     iso_currency_str: CurrencyQuery = "INR",
 ) -> ApiSuccessResponse[BookingBizKpiSummary]:
@@ -30,7 +30,7 @@ def bookings_kpi_summary(
     Get customer KPI summary
     """
     # TODO: access control: restrict this endpoint to admin users only
-    kpi_summary = booking_service.get_biz_kpi_summary(iso_currency_str=iso_currency_str)
+    kpi_summary = await booking_service.get_biz_kpi_summary(iso_currency_str=iso_currency_str)
 
     return ApiSuccessResponse(
         status=RequestProcessStatus.OK,
@@ -45,7 +45,7 @@ def bookings_kpi_summary(
     summary="List bookings for all customers with pagination and filtering",
     name="List Customer Bookings",
 )
-def list_customer_bookings(
+async def list_customer_bookings(
     booking_service: Annotated[CustomerBookingService, Depends(CustomerBookingService)],
     query: Annotated[PaginationParams, Depends()],
     iso_currency_str: CurrencyQuery = "INR",
@@ -54,7 +54,7 @@ def list_customer_bookings(
     List bookings for all customers with pagination
     """
     # TODO: access control: restrict this endpoint to admin users only
-    customer_bookings_list, pagination_meta = booking_service.get_list(
+    customer_bookings_list, pagination_meta = await booking_service.get_list(
         page=query.page, page_size=query.size, iso_currency_str=iso_currency_str
     )
 

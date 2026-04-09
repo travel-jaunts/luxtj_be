@@ -7,7 +7,7 @@ class CustomerSupportService:
     def __init__(self):
         pass
 
-    def get_support_tickets(
+    async def get_support_tickets(
         self,
         page: int,
         page_size: int,
@@ -24,6 +24,6 @@ class CustomerSupportService:
         customer_list = [SupportTicketDomainModel.generate_mock() for _ in range(num_items)]
         return customer_list, PaginationMeta(total=num_items, page=page, size=page_size)
 
-    def get_kpi_summary(self) -> SupportKpiSummary:
+    async def get_kpi_summary(self) -> SupportKpiSummary:
         # TODO: Implement actual fetching logic here
         return SupportKpiSummary.generate_mock()

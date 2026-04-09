@@ -22,7 +22,7 @@ user_router = APIRouter()
     summary="Get customer KPI summary",
     name="Customer KPI Summary",
 )
-def customer_kpi_summary(
+async def customer_kpi_summary(
     customer_service: Annotated[CustomerUserService, Depends(CustomerUserService)],
     iso_currency_str: CurrencyQuery = "INR",
 ) -> ApiSuccessResponse[CustomerBizKpiSummary]:
@@ -30,7 +30,7 @@ def customer_kpi_summary(
     Get customer KPI summary
     """
     # TODO: access control: restrict this endpoint to admin users only
-    kpi_summary = customer_service.get_biz_kpi_summary(iso_currency_str=iso_currency_str)
+    kpi_summary = await customer_service.get_biz_kpi_summary(iso_currency_str=iso_currency_str)
 
     return ApiSuccessResponse(
         status=RequestProcessStatus.OK,
@@ -45,7 +45,7 @@ def customer_kpi_summary(
     summary="List customers with pagination and filtering",
     name="List Customers",
 )
-def list_customers(
+async def list_customers(
     customer_service: Annotated[CustomerUserService, Depends(CustomerUserService)],
     query: Annotated[PaginationParams, Depends()],
     iso_currency_str: CurrencyQuery = "INR",
@@ -54,7 +54,7 @@ def list_customers(
     List customers with pagination
     """
     # TODO: access control: restrict this endpoint to admin users only
-    person_list, pagination_meta = customer_service.get_list(
+    person_list, pagination_meta = await customer_service.get_list(
         page=query.page, page_size=query.size, iso_currency_str=iso_currency_str
     )
 

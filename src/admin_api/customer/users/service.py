@@ -10,7 +10,7 @@ class CustomerUserService:
     def __init__(self):
         pass
 
-    def get_list(
+    async def get_list(
         self, page: int, page_size: int, *, iso_currency_str: str
     ) -> tuple[list[CustomerDomainModel], PaginationMeta]:
         """
@@ -28,7 +28,9 @@ class CustomerUserService:
         ]
         return customer_list, PaginationMeta(total=num_items, page=page, size=page_size)
 
-    def get_biz_kpi_summary(self, *, iso_currency_str: str) -> CustomerBizKpiSummaryDomainModel:
+    async def get_biz_kpi_summary(
+        self, *, iso_currency_str: str
+    ) -> CustomerBizKpiSummaryDomainModel:
         """
         Fetch business KPI summary for customers.
         - iso_currency_str: The ISO currency code to use for monetary values in the summary
