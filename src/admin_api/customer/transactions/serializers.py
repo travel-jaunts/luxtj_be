@@ -99,3 +99,8 @@ class PaymentsLineItem(ApiSerializerBaseModel):
             transaction_source=payment_domain_model.transaction_source,
             transaction_source_reference=payment_domain_model.transaction_source_reference,
         )
+
+
+class RefundPaymentBody(ApiSerializerBaseModel):
+    amount: float
+    reason: str

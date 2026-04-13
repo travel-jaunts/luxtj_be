@@ -1,10 +1,11 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Body
 
 from admin_api.customer.transactions.serializers import (
     PaymentRefundKpiSummarySerializer,
     PaymentsLineItem,
+    RefundPaymentBody,
 )
 from admin_api.customer.transactions.service import CustomerPaymentService
 from common.serializerlib import (
@@ -12,6 +13,7 @@ from common.serializerlib import (
     CurrencyQuery,
     PaginatedResult,
     PaginationParams,
+    SearchFilterParams,
     RequestProcessStatus,
 )
 
@@ -50,7 +52,8 @@ async def payments_kpi_summary(
 )
 async def list_customer_payments(
     payments_service: Annotated[CustomerPaymentService, Depends(CustomerPaymentService)],
-    query: Annotated[PaginationParams, Depends()],
+    page_query: Annotated[PaginationParams, Depends()],
+    search_filter_query: Annotated[SearchFilterParams, Depends()],
     iso_currency_str: CurrencyQuery = "INR",
 ) -> ApiSuccessResponse[PaginatedResult[PaymentsLineItem]]:
     """
@@ -58,7 +61,10 @@ async def list_customer_payments(
     """
     # TODO: access control: restrict this endpoint to admin users only
     payments_list, pagination_meta = await payments_service.get_list(
-        page=query.page, page_size=query.size, iso_currency_str=iso_currency_str
+        page=page_query.page, page_size=page_query.size,
+        from_date=search_filter_query.from_date,
+        to_date=search_filter_query.to_date,
+        iso_currency_str=iso_currency_str
     )
 
     return ApiSuccessResponse(
@@ -69,4 +75,56 @@ async def list_customer_payments(
             size=pagination_meta.size,
             items=[PaymentsLineItem.from_domain_model(payment) for payment in payments_list],
         ),
+    )
+
+
+@transactions_router.post(
+    "/{transaction_id}/details",
+    response_model=ApiSuccessResponse[PaymentsLineItem],
+    status_code=200,
+    summary="Get details of a specific transaction",
+    name="Get Transaction Details",
+)
+async def get_transaction_details(
+    transaction_id: str,
+    payments_service: Annotated[CustomerPaymentService, Depends(CustomerPaymentService)],
+    iso_currency_str: CurrencyQuery = "INR",
+) -> ApiSuccessResponse[PaymentsLineItem]:
+    """
+    Get details of a specific transaction
+    """
+    # TODO: access control: restrict this endpoint to admin users only
+    transaction_details = await payments_service.get_payment_details(
+        payment_id=transaction_id, iso_currency_str=iso_currency_str
+    )
+
+    return ApiSuccessResponse(
+        status=RequestProcessStatus.OK,
+        output=PaymentsLineItem.from_domain_model(transaction_details),
+    )
+
+
+@transactions_router.post(
+    "/{transaction_id}/refund",
+    response_model=ApiSuccessResponse[str],
+    status_code=200,
+    summary="Refund a specific transaction",
+    name="Refund Transaction",
+)
+async def refund_transaction(
+    transaction_id: str,
+    payments_service: Annotated[CustomerPaymentService, Depends(CustomerPaymentService)],
+    refund_body: Annotated[RefundPaymentBody, Body(...)],
+) -> ApiSuccessResponse[str]:
+    """
+    Refund a specific transaction
+    """
+    # TODO: access control: restrict this endpoint to admin users only
+    await payments_service.refund_payment(
+        payment_id=transaction_id, amount=refund_body.amount, reason=refund_body.reason
+    )
+
+    return ApiSuccessResponse(
+        status=RequestProcessStatus.OK,
+        output=f"Transaction {transaction_id} has been refunded with amount {refund_body.amount} for reason: {refund_body.reason}",
     )
