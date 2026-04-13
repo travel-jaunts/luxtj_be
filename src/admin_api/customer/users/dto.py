@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from luxtj.domain.enums import CustomerTierEnum, CustomerStatusEnum
+from luxtj.domain.enums import CustomerStatusEnum, CustomerTierEnum
 
 
 @dataclass

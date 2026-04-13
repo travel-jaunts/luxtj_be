@@ -4,10 +4,10 @@ from admin_api.customer.users.domainmodel import (
     CustomerBizKpiSummaryDomainModel,
     CustomerDomainModel,
 )
+from admin_api.customer.users.dto import UpdateUserDTO
 from admin_api.customer.users.serializers import SignupOptionParams
 from common.service.metadata import PaginationMeta
 from luxtj.utils import mockutils
-from admin_api.customer.users.dto import UpdateUserDTO
 
 
 class CustomerUserService:

@@ -3,9 +3,9 @@ from typing import Annotated
 from fastapi import APIRouter, Body, Depends
 
 from admin_api.customer.offers.serializers import (
+    CreateOfferDetailsBody,
     OfferLineItemSerializer,
     OffersKpiSummarySerializer,
-    CreateOfferDetailsBody,
     UpdateOfferDetailsBody,
 )
 from admin_api.customer.offers.service import CustomerOffersService
@@ -14,8 +14,8 @@ from common.serializerlib import (
     CurrencyQuery,
     PaginatedResult,
     PaginationParams,
-    SearchFilterParams,
     RequestProcessStatus,
+    SearchFilterParams,
 )
 
 offers_router = APIRouter(prefix="/offers")

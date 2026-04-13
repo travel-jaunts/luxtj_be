@@ -1,4 +1,4 @@
-from datetime import date, datetime, timezone
+from datetime import UTC, date, datetime
 
 from admin_api.customer.support.domainmodel import SupportKpiSummary, SupportTicketDomainModel
 from common.service.metadata import PaginationMeta
@@ -62,7 +62,7 @@ class CustomerSupportService:
         # TODO: Implement actual resolve ticket logic here
         mock = SupportTicketDomainModel.generate_mock()
         mock.status = SupportTicketStatusEnum.CLOSED
-        mock.resolution_date = datetime.now(tz=timezone.utc)
+        mock.resolution_date = datetime.now(tz=UTC)
         return mock
 
     async def get_kpi_summary(self) -> SupportKpiSummary:

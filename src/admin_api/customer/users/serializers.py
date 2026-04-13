@@ -3,8 +3,8 @@ from pydantic import AwareDatetime, Field
 from admin_api.customer.users.domainmodel import (
     CustomerBizKpiSummaryDomainModel,
     CustomerDomainModel,
-    CustomerTierEnum,
     CustomerStatusEnum,
+    CustomerTierEnum,
 )
 from admin_api.customer.users.dto import UpdateUserDTO
 from common.serializerlib import AmountSerializer, ApiSerializerBaseModel
