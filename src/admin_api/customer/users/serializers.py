@@ -4,7 +4,9 @@ from admin_api.customer.users.domainmodel import (
     CustomerBizKpiSummaryDomainModel,
     CustomerDomainModel,
     CustomerTierEnum,
+    CustomerStatusEnum,
 )
+from admin_api.customer.users.dto import UpdateUserDTO
 from common.serializerlib import AmountSerializer, ApiSerializerBaseModel
 
 
@@ -68,7 +70,7 @@ class CustomerListItem(ApiSerializerBaseModel):
         CustomerTierEnum.NOVUS,
         description="The tier of the user (Novus, Aurea, Privé, Elite, Échelon)",
     )
-    status: str = Field(..., description="Current status of the user (e.g., Active, Inactive)")
+    status: CustomerStatusEnum = Field(..., description="Current status of the user (e.g., Active, Inactive)")
 
     @classmethod
     def from_domain_model(cls, customer_model: CustomerDomainModel) -> CustomerListItem:
@@ -94,4 +96,45 @@ class CustomerListItem(ApiSerializerBaseModel):
             is_active=customer_model.user_is_active,
             tier=CustomerTierEnum(customer_model.user_tier),
             status=customer_model.user_status,
+        )
+
+
+class SignupOptionParams(ApiSerializerBaseModel):
+    send_welcome_email: bool = Field(
+        True, description="Whether to send a welcome email to the new user"
+    )
+    user_tier: CustomerTierEnum = Field(
+        CustomerTierEnum.NOVUS, description="The tier to assign to the new user"
+    )
+    require_email_verification: bool = Field(
+        True,
+        description="Whether the new user must verify their email address before the account becomes active",
+    )
+
+
+class NewUserDetailsBody(ApiSerializerBaseModel):
+    first_name: str
+    last_name: str
+    phone_number: str
+    email: str
+
+
+class UpdateUserDetailsBody(ApiSerializerBaseModel):
+    first_name: str
+    last_name: str
+    email: str
+    tier: CustomerTierEnum = Field(
+        CustomerTierEnum.NOVUS,
+        description="The tier of the user (Novus, Aurea, Privé, Elite, Échelon)",
+    )
+    status: CustomerStatusEnum = Field(..., description="Current status of the user (e.g., Active, Inactive)")
+
+    def to_dto(self) -> UpdateUserDTO:
+        return UpdateUserDTO(
+            first_name=self.first_name,
+            last_name=self.last_name,
+            phone_number="",  # Phone number is not included in the update details body, so we can set it to an empty string or handle it as needed
+            email=self.email,
+            tier=self.tier,
+            status=self.status,
         )
