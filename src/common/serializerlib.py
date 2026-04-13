@@ -1,3 +1,4 @@
+from datetime import date
 from enum import StrEnum
 from typing import Annotated, TypeVar
 
@@ -23,7 +24,12 @@ class ApiSerializerBaseModel(BaseModel):
 class PaginationParams(ApiSerializerBaseModel):
     page: int = Field(1, description="Page number")
     size: int = Field(10, description="Number of items per page")
+
+
+class SearchFilterParams(ApiSerializerBaseModel):
     search_query: str | None = Field(None, alias="q", description="Search query to filter results")
+    from_date: date | None = Field(None, description="Start date for filtering results (inclusive)")
+    to_date: date | None = Field(None, description="End date for filtering results (inclusive)")
 
 
 # response models ---------------------------------------------------------------------------------
