@@ -63,10 +63,11 @@ async def list_customers(
     """
     # TODO: access control: restrict this endpoint to admin users only
     person_list, pagination_meta = await customer_service.get_list(
-        page=page_query.page, page_size=page_query.size, 
+        page=page_query.page,
+        page_size=page_query.size,
         from_date=search_filter_query.from_date,
         to_date=search_filter_query.to_date,
-        iso_currency_str=iso_currency_str
+        iso_currency_str=iso_currency_str,
     )
 
     return ApiSuccessResponse(
@@ -126,8 +127,7 @@ async def update_customer_user(
     """
     # TODO: access control: restrict this endpoint to admin users only
     updated_customer = await customer_service.update_user(
-        customer_id=customer_id,
-        update_user_dto=update_details.to_dto()
+        customer_id=customer_id, update_user_dto=update_details.to_dto()
     )
     return ApiSuccessResponse(
         status=RequestProcessStatus.OK,

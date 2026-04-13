@@ -57,11 +57,11 @@ async def list_customer_bookings(
     """
     # TODO: access control: restrict this endpoint to admin users only
     customer_bookings_list, pagination_meta = await booking_service.get_list(
-        page=page_query.page, 
-        page_size=page_query.size, 
+        page=page_query.page,
+        page_size=page_query.size,
         from_date=search_filter_query.from_date,
         to_date=search_filter_query.to_date,
-        iso_currency_str=iso_currency_str
+        iso_currency_str=iso_currency_str,
     )
 
     return ApiSuccessResponse(

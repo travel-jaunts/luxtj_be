@@ -70,7 +70,9 @@ class CustomerListItem(ApiSerializerBaseModel):
         CustomerTierEnum.NOVUS,
         description="The tier of the user (Novus, Aurea, Privé, Elite, Échelon)",
     )
-    status: CustomerStatusEnum = Field(..., description="Current status of the user (e.g., Active, Inactive)")
+    status: CustomerStatusEnum = Field(
+        ..., description="Current status of the user (e.g., Active, Inactive)"
+    )
 
     @classmethod
     def from_domain_model(cls, customer_model: CustomerDomainModel) -> CustomerListItem:
@@ -127,7 +129,9 @@ class UpdateUserDetailsBody(ApiSerializerBaseModel):
         CustomerTierEnum.NOVUS,
         description="The tier of the user (Novus, Aurea, Privé, Elite, Échelon)",
     )
-    status: CustomerStatusEnum = Field(..., description="Current status of the user (e.g., Active, Inactive)")
+    status: CustomerStatusEnum = Field(
+        ..., description="Current status of the user (e.g., Active, Inactive)"
+    )
 
     def to_dto(self) -> UpdateUserDTO:
         return UpdateUserDTO(

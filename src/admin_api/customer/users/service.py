@@ -29,7 +29,7 @@ class CustomerUserService:
         # TODO: implement actual create logic here
         # interface with keycloak to create user and assign roles based on signup options
         return CustomerDomainModel.generate_mock()
-    
+
     async def update_user(
         self,
         customer_id: str,
@@ -51,7 +51,13 @@ class CustomerUserService:
         pass
 
     async def get_list(
-        self, page: int, page_size: int, *, from_date: date | None = None, to_date: date | None = None, iso_currency_str: str
+        self,
+        page: int,
+        page_size: int,
+        *,
+        from_date: date | None = None,
+        to_date: date | None = None,
+        iso_currency_str: str,
     ) -> tuple[list[CustomerDomainModel], PaginationMeta]:
         """
         Fetch a paginated list of customers from the database.

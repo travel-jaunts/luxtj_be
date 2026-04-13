@@ -13,7 +13,13 @@ class CustomerBookingService:
         pass
 
     async def get_list(
-        self, page: int, page_size: int, *, from_date: date | None = None, to_date: date | None = None, iso_currency_str: str
+        self,
+        page: int,
+        page_size: int,
+        *,
+        from_date: date | None = None,
+        to_date: date | None = None,
+        iso_currency_str: str,
     ) -> tuple[list[CustomerBookingDomainModel], PaginationMeta]:
         """
         Fetch a paginated list of customer bookings from the database.

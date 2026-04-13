@@ -13,7 +13,13 @@ class CustomerPaymentService:
         pass
 
     async def get_list(
-        self, page: int, page_size: int, *, from_date: date | None = None, to_date: date | None = None, iso_currency_str: str
+        self,
+        page: int,
+        page_size: int,
+        *,
+        from_date: date | None = None,
+        to_date: date | None = None,
+        iso_currency_str: str,
     ) -> tuple[list[CustomerPaymentDomainModel], PaginationMeta]:
         """
         Fetch a paginated list of customer payments from the database.
@@ -40,7 +46,9 @@ class CustomerPaymentService:
         # TODO: Implement actual fetching logic here
         return PaymentRefundKpiSummaryDomainModel.generate_mock(mock_currency=iso_currency_str)
 
-    async def get_payment_details(self, payment_id: str, *, iso_currency_str: str) -> CustomerPaymentDomainModel:
+    async def get_payment_details(
+        self, payment_id: str, *, iso_currency_str: str
+    ) -> CustomerPaymentDomainModel:
         """
         Fetch detailed information about a specific payment by its ID.
         - payment_id: The unique identifier of the payment to fetch details for

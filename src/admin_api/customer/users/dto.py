@@ -2,6 +2,7 @@ from dataclasses import dataclass
 
 from luxtj.domain.enums import CustomerTierEnum, CustomerStatusEnum
 
+
 @dataclass
 class UpdateUserDTO:
     first_name: str

@@ -1,4 +1,7 @@
+from datetime import date
+
 from admin_api.customer.offers.domainmodel import OfferDomainModel, OffersKpiSummaryDomainModel
+from admin_api.customer.offers.dto import CreateOfferDTO, UpdateOfferDTO
 from common.service.metadata import PaginationMeta
 from luxtj.utils import mockutils
 
@@ -12,10 +15,42 @@ class CustomerOffersService:
         return OffersKpiSummaryDomainModel.generate_mock()
 
     async def get_offers_list(
-        self, page: int, page_size: int, iso_currency_str: str
+        self,
+        page: int,
+        page_size: int,
+        *,
+        from_date: date | None = None,
+        to_date: date | None = None,
+        iso_currency_str: str,
     ) -> tuple[list[OfferDomainModel], PaginationMeta]:
         # TODO: Implement actual fetching logic here
         num_items = mockutils.random.randint(1, 10)  # To ensure randomness in generated mock data
         offers_list = [OfferDomainModel.generate_mock() for _ in range(num_items)]
 
         return offers_list, PaginationMeta(total=num_items, page=page, size=page_size)
+
+    async def create_offer(self, create_offer_dto: CreateOfferDTO) -> OfferDomainModel:
+        """
+        Create a new offer with the provided details.
+        """
+        # TODO: implement actual create logic here
+        # interface with database to create offer
+        return OfferDomainModel.generate_mock()
+
+    async def update_offer(
+        self, offer_id: str, update_offer_dto: UpdateOfferDTO
+    ) -> OfferDomainModel:
+        """
+        Update an existing offer with the provided details.
+        """
+        # TODO: implement actual update logic here
+        # interface with database to update offer
+        return OfferDomainModel.generate_mock()
+
+    async def delete_offer(self, offer_id: str) -> None:
+        """
+        Delete an offer
+        """
+        # TODO: implement actual delete logic here
+        # interface with database to delete offer
+        pass
