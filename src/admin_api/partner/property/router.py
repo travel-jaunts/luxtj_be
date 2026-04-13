@@ -1,21 +1,22 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Body, Depends, Query
 
-from luxtj.domain.enums import PartnerStatusControlActionEnum
-from admin_api.partner.property.serializers import PartnerBizKpiSummary, PropertyPartnerLineItem, PropertyPartnerDetails
+from admin_api.partner.property.serializers import (
+    PartnerBizKpiSummary,
+    PropertyPartnerDetails,
+    PropertyPartnerLineItem,
+    UpdatePropertyPartnerDetailsBody,
+)
 from admin_api.partner.property.service import PartnerService
 from common.serializerlib import (
-    AmountSerializer,
     ApiSuccessResponse,
     PaginatedResult,
     PaginationParams,
     RequestProcessStatus,
-    ImageMetadataSerializer,
-    LocationMetadataSerializer,
-    BankDetailsSerializer,
+    SearchFilterParams,
 )
-from luxtj.utils import mockutils
+from luxtj.domain.enums import PartnerStatusControlActionEnum
 
 property_partner_router = APIRouter()
 
@@ -50,7 +51,8 @@ async def property_partner_kpi_summary(
 )
 async def list_property_partners(
     partner_service: Annotated[PartnerService, Depends(PartnerService)],
-    query: Annotated[PaginationParams, Depends()],
+    page_query: Annotated[PaginationParams, Depends()],
+    search_filter_query: Annotated[SearchFilterParams, Depends()],
 ) -> ApiSuccessResponse[PaginatedResult[PropertyPartnerLineItem]]:
     """
     Get list of property partners
@@ -58,7 +60,10 @@ async def list_property_partners(
     # TODO: access control: restrict this endpoint to admin users only
 
     property_partners_list, pagination_meta = await partner_service.get_list(
-        page=query.page, page_size=query.size
+        page=page_query.page,
+        page_size=page_query.size,
+        from_date=search_filter_query.from_date,
+        to_date=search_filter_query.to_date,
     )
     return ApiSuccessResponse(
         status=RequestProcessStatus.OK,
@@ -89,66 +94,16 @@ async def property_partner_details(
     Get detailed information about a specific property partner
     """
     # TODO: access control: restrict this endpoint to admin users only
-    # TODO: implement actual update logic here
-    # partner_details = await partner_service.get_details(partner_id)
+    partner_details = await partner_service.get_details(partner_id)
     return ApiSuccessResponse(
         status=RequestProcessStatus.OK,
-        output=PropertyPartnerDetails(
-            partner_id=partner_id,
-            property_name=mockutils.random_property_name(),
-            property_owner_name="Mock Owner Name",
-            property_contact_number="1234567890",
-            partner_email="mockemail@example.com",
-            property_address="123 Mock Street, Mock City, Mock Country",
-            property_images=[
-                ImageMetadataSerializer(
-                    url="https://example.com/mock-image.jpg",
-                    alt_text="Mock Image",
-                    image_size_bytes=102400,
-                    mime_type="image/jpeg",
-                    luxtj_id=mockutils.random_booking_id(),
-                )
-            ],
-            property_base_price=AmountSerializer(amount=100.0, currency="USD"),
-            seasonal_prices=AmountSerializer(amount=150.0, currency="USD"),
-            offers=[],
-            partner_pan_number="ABCDE1234F",
-            partner_gst_number="22ABCDE1234F1Z5",
-            partner_bank=BankDetailsSerializer(
-                account_holder_name="Mock Owner Name",
-                account_number="123456789012",
-                ifsc_code="MOCK0001234",
-                bank_name="Mock Bank",
-            ),
-            kyc_documents=[
-                ImageMetadataSerializer(
-                    url="https://example.com/mock-kyc-document.jpg",
-                    alt_text="Mock KYC Document",
-                    image_size_bytes=204800,
-                    mime_type="image/jpeg",
-                    luxtj_id=mockutils.random_booking_id(),
-                )
-            ],
-            property_amenities=["Free Wi-Fi", "Swimming Pool", "Gym"],
-            property_description="This is a mock property description.",
-            property_location=LocationMetadataSerializer(
-                latitude=12.9716,
-                longitude=77.5946,
-                address_line1="123 Mock Street",
-                address_line2=None,
-                city="Mock City",
-                state="Mock State",
-                postal_code="123456",
-                country="Mock Country",
-            ),
-            property_room_types=["Deluxe", "Suite"],
-        ),
+        output=PropertyPartnerDetails.from_domain_model(partner_details),
     )
 
 
 @property_partner_router.post(
     "/{partner_id}/details-update",
-    response_model=ApiSuccessResponse[str],
+    response_model=ApiSuccessResponse[PropertyPartnerDetails],
     status_code=200,
     summary="Update detailed information about a specific property partner",
     name="Property Partner Details Update",
@@ -156,12 +111,15 @@ async def property_partner_details(
 async def property_partner_details_update(
     partner_service: Annotated[PartnerService, Depends(PartnerService)],
     partner_id: str,
-) -> ApiSuccessResponse[str]:
+    update_details: Annotated[UpdatePropertyPartnerDetailsBody, Body(...)],
+) -> ApiSuccessResponse[PropertyPartnerDetails]:
     # TODO: access control: restrict this endpoint to admin users only
-    # TODO: implement actual update logic here
+    updated_partner = await partner_service.update_details(
+        partner_id=partner_id, update_dto=update_details.to_dto()
+    )
     return ApiSuccessResponse(
-        status=RequestProcessStatus.OK, 
-        output=f"Property partner {partner_id} details updated successfully"
+        status=RequestProcessStatus.OK,
+        output=PropertyPartnerDetails.from_domain_model(updated_partner),
     )
 
 
@@ -178,8 +136,8 @@ async def property_partner_status_control(
     partner_id: str,
 ) -> ApiSuccessResponse[str]:
     # TODO: access control: restrict this endpoint to admin users only
-    # TODO: implement actual status update logic here
+    await partner_service.update_status(partner_id=partner_id, action=updated_status)
     return ApiSuccessResponse(
-        status=RequestProcessStatus.OK, 
-        output=f"Property partner {partner_id} status updated to '{updated_status}' successfully"
+        status=RequestProcessStatus.OK,
+        output=f"Property partner {partner_id} status updated to '{updated_status}' successfully",
     )

@@ -1,7 +1,7 @@
 from pydantic import AwareDatetime
 
+from common.serializerlib import AmountSerializer, ApiSerializerBaseModel
 from luxtj.domain.enums import OfferStatusEnum, OfferTypeEnum
-from common.serializerlib import ApiSerializerBaseModel, AmountSerializer
 
 
 class PartnerOfferDetailLineItem(ApiSerializerBaseModel):

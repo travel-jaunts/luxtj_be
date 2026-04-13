@@ -10,8 +10,7 @@ from fastapi import APIRouter, Depends, FastAPI
 # from opentelemetry.sdk.trace import TracerProvider
 # from opentelemetry.sdk.trace.export import BatchSpanProcessor
 from admin_api.customer import customer_router
-
-# from admin_api.partner import partner_router
+from admin_api.partner import partner_router
 from api import config
 from common.injectorlib import fastapi_app_handle
 from common.kernellib import health_check, init_app_state
@@ -37,7 +36,7 @@ def server_factory() -> FastAPI:
 
     admin_router = APIRouter(prefix="/v1/admin")
     admin_router.include_router(customer_router)
-    # admin_router.include_router(partner_router)
+    admin_router.include_router(partner_router)
     api_application.include_router(admin_router)
     # CAUTION: in case admin apis need to be removed, comment above lines
 
