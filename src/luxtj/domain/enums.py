@@ -166,6 +166,15 @@ class SupportCategoryEnum(StrEnum):
     GENERAL_INQUIRY = "general_inquiry"
 
 
+class SupportEscalationLevelEnum(StrEnum):
+    """Enum to represent different support ticket escalation levels"""
+
+    NONE = "none"
+    LEVEL_1 = "level_1"
+    LEVEL_2 = "level_2"
+    LEVEL_3 = "level_3"
+
+
 class OfferTypeEnum(StrEnum):
     """Enum to represent different offer types (e.g., Percentage Discount, Flat Discount, Special Price)"""
 

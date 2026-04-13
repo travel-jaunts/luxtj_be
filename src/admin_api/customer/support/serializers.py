@@ -8,6 +8,7 @@ from common.serializerlib import (
 from luxtj.domain.enums import (
     CustomerTierEnum,
     SupportCategoryEnum,
+    SupportEscalationLevelEnum,
     SupportTicketPriorityEnum,
     SupportTicketStatusEnum,
 )
@@ -76,6 +77,7 @@ class SupportTicketLineItem(ApiSerializerBaseModel):
     category: SupportCategoryEnum
     status: SupportTicketStatusEnum
     priority: SupportTicketPriorityEnum
+    escalation_level: SupportEscalationLevelEnum
     created_date: AwareDatetime
     resolution_date: AwareDatetime | None
     subject: str
@@ -91,6 +93,7 @@ class SupportTicketLineItem(ApiSerializerBaseModel):
             category=ticket_model.category,
             status=ticket_model.status,
             priority=ticket_model.priority,
+            escalation_level=ticket_model.escalation_level,
             created_date=ticket_model.created_date,
             resolution_date=ticket_model.resolution_date,
             subject=ticket_model.subject,
@@ -99,3 +102,11 @@ class SupportTicketLineItem(ApiSerializerBaseModel):
             if ticket_model.assigned_agent
             else None,
         )
+
+
+class AssignAgentBody(ApiSerializerBaseModel):
+    agent_id: str
+
+
+class ResolveTicketBody(ApiSerializerBaseModel):
+    resolution_note: str | None = None
