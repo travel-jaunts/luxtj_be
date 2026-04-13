@@ -1,3 +1,5 @@
+from datetime import date
+
 from admin_api.customer.bookings.domainmodel import (
     BookingBizKpiSummaryDomainModel,
     CustomerBookingDomainModel,
@@ -10,8 +12,14 @@ class CustomerBookingService:
     def __init__(self):
         pass
 
-    def get_list(
-        self, page: int, page_size: int, *, iso_currency_str: str
+    async def get_list(
+        self,
+        page: int,
+        page_size: int,
+        *,
+        from_date: date | None = None,
+        to_date: date | None = None,
+        iso_currency_str: str,
     ) -> tuple[list[CustomerBookingDomainModel], PaginationMeta]:
         """
         Fetch a paginated list of customer bookings from the database.
@@ -28,7 +36,9 @@ class CustomerBookingService:
         ]
         return customer_bookings_list, PaginationMeta(total=num_items, page=page, size=page_size)
 
-    def get_biz_kpi_summary(self, *, iso_currency_str: str) -> BookingBizKpiSummaryDomainModel:
+    async def get_biz_kpi_summary(
+        self, *, iso_currency_str: str
+    ) -> BookingBizKpiSummaryDomainModel:
         """
         Fetch booking-related business KPI summary data.
         Returns a BookingBizKpiSummaryDomainModel instance containing the KPI data.

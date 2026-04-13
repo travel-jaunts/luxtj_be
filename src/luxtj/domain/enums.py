@@ -166,6 +166,15 @@ class SupportCategoryEnum(StrEnum):
     GENERAL_INQUIRY = "general_inquiry"
 
 
+class SupportEscalationLevelEnum(StrEnum):
+    """Enum to represent different support ticket escalation levels"""
+
+    NONE = "none"
+    LEVEL_1 = "level_1"
+    LEVEL_2 = "level_2"
+    LEVEL_3 = "level_3"
+
+
 class OfferTypeEnum(StrEnum):
     """Enum to represent different offer types (e.g., Percentage Discount, Flat Discount, Special Price)"""
 
@@ -196,3 +205,38 @@ class OfferApplicabilityEnum(StrEnum):
     COUPON_CODE = "coupon_code"
     USER_SEGMENT = "user_segment"
     PAYMENT_METHOD = "payment_method"
+
+
+class PropertySourceEnum(StrEnum):
+    """Enum to represent different property sources (e.g., Direct, OTA, Channel Manager)"""
+
+    EXTRAENET = "extranet"
+    API = "api"
+    OTA = "ota"
+    CHANNEL_MANAGER = "channel_manager"
+
+
+class PropertyStatusEnum(StrEnum):
+    """Enum to represent different property statuses (e.g., Active, Pending Approval, Rejected, Suspended)"""
+
+    ACTIVE = "active"
+    DORMANT = "dormant"
+    REJECTED = "rejected"
+    SUSPENDED = "suspended"
+
+
+class PartnerKYCStatusEnum(StrEnum):
+    """Enum to represent different partner KYC statuses (e.g., Pending, Approved, Rejected)"""
+
+    PENDING = "pending"
+    APPROVED = "approved"
+    REJECTED = "rejected"
+
+
+class PartnerStatusControlActionEnum(StrEnum):
+    """Enum to represent different partner status control actions (e.g., Activate, Suspend, Reject)"""
+
+    APPROVE = "approve"
+    REJECT = "reject"
+    DEACTIVATE = "deactivate"
+    REQUEST_UPDATE = "request_update"

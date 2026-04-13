@@ -2,7 +2,7 @@ from contextlib import asynccontextmanager
 from datetime import UTC, datetime
 
 from fastapi import FastAPI
-from niquests import Session
+from httpx import AsyncClient
 
 from common.serializerlib import HealthStatusResult
 
@@ -10,7 +10,7 @@ from common.serializerlib import HealthStatusResult
 @asynccontextmanager
 async def init_app_state(fastapi_app: FastAPI):
     fastapi_app.state.start_timestamp = datetime.now(UTC)
-    with Session() as client:
+    async with AsyncClient() as client:
         fastapi_app.state.http_client = client
         yield
 
@@ -22,7 +22,7 @@ def get_start_timestamp(fastapi_app: FastAPI) -> datetime:
     return fastapi_app.state.start_timestamp
 
 
-def get_http_client(fastapi_app: FastAPI) -> Session:
+def get_http_client(fastapi_app: FastAPI) -> AsyncClient:
     """Helper function to retrieve the application's HTTP client.
     - Can be used in Depends
     """

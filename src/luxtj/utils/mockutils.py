@@ -1,6 +1,6 @@
 import random
 import uuid
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 
 _random_seed: int = 0
 random.seed(_random_seed)
@@ -45,6 +45,14 @@ mock_support_ticket_descriptions = [
     "I have a general inquiry about your services.",
 ]
 mock_offer_title = ["Summer Sale", "Winter Discount", "Festive Offer"]
+mock_property_names = [
+    "Luxury Apartment",
+    "Cozy Villa",
+    "Spacious Cottage",
+    "Modern Studio",
+    "Beachfront Bungalow",
+]
+mock_property_types = ["Apartment", "Villa", "Cottage", "Studio", "Bungalow"]
 
 
 def random_user_id() -> str:
@@ -99,3 +107,21 @@ def random_support_ticket_description() -> str:
 
 def random_offer_title() -> str:
     return random.choice(mock_offer_title)
+
+
+def random_property_name() -> str:
+    return random.choice(mock_property_names)
+
+
+def random_property_location() -> str:
+    return random.choice(mock_base_locations)
+
+
+def random_property_type() -> str:
+    return random.choice(mock_property_types)
+
+
+def random_date_from_past_days(days: int = 365) -> datetime:
+    end_date = datetime.now(tz=UTC)
+    start_date = end_date - timedelta(days=days)
+    return start_date + (end_date - start_date) * random.random()

@@ -4,6 +4,7 @@ from datetime import datetime
 from admin_api.customer.users.domainmodel import CustomerDomainModel
 from luxtj.domain.enums import (
     SupportCategoryEnum,
+    SupportEscalationLevelEnum,
     SupportTicketPriorityEnum,
     SupportTicketStatusEnum,
 )
@@ -39,6 +40,7 @@ class SupportTicketDomainModel:
     resolution_date: datetime | None
     subject: str
     description: str
+    escalation_level: SupportEscalationLevelEnum
     assigned_agent: CustomerDomainModel | None
 
     @classmethod
@@ -54,5 +56,6 @@ class SupportTicketDomainModel:
             resolution_date=None,
             subject=mockutils.random_support_ticket_subject(),
             description=mockutils.random_support_ticket_description(),
+            escalation_level=mockutils.random.choice(list(SupportEscalationLevelEnum)),
             assigned_agent=CustomerDomainModel.generate_mock(mock_currency="INR"),
         )

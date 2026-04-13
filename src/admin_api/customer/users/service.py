@@ -1,7 +1,11 @@
+from datetime import date
+
 from admin_api.customer.users.domainmodel import (
     CustomerBizKpiSummaryDomainModel,
     CustomerDomainModel,
 )
+from admin_api.customer.users.dto import UpdateUserDTO
+from admin_api.customer.users.serializers import SignupOptionParams
 from common.service.metadata import PaginationMeta
 from luxtj.utils import mockutils
 
@@ -10,8 +14,50 @@ class CustomerUserService:
     def __init__(self):
         pass
 
-    def get_list(
-        self, page: int, page_size: int, *, iso_currency_str: str
+    async def create_new_user(
+        self,
+        first_name: str,
+        last_name: str,
+        phone_number: str,
+        email: str,
+        *,
+        signup_options: SignupOptionParams | None = None,
+    ) -> CustomerDomainModel:
+        """
+        Create a new customer user with the provided details and signup options.
+        """
+        # TODO: implement actual create logic here
+        # interface with keycloak to create user and assign roles based on signup options
+        return CustomerDomainModel.generate_mock()
+
+    async def update_user(
+        self,
+        customer_id: str,
+        update_user_dto: UpdateUserDTO,
+    ) -> CustomerDomainModel:
+        """
+        Update an existing customer user with the provided details.
+        """
+        # TODO: implement actual update logic here
+        # interface with keycloak to update user details and roles based on update_user_dto
+        return CustomerDomainModel.generate_mock()
+
+    async def delete_user(self, customer_id: str) -> None:
+        """
+        Delete a customer user
+        """
+        # TODO: implement actual delete logic here
+        # interface with keycloak to delete user
+        pass
+
+    async def get_list(
+        self,
+        page: int,
+        page_size: int,
+        *,
+        from_date: date | None = None,
+        to_date: date | None = None,
+        iso_currency_str: str,
     ) -> tuple[list[CustomerDomainModel], PaginationMeta]:
         """
         Fetch a paginated list of customers from the database.
@@ -28,7 +74,9 @@ class CustomerUserService:
         ]
         return customer_list, PaginationMeta(total=num_items, page=page, size=page_size)
 
-    def get_biz_kpi_summary(self, *, iso_currency_str: str) -> CustomerBizKpiSummaryDomainModel:
+    async def get_biz_kpi_summary(
+        self, *, iso_currency_str: str
+    ) -> CustomerBizKpiSummaryDomainModel:
         """
         Fetch business KPI summary for customers.
         - iso_currency_str: The ISO currency code to use for monetary values in the summary

@@ -2,11 +2,10 @@ from asyncio import Lock as CoroutineLock
 from base64 import b64encode
 from typing import ParamSpec, TypeVar
 
-from httpx import AsyncClient, HTTPStatusError, Response
-
 from app.core.bases import IAsyncCachingProvider, SingletonMeta
 from app.core.config import get_settings
 from app.core.logging import get_logger
+from httpx import AsyncClient, HTTPStatusError, Response
 
 P = ParamSpec("P")
 R = TypeVar("R")
