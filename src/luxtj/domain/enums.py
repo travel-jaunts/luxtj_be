@@ -240,3 +240,21 @@ class PartnerStatusControlActionEnum(StrEnum):
     REJECT = "reject"
     DEACTIVATE = "deactivate"
     REQUEST_UPDATE = "request_update"
+
+
+class ApprovalStatusEnum(StrEnum):
+    PENDING = "pending"
+    APPROVED = "approved"
+    REJECTED = "rejected"
+    CHANGES_REQUESTED = "changes_requested"
+
+
+class ApprovalControlActionEnum(StrEnum):
+    APPROVE = "approve"
+    REJECT = "reject"
+    REQUEST_CHANGES = "request-changes"
+
+
+class ApprovalTypeEnum(StrEnum):
+    CONTENT = "content"
+    KYC = "kyc"
