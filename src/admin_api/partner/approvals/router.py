@@ -21,6 +21,7 @@ from luxtj.domain.enums import ApprovalControlActionEnum
 
 approvals_router = APIRouter()
 
+
 @approvals_router.post(
     "/summary",
     response_model=ApiSuccessResponse[ApprovalSummary],

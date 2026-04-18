@@ -35,13 +35,15 @@ class PartnerTransactionsSummaryDomainModel:
     amount_currency: str
 
     @classmethod
-    def generate_mock(cls, *, iso_currency_str: str) -> "PartnerTransactionsSummaryDomainModel":
+    def generate_mock(cls, *, iso_currency_str: str) -> PartnerTransactionsSummaryDomainModel:
         total_partner_payments_amount = mockutils.random_booking_amount(50000.0, 5000000.0)
         pending_payments_amount = mockutils.random_booking_amount(0.0, 1000000.0)
         refunds_pending_amount = mockutils.random_booking_amount(0.0, 200000.0)
         completed_payments_amount = max(
             0.0,
-            round(total_partner_payments_amount - pending_payments_amount - refunds_pending_amount, 2),
+            round(
+                total_partner_payments_amount - pending_payments_amount - refunds_pending_amount, 2
+            ),
         )
 
         return cls(
@@ -65,7 +67,7 @@ class PartnerPaymentLineItemDomainModel:
     date: datetime
 
     @classmethod
-    def generate_mock(cls, *, iso_currency_str: str) -> "PartnerPaymentLineItemDomainModel":
+    def generate_mock(cls, *, iso_currency_str: str) -> PartnerPaymentLineItemDomainModel:
         return cls(
             payment_id=mockutils.random_transaction_id(),
             partner=f"{mockutils.random_user_last_name()} Travels",
@@ -89,7 +91,7 @@ class PartnerRefundLineItemDomainModel:
     status: PartnerRefundStatusEnum
 
     @classmethod
-    def generate_mock(cls, *, iso_currency_str: str) -> "PartnerRefundLineItemDomainModel":
+    def generate_mock(cls, *, iso_currency_str: str) -> PartnerRefundLineItemDomainModel:
         reasons = [
             "Customer cancellation",
             "Duplicate payment",

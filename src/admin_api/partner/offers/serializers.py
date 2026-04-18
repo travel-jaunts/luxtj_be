@@ -172,8 +172,7 @@ class OfferLineItem(ApiSerializerBaseModel):
             discount = f"{domain_model.discount_percentage:.2f}%"
         elif domain_model.flat_discount_amount is not None:
             discount = (
-                f"{domain_model.flat_discount_currency} "
-                f"{domain_model.flat_discount_amount:.2f}"
+                f"{domain_model.flat_discount_currency} {domain_model.flat_discount_amount:.2f}"
             )
         else:
             discount = "-"

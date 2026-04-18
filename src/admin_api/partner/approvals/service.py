@@ -1,15 +1,15 @@
 from datetime import date
 
 from admin_api.partner.approvals.domainmodel import (
-    ApprovalKycDetailsDomainModel,
     ApprovalContentDetailsDomainModel,
+    ApprovalKycDetailsDomainModel,
     ApprovalLineItemDomainModel,
     ApprovalSummaryDomainModel,
     LifetimeApprovalSummaryDomainModel,
 )
 from common.service.metadata import PaginationMeta
-from luxtj.utils import mockutils
 from luxtj.domain.enums import ApprovalControlActionEnum
+from luxtj.utils import mockutils
 
 
 class PartnerApprovalsService:

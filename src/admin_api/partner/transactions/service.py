@@ -7,7 +7,6 @@ from admin_api.partner.transactions.domainmodel import (
     PartnerRefundStatusEnum,
     PartnerTransactionsSummaryDomainModel,
 )
-
 from common.service.metadata import PaginationMeta
 from luxtj.utils import mockutils
 
@@ -18,7 +17,9 @@ class PartnerTransactionsService:
 
     async def get_summary(self, *, iso_currency_str: str) -> PartnerTransactionsSummaryDomainModel:
         # TODO: Implement actual fetching logic here
-        return PartnerTransactionsSummaryDomainModel.generate_mock(iso_currency_str=iso_currency_str)
+        return PartnerTransactionsSummaryDomainModel.generate_mock(
+            iso_currency_str=iso_currency_str
+        )
 
     async def get_payments_list(
         self,

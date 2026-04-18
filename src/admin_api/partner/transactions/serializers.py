@@ -8,7 +8,6 @@ from admin_api.partner.transactions.domainmodel import (
     PartnerRefundStatusEnum,
     PartnerTransactionsSummaryDomainModel,
 )
-
 from common.serializerlib import AmountSerializer, ApiSerializerBaseModel
 
 
@@ -21,7 +20,7 @@ class PartnerTransactionsSummary(ApiSerializerBaseModel):
     @classmethod
     def from_domain_model(
         cls, domain_model: PartnerTransactionsSummaryDomainModel
-    ) -> "PartnerTransactionsSummary":
+    ) -> PartnerTransactionsSummary:
         return cls(
             total_partner_payments=AmountSerializer(
                 amount=domain_model.total_partner_payments_amount,
@@ -54,7 +53,7 @@ class PartnerPaymentsLineItem(ApiSerializerBaseModel):
     @classmethod
     def from_domain_model(
         cls, domain_model: PartnerPaymentLineItemDomainModel
-    ) -> "PartnerPaymentsLineItem":
+    ) -> PartnerPaymentsLineItem:
         return cls(
             payment_id=domain_model.payment_id,
             partner=domain_model.partner,
@@ -77,7 +76,7 @@ class PartnerRefundsLineItem(ApiSerializerBaseModel):
     @classmethod
     def from_domain_model(
         cls, domain_model: PartnerRefundLineItemDomainModel
-    ) -> "PartnerRefundsLineItem":
+    ) -> PartnerRefundsLineItem:
         return cls(
             refund_id=domain_model.refund_id,
             booking=domain_model.booking,
@@ -86,5 +85,3 @@ class PartnerRefundsLineItem(ApiSerializerBaseModel):
             reason=domain_model.reason,
             status=domain_model.status,
         )
-
-

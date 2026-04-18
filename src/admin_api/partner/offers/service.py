@@ -96,13 +96,17 @@ class PartnerOffersService:
         to_date: date | None = None,
     ) -> tuple[list[PartnerOfferLineItemDomainModel], PaginationMeta]:
         num_items = mockutils.random.randint(1, 10)
-        return [PartnerOfferLineItemDomainModel.generate_mock() for _ in range(num_items)], PaginationMeta(
+        return [
+            PartnerOfferLineItemDomainModel.generate_mock() for _ in range(num_items)
+        ], PaginationMeta(
             total=num_items,
             page=page,
             size=page_size,
         )
 
-    async def create_offer_item(self, create_dto: CreatePartnerOfferDTO) -> PartnerOfferLineItemDomainModel:
+    async def create_offer_item(
+        self, create_dto: CreatePartnerOfferDTO
+    ) -> PartnerOfferLineItemDomainModel:
         return PartnerOfferLineItemDomainModel.generate_mock()
 
     async def update_offer_item(

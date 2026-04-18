@@ -1,16 +1,20 @@
 from pydantic import AwareDatetime
 
 from admin_api.partner.approvals.domainmodel import (
+    ApprovalContentDetailsDomainModel,
     ApprovalKycDetailsDomainModel,
     ApprovalLineItemDomainModel,
     ApprovalStatusEnum,
     ApprovalSummaryDomainModel,
     ApprovalTypeEnum,
     LifetimeApprovalSummaryDomainModel,
-    ApprovalContentDetailsDomainModel,
 )
 from admin_api.partner.approvals.dto import ApprovalActionDTO
-from common.serializerlib import ApiSerializerBaseModel, BankDetailsSerializer, ImageMetadataSerializer
+from common.serializerlib import (
+    ApiSerializerBaseModel,
+    BankDetailsSerializer,
+    ImageMetadataSerializer,
+)
 
 
 class ApprovalSummary(ApiSerializerBaseModel):
@@ -20,7 +24,7 @@ class ApprovalSummary(ApiSerializerBaseModel):
     new_partners: int
 
     @classmethod
-    def from_domain_model(cls, domain_model: ApprovalSummaryDomainModel) -> "ApprovalSummary":
+    def from_domain_model(cls, domain_model: ApprovalSummaryDomainModel) -> ApprovalSummary:
         return cls(
             pending_approvals=domain_model.pending_approvals,
             kyc_pending=domain_model.kyc_pending,
@@ -40,7 +44,7 @@ class LifetimeApprovalSummary(ApiSerializerBaseModel):
     @classmethod
     def from_domain_model(
         cls, domain_model: LifetimeApprovalSummaryDomainModel
-    ) -> "LifetimeApprovalSummary":
+    ) -> LifetimeApprovalSummary:
         return cls(
             property_approvals=domain_model.property_approvals,
             activity_approvals=domain_model.activity_approvals,
@@ -60,7 +64,7 @@ class ApprovalLineItem(ApiSerializerBaseModel):
     status: ApprovalStatusEnum
 
     @classmethod
-    def from_domain_model(cls, domain_model: ApprovalLineItemDomainModel) -> "ApprovalLineItem":
+    def from_domain_model(cls, domain_model: ApprovalLineItemDomainModel) -> ApprovalLineItem:
         return cls(
             approval_id=domain_model.approval_id,
             approval_type=domain_model.approval_type,
@@ -82,7 +86,7 @@ class ApprovalKycDetails(ApiSerializerBaseModel):
     kyc_documents: list[ImageMetadataSerializer]
 
     @classmethod
-    def from_domain_model(cls, domain_model: ApprovalKycDetailsDomainModel) -> "ApprovalKycDetails":
+    def from_domain_model(cls, domain_model: ApprovalKycDetailsDomainModel) -> ApprovalKycDetails:
         return cls(
             partner_id=domain_model.partner_id,
             partner_name=domain_model.partner_name,
@@ -103,7 +107,8 @@ class ApprovalKycDetails(ApiSerializerBaseModel):
                     image_size_bytes=doc.image_size_bytes,
                     mime_type=doc.mime_type,
                     alt_text=doc.alt_text,
-                ) for doc in domain_model.kyc_documents
+                )
+                for doc in domain_model.kyc_documents
             ],
         )
 
@@ -122,7 +127,9 @@ class ApprovalContentDetails(ApiSerializerBaseModel):
     images: list[ImageMetadataSerializer]
 
     @classmethod
-    def from_domain_model(cls, domain_model: ApprovalContentDetailsDomainModel) -> "ApprovalContentDetails":
+    def from_domain_model(
+        cls, domain_model: ApprovalContentDetailsDomainModel
+    ) -> ApprovalContentDetails:
         return cls(
             content_id=domain_model.content_id,
             name=domain_model.title,
@@ -134,6 +141,7 @@ class ApprovalContentDetails(ApiSerializerBaseModel):
                     image_size_bytes=doc.image_size_bytes,
                     mime_type=doc.mime_type,
                     alt_text=doc.alt_text,
-                ) for doc in domain_model.content_images
+                )
+                for doc in domain_model.content_images
             ],
         )

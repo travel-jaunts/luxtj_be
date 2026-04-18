@@ -2,14 +2,14 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, Query
 
+from admin_api.partner.transactions.domainmodel import (
+    PartnerPaymentStatusEnum,
+    PartnerRefundStatusEnum,
+)
 from admin_api.partner.transactions.serializers import (
     PartnerPaymentsLineItem,
     PartnerRefundsLineItem,
     PartnerTransactionsSummary,
-)
-from admin_api.partner.transactions.domainmodel import (
-    PartnerPaymentStatusEnum,
-    PartnerRefundStatusEnum,
 )
 from admin_api.partner.transactions.service import PartnerTransactionsService
 from common.serializerlib import (
@@ -32,7 +32,9 @@ transactions_partner_router = APIRouter()
     name="Partner Transactions Summary",
 )
 async def partner_transactions_summary(
-    transactions_service: Annotated[PartnerTransactionsService, Depends(PartnerTransactionsService)],
+    transactions_service: Annotated[
+        PartnerTransactionsService, Depends(PartnerTransactionsService)
+    ],
     iso_currency_str: CurrencyQuery = "INR",
 ) -> ApiSuccessResponse[PartnerTransactionsSummary]:
     # TODO: access control: restrict this endpoint to admin users only
@@ -51,7 +53,9 @@ async def partner_transactions_summary(
     name="List Partner Payments",
 )
 async def partner_payments_list(
-    transactions_service: Annotated[PartnerTransactionsService, Depends(PartnerTransactionsService)],
+    transactions_service: Annotated[
+        PartnerTransactionsService, Depends(PartnerTransactionsService)
+    ],
     page_query: Annotated[PaginationParams, Depends()],
     search_filter_query: Annotated[SearchFilterParams, Depends()],
     iso_currency_str: CurrencyQuery = "INR",
@@ -83,12 +87,16 @@ async def partner_payments_list(
     name="Partner Payment Status Update",
 )
 async def partner_payment_status_control(
-    transactions_service: Annotated[PartnerTransactionsService, Depends(PartnerTransactionsService)],
+    transactions_service: Annotated[
+        PartnerTransactionsService, Depends(PartnerTransactionsService)
+    ],
     payment_id: str,
     target_status: Annotated[PartnerPaymentStatusEnum, Query(..., alias="to")],
 ) -> ApiSuccessResponse[str]:
     # TODO: access control: restrict this endpoint to admin users only
-    await transactions_service.update_payment_status(payment_id=payment_id, target_status=target_status)
+    await transactions_service.update_payment_status(
+        payment_id=payment_id, target_status=target_status
+    )
     return ApiSuccessResponse(
         status=RequestProcessStatus.OK,
         output=f"Payment {payment_id} status updated to '{target_status}' successfully",
@@ -103,7 +111,9 @@ async def partner_payment_status_control(
     name="List Partner Refunds",
 )
 async def partner_refunds_list(
-    transactions_service: Annotated[PartnerTransactionsService, Depends(PartnerTransactionsService)],
+    transactions_service: Annotated[
+        PartnerTransactionsService, Depends(PartnerTransactionsService)
+    ],
     page_query: Annotated[PaginationParams, Depends()],
     search_filter_query: Annotated[SearchFilterParams, Depends()],
     iso_currency_str: CurrencyQuery = "INR",
@@ -135,12 +145,16 @@ async def partner_refunds_list(
     name="Partner Refund Status Update",
 )
 async def partner_refund_status_control(
-    transactions_service: Annotated[PartnerTransactionsService, Depends(PartnerTransactionsService)],
+    transactions_service: Annotated[
+        PartnerTransactionsService, Depends(PartnerTransactionsService)
+    ],
     refund_id: str,
     target_status: Annotated[PartnerRefundStatusEnum, Query(..., alias="to")],
 ) -> ApiSuccessResponse[str]:
     # TODO: access control: restrict this endpoint to admin users only
-    await transactions_service.update_refund_status(refund_id=refund_id, target_status=target_status)
+    await transactions_service.update_refund_status(
+        refund_id=refund_id, target_status=target_status
+    )
     return ApiSuccessResponse(
         status=RequestProcessStatus.OK,
         output=f"Refund {refund_id} status updated to '{target_status}' successfully",

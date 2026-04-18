@@ -1,8 +1,8 @@
 from dataclasses import dataclass
 from datetime import datetime
 
-from luxtj.utils import mockutils
 from luxtj.domain.enums import ApprovalStatusEnum, ApprovalTypeEnum
+from luxtj.utils import mockutils
 
 
 @dataclass
@@ -13,7 +13,7 @@ class ApprovalSummaryDomainModel:
     new_partners: int
 
     @classmethod
-    def generate_mock(cls) -> "ApprovalSummaryDomainModel":
+    def generate_mock(cls) -> ApprovalSummaryDomainModel:
         return cls(
             pending_approvals=mockutils.random.randint(10, 80),
             kyc_pending=mockutils.random.randint(3, 30),
@@ -32,7 +32,7 @@ class LifetimeApprovalSummaryDomainModel:
     kyc_approvals: int
 
     @classmethod
-    def generate_mock(cls) -> "LifetimeApprovalSummaryDomainModel":
+    def generate_mock(cls) -> LifetimeApprovalSummaryDomainModel:
         return cls(
             property_approvals=mockutils.random.randint(100, 700),
             activity_approvals=mockutils.random.randint(80, 500),
@@ -53,7 +53,7 @@ class ApprovalLineItemDomainModel:
     status: ApprovalStatusEnum
 
     @classmethod
-    def generate_mock(cls) -> "ApprovalLineItemDomainModel":
+    def generate_mock(cls) -> ApprovalLineItemDomainModel:
         entity_type = mockutils.random.choice(list(ApprovalTypeEnum))
         entity_name = (
             mockutils.random_property_name()
@@ -87,7 +87,7 @@ class ContentImageDomainModel:
             mime_type="image/jpeg",
             alt_text="Mock Property Image",
         )
-    
+
 
 @dataclass
 class ApprovalKycDetailsDomainModel:
@@ -104,7 +104,7 @@ class ApprovalKycDetailsDomainModel:
     kyc_documents: list[ContentImageDomainModel]
 
     @classmethod
-    def generate_mock(cls) -> "ApprovalKycDetailsDomainModel":
+    def generate_mock(cls) -> ApprovalKycDetailsDomainModel:
         return cls(
             partner_id=mockutils.random_user_id(),
             partner_name=f"{mockutils.random_user_first_name()} {mockutils.random_user_last_name()}",
@@ -116,7 +116,10 @@ class ApprovalKycDetailsDomainModel:
             bank_account_number=str(mockutils.random.randint(100000000000, 999999999999)),
             bank_ifsc_code="MOCK0001234",
             bank_name="Mock Bank",
-            kyc_documents=[ContentImageDomainModel.generate_mock() for _ in range(mockutils.random.randint(1, 3))],
+            kyc_documents=[
+                ContentImageDomainModel.generate_mock()
+                for _ in range(mockutils.random.randint(1, 3))
+            ],
         )
 
 
@@ -128,10 +131,13 @@ class ApprovalContentDetailsDomainModel:
     content_images: list[ContentImageDomainModel]
 
     @classmethod
-    def generate_mock(cls) -> "ApprovalContentDetailsDomainModel":
+    def generate_mock(cls) -> ApprovalContentDetailsDomainModel:
         return cls(
             content_id=mockutils.random_booking_id(),
             title="Mock Property Title",
             description="This is a mock description for the property/activity pending approval.",
-            content_images=[ContentImageDomainModel.generate_mock() for _ in range(mockutils.random.randint(1, 5))],
+            content_images=[
+                ContentImageDomainModel.generate_mock()
+                for _ in range(mockutils.random.randint(1, 5))
+            ],
         )

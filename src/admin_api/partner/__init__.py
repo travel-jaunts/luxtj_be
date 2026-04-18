@@ -1,9 +1,9 @@
 from fastapi import APIRouter
 
 from admin_api.partner.activity.router import activity_partner_router
-from admin_api.partner.approvals.router import approvals_router
 from admin_api.partner.affiliate.router import affiliate_partner_router
 from admin_api.partner.agent.router import agent_partner_router
+from admin_api.partner.approvals.router import approvals_router
 from admin_api.partner.offers.router import offers_partner_router
 from admin_api.partner.property.router import property_partner_router
 from admin_api.partner.transactions.router import transactions_partner_router
