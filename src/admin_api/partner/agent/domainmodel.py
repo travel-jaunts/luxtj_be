@@ -94,7 +94,7 @@ class AgentPartnerDetailsDomainModel:
 
     domestic_percent: float
     international_percent: float
-    custom_deals: bool
+    custom_deals: int
     sales_performance: float
 
     bookings: int
@@ -119,7 +119,7 @@ class AgentPartnerDetailsDomainModel:
             commission_percent=round(mockutils.random.uniform(2.0, 18.0), 2),
             domestic_percent=round(mockutils.random.uniform(10.0, 90.0), 2),
             international_percent=round(mockutils.random.uniform(10.0, 90.0), 2),
-            custom_deals=mockutils.random.choice([True, False]),
+            custom_deals=mockutils.random.randint(0, 50),
             sales_performance=round(mockutils.random.uniform(0.0, 100.0), 2),
             bookings=mockutils.random.randint(10, 2000),
             revenue_amount=mockutils.random_booking_amount(50000, 5000000),

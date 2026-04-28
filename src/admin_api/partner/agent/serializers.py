@@ -74,6 +74,7 @@ class AgentPartnerDetails(ApiSerializerBaseModel):
 
     domestic_percent: float
     international_percent: float
+    custom_deals: int
 
     bookings: int
     revenue: AmountSerializer
@@ -95,6 +96,7 @@ class AgentPartnerDetails(ApiSerializerBaseModel):
             commission_percent=domain_model.commission_percent,
             domestic_percent=domain_model.domestic_percent,
             international_percent=domain_model.international_percent,
+            custom_deals=domain_model.custom_deals,
             bookings=domain_model.bookings,
             revenue=AmountSerializer(
                 amount=domain_model.revenue_amount,
