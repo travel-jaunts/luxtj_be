@@ -258,3 +258,9 @@ class ApprovalControlActionEnum(StrEnum):
 class ApprovalTypeEnum(StrEnum):
     CONTENT = "content"
     KYC = "kyc"
+
+
+class PartnerTypeEnum(StrEnum):
+    PARTNER = "partner"
+    B2B = "b2b"
+    AFFILIATE = "affiliate"
