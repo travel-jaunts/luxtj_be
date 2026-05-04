@@ -14,6 +14,7 @@ from admin_api.customer import customer_router
 from admin_api.partner import partner_router
 from admin_api.reports import reports_router
 from api import config
+from api.idam import idam_router
 from common.injectorlib import fastapi_app_handle
 from common.kernellib import health_check, init_app_state
 from common.middlewarelib import EndpointExceptionHandler, EnforcePostMethodOnly
@@ -43,6 +44,10 @@ def server_factory() -> FastAPI:
     admin_router.include_router(admin_audit_logs_router)
     api_application.include_router(admin_router)
     # CAUTION: in case admin apis need to be removed, comment above lines
+
+    public_router = APIRouter(prefix="/v1")
+    public_router.include_router(idam_router)
+    api_application.include_router(public_router)
 
     @api_application.post("/ping", tags=["ops"])
     async def _() -> str:
