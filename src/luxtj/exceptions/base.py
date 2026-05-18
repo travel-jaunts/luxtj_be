@@ -1,6 +1,6 @@
-class LuxtjDomainException(Exception):
+class LuxtjDomainError(Exception):
     """
-    Base exception for all domain exceptions in luxtj
+    Base exception for all domain errors in luxtj
     """
 
     pass

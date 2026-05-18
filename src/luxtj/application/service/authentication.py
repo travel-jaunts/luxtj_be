@@ -1,14 +1,12 @@
-"""
-Top level business services at luxtj
-"""
-
-from luxtj.protocols import ITelecomService, IUserAccountsService, ILogger
+from luxtj.application.interface.user_accounts import IUserAccountsService
+from luxtj.application.interface.telecom import ITelecomService
+from luxtj.application.interface.logger import ILogger
 from luxtj.exceptions.authentication import (
     InvalidPhoneNumberException,
     PhoneNumberAlreadyRegisteredException,
     PhoneNumberNotRegisteredException,
 )
-from luxtj.domain.entity import LuxtjUser, LuxtjUserAuthorizationDetail
+
 
 class AuthenticationService:
     def __init__(
@@ -125,40 +123,3 @@ class AuthenticationService:
                 extra={"country_dial_code": country_dial_code, "phone_number": phone_number},
             )
             return None
-
-
-class TelecomServiceProvider(ITelecomService):
-
-    def __init__(self):
-        pass
-
-    async def is_valid_phone_number(self, country_dial_code: str, phone_number: str) -> bool:
-        raise NotImplementedError
-    
-    async def send_otp(self, country_dial_code: str, phone_number: str) -> None:
-        raise NotImplementedError
-    
-    async def verify_otp(self, country_dial_code: str, phone_number: str, otp: str) -> bool:
-        raise NotImplementedError
-
-
-class UserAccountsServiceProvider(IUserAccountsService):
-
-    def __init__(self):
-        pass
-
-    async def is_phone_number_registered(self, country_dial_code: str, phone_number: str) -> bool:
-        raise NotImplementedError
-    
-    async def create_user_with_phone_number(
-        self, country_dial_code: str, phone_number: str
-    ) -> LuxtjUser:
-        raise NotImplementedError
-    
-    async def get_user_by_phone_number(
-        self, country_dial_code: str, phone_number: str
-    ) -> LuxtjUser:
-        raise NotImplementedError
-    
-    async def login_user_by_guid(self, guid: str) -> LuxtjUserAuthorizationDetail:
-        raise NotImplementedError

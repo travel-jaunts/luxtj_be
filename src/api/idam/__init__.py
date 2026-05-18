@@ -1,5 +1,5 @@
-from typing import Annotated
 import logging
+from typing import Annotated
 
 from fastapi import APIRouter, Body, Depends
 
@@ -8,7 +8,6 @@ from common.serializerlib import (
     ApiSuccessResponse,
     RequestProcessStatus,
 )
-
 from luxtj.service import AuthenticationService, TelecomServiceProvider, UserAccountsServiceProvider
 
 idam_router = APIRouter(prefix="/idam")
@@ -26,13 +25,15 @@ def get_user_accounts_service() -> UserAccountsServiceProvider:
 
 def get_authentication_service(
     telecom_service: Annotated[TelecomServiceProvider, Depends(get_telecom_service)],
-    user_accounts_service: Annotated[UserAccountsServiceProvider, Depends(get_user_accounts_service)],
+    user_accounts_service: Annotated[
+        UserAccountsServiceProvider, Depends(get_user_accounts_service)
+    ],
 ) -> AuthenticationService:
     """Dependency to provide AuthenticationService instance"""
     return AuthenticationService(
         telecom_service=telecom_service,
         user_accounts_service=user_accounts_service,
-        logger=logging.getLogger(__name__)
+        logger=logging.getLogger(__name__),
     )
 
 
@@ -43,6 +44,7 @@ class AuthenticatedUserResponse(ApiSerializerBaseModel):
 class PhoneDetailsBody(ApiSerializerBaseModel):
     phone_number: str
     country_dial_code: str
+
 
 @idam_router.post(
     "/login-request-otp",
