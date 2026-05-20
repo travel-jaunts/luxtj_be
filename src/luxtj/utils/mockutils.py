@@ -59,6 +59,11 @@ def random_user_id() -> str:
     return random.choice(mock_user_ids)
 
 
+def random_user_ids(min_count: int = 1, max_count: int = 5) -> list[str]:
+    count = random.randint(min_count, max_count)
+    return random.sample(mock_user_ids, count)
+
+
 def random_user_first_name() -> str:
     return random.choice(mock_first_names)
 
