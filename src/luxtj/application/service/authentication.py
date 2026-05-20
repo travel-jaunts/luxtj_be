@@ -1,6 +1,6 @@
-from luxtj.application.interface.user_accounts import IUserAccountsService
-from luxtj.application.interface.telecom import ITelecomService
 from luxtj.application.interface.logger import ILogger
+from luxtj.application.interface.telecom import ITelecomService
+from luxtj.application.interface.user_accounts import IUserAccountsService
 from luxtj.exceptions.authentication import (
     InvalidPhoneNumberException,
     PhoneNumberAlreadyRegisteredException,

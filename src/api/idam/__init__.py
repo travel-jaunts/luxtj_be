@@ -8,7 +8,8 @@ from common.serializerlib import (
     ApiSuccessResponse,
     RequestProcessStatus,
 )
-from luxtj.service import AuthenticationService, TelecomServiceProvider, UserAccountsServiceProvider
+from luxtj.application.service.authentication import AuthenticationService
+from luxtj. TelecomServiceProvider, UserAccountsServiceProvider
 
 idam_router = APIRouter(prefix="/idam")
 

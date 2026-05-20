@@ -5,14 +5,27 @@ from fastapi import FastAPI
 from httpx import AsyncClient
 
 from common.serializerlib import HealthStatusResult
+from luxtj.application.service.event import InProcessEventPublisher, PrintInProcessEventSubscriber
 
 
 @asynccontextmanager
 async def init_app_state(fastapi_app: FastAPI):
     fastapi_app.state.start_timestamp = datetime.now(UTC)
-    async with AsyncClient() as client:
-        fastapi_app.state.http_client = client
-        yield
+
+    event_publisher = InProcessEventPublisher()
+    print_subscriber = PrintInProcessEventSubscriber(event_publisher=event_publisher)
+
+    fastapi_app.state.domain_event_publisher = event_publisher
+    fastapi_app.state.domain_event_subscribers = [print_subscriber]
+
+    await print_subscriber.start()
+
+    try:
+        async with AsyncClient() as client:
+            fastapi_app.state.http_client = client
+            yield
+    finally:
+        await print_subscriber.stop()
 
 
 def get_start_timestamp(fastapi_app: FastAPI) -> datetime:
@@ -27,6 +40,11 @@ def get_http_client(fastapi_app: FastAPI) -> AsyncClient:
     - Can be used in Depends
     """
     return fastapi_app.state.http_client
+
+
+def get_domain_event_publisher(fastapi_app: FastAPI) -> InProcessEventPublisher:
+    """Helper function to retrieve the application's in-process event publisher."""
+    return fastapi_app.state.domain_event_publisher
 
 
 def health_check(fastapi_app: FastAPI) -> HealthStatusResult:
