@@ -1,7 +1,7 @@
 from datetime import date, datetime
 from uuid import UUID, uuid7
 
-from sqlalchemy import Date, String, Text
+from sqlalchemy import Date, String, Text, Boolean
 from sqlalchemy.dialects.postgresql import ARRAY
 from sqlalchemy.dialects.postgresql import UUID as PGUUID
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
@@ -21,7 +21,12 @@ class TimestampMixin:
     )
 
 
-class MarketingCampaign(Base, TimestampMixin):
+class SoftDeleteMixin:
+    is_deleted: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    deleted_at: Mapped[datetime | None] = mapped_column(Date, nullable=True, default=None)
+
+
+class MarketingCampaign(Base, TimestampMixin, SoftDeleteMixin):
     """Entity mapped to a PostgreSQL table for campaign data captured by marketing DTOs."""
 
     __tablename__ = "marketing_campaigns"
