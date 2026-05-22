@@ -9,7 +9,7 @@ from luxtj.domain.model import MarketingCampaign
 from luxtj.domain.repository.marketing import IMarketingRepository
 from luxtj.domain.service.marketing import MarketingService
 from luxtj.utils import mockutils
-from luxtj.utils.time import datetime_now
+from luxtj.utils.timeutils import datetime_now
 
 
 class InMemoryMarketingRepository(IMarketingRepository):

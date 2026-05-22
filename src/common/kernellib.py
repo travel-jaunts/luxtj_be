@@ -1,16 +1,17 @@
 from contextlib import asynccontextmanager
-from datetime import UTC, datetime
+from datetime import datetime
 
 from fastapi import FastAPI
 from httpx import AsyncClient
 
 from common.serializerlib import HealthStatusResult
 from luxtj.application.service.event import InProcessEventPublisher, PrintInProcessEventSubscriber
+from luxtj.utils import timeutils
 
 
 @asynccontextmanager
 async def init_app_state(fastapi_app: FastAPI):
-    fastapi_app.state.start_timestamp = datetime.now(UTC)
+    fastapi_app.state.start_timestamp = timeutils.datetime_now()
 
     event_publisher = InProcessEventPublisher()
     print_subscriber = PrintInProcessEventSubscriber(event_publisher=event_publisher)
@@ -49,6 +50,8 @@ def get_domain_event_publisher(fastapi_app: FastAPI) -> InProcessEventPublisher:
 
 def health_check(fastapi_app: FastAPI) -> HealthStatusResult:
     return HealthStatusResult(
-        uptime_seconds=int((datetime.now(UTC) - get_start_timestamp(fastapi_app)).total_seconds()),
+        uptime_seconds=int(
+            (timeutils.datetime_now() - get_start_timestamp(fastapi_app)).total_seconds()
+        ),
         database_connected=False,  # TODO: implement actual database connectivity check
     )

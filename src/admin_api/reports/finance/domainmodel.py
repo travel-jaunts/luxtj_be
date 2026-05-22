@@ -1,10 +1,10 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import UTC, date, datetime, timedelta
+from datetime import date, datetime, timedelta
 from enum import StrEnum
 
-from luxtj.utils import mockutils
+from luxtj.utils import mockutils, timeutils
 
 
 class FinanceMetricTypeEnum(StrEnum):
@@ -57,7 +57,7 @@ def default_finance_date_range(
     to_date: date | None,
     fallback_days: int,
 ) -> tuple[date, date]:
-    end_date = to_date or datetime.now(tz=UTC).date()
+    end_date = to_date or timeutils.datetime_now().date()
     start_date = from_date or (end_date - timedelta(days=fallback_days - 1))
     if start_date > end_date:
         start_date, end_date = end_date, start_date

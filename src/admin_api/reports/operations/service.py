@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import UTC, date, datetime
+from datetime import date
 
 from admin_api.reports.operations.domainmodel import (
     OperationsApprovalSummaryDomainModel,
@@ -8,6 +8,8 @@ from admin_api.reports.operations.domainmodel import (
     PartnerResponseTimeSummaryDomainModel,
     SupportResolutionTimeSummaryDomainModel,
 )
+
+from luxtj.utils import timeutils
 
 
 class OperationsReportService:
@@ -19,7 +21,7 @@ class OperationsReportService:
     ) -> OperationsReportDomainModel:
         return OperationsReportDomainModel(
             title="Operations Overview",
-            generated_at=datetime.now(tz=UTC),
+            generated_at=timeutils.datetime_now(),
             from_date=from_date,
             to_date=to_date,
             approvals_pending=OperationsApprovalSummaryDomainModel.generate_mock(),

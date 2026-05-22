@@ -2,6 +2,8 @@ import random
 import uuid
 from datetime import UTC, datetime, timedelta
 
+from luxtj.utils import timeutils
+
 _random_seed: int = 0
 random.seed(_random_seed)
 
@@ -127,6 +129,6 @@ def random_property_type() -> str:
 
 
 def random_date_from_past_days(days: int = 365) -> datetime:
-    end_date = datetime.now(tz=UTC)
+    end_date = timeutils.datetime_now()
     start_date = end_date - timedelta(days=days)
     return start_date + (end_date - start_date) * random.random()

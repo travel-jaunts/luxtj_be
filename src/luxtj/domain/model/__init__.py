@@ -7,7 +7,7 @@ from sqlalchemy.dialects.postgresql import UUID as PGUUID
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 from luxtj.domain.enums import CampaignChannelEnum, ScheduleFrequencyEnum
-from luxtj.utils.time import datetime_now
+from luxtj.utils import timeutils
 
 
 class Base(DeclarativeBase):
@@ -15,9 +15,11 @@ class Base(DeclarativeBase):
 
 
 class TimestampMixin:
-    created_at: Mapped[datetime] = mapped_column(Date, nullable=False, default=datetime_now)
+    created_at: Mapped[datetime] = mapped_column(
+        Date, nullable=False, default=timeutils.datetime_now
+    )
     updated_at: Mapped[datetime] = mapped_column(
-        Date, nullable=False, default=datetime_now, onupdate=datetime_now
+        Date, nullable=False, default=timeutils.datetime_now, onupdate=timeutils.datetime_now
     )
 
 

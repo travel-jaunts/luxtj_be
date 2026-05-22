@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import UTC, date, datetime
+from datetime import date
 
 from admin_api.customer.users.domainmodel import CustomerDomainModel
 from admin_api.reports.customers.domainmodel import (
@@ -11,7 +11,7 @@ from admin_api.reports.customers.domainmodel import (
     mock_customer_overview,
     mock_customer_value_row,
 )
-from luxtj.utils import mockutils
+from luxtj.utils import mockutils, timeutils
 
 CUSTOMER_REPORT_OPTIONS = [
     CustomerReportIdentityDomainModel.from_customer_model(CustomerDomainModel.generate_mock())
@@ -58,7 +58,7 @@ class CustomerReportService:
         support_ticket_count = mockutils.random.randint(0, 18)
         return CustomerSatisfactionReportDomainModel(
             title="Customer Satisfaction",
-            generated_at=datetime.now(tz=UTC),
+            generated_at=timeutils.datetime_now(),
             customer=customer,
             average_rating=round(mockutils.random.uniform(2.5, 5.0), 2),
             rating_count=mockutils.random.randint(0, 80),
