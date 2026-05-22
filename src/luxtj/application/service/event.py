@@ -2,7 +2,7 @@ import asyncio
 from abc import ABC, abstractmethod
 
 from luxtj.application.interface.event import IDomainEventPublisher
-from luxtj.domain.event.base import BaseDomainEvent
+from luxtj.domains.event.base import BaseDomainEvent
 
 
 class BaseInProcessEventSubscriber(ABC):

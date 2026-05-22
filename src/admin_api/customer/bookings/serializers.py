@@ -5,7 +5,7 @@ from admin_api.customer.bookings.domainmodel import (
     CustomerBookingDomainModel,
 )
 from common.serializerlib import AmountSerializer, ApiSerializerBaseModel
-from luxtj.domain.enums import (
+from luxtj.domains.enums import (
     BookingSourceEnum,
     BookingStatusEnum,
     BookingTypeEnum,

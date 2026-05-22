@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from datetime import datetime
 
 from admin_api.customer.users.domainmodel import CustomerDomainModel
-from luxtj.domain.enums import (
+from luxtj.domains.enums import (
     BookingSourceEnum,
     BookingStatusEnum,
     BookingTypeEnum,

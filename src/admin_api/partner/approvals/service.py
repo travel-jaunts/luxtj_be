@@ -8,7 +8,7 @@ from admin_api.partner.approvals.domainmodel import (
     LifetimeApprovalSummaryDomainModel,
 )
 from common.service.metadata import PaginationMeta
-from luxtj.domain.enums import ApprovalControlActionEnum
+from luxtj.domains.enums import ApprovalControlActionEnum
 from luxtj.utils import mockutils
 
 

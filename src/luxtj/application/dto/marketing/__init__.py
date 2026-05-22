@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from datetime import date
 
-from luxtj.domain.enums import CampaignChannelEnum, ScheduleFrequencyEnum
+from luxtj.domains.enums import CampaignChannelEnum, ScheduleFrequencyEnum
 
 
 @dataclass

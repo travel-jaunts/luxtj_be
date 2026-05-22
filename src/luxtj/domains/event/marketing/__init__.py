@@ -2,8 +2,8 @@ from typing import Any
 
 from pydantic import Field
 
-from luxtj.domain.event.base import BaseDomainEvent
-from luxtj.domain.model import MarketingCampaign
+from luxtj.domains.event.base import BaseDomainEvent
+from luxtj.domains.model import MarketingCampaign
 
 
 class DEMarketingCampaignCreated(BaseDomainEvent):

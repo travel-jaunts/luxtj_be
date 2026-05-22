@@ -1,6 +1,6 @@
 from typing import Protocol
 
-from luxtj.domain.entity import LuxtjUser, LuxtjUserAuthorizationDetail
+from luxtj.domains.entity import LuxtjUser, LuxtjUserAuthorizationDetail
 
 
 class IUserAccountsService(Protocol):

@@ -16,7 +16,7 @@ from common.serializerlib import (
     RequestProcessStatus,
     SearchFilterParams,
 )
-from luxtj.domain.enums import PartnerStatusControlActionEnum
+from luxtj.domains.enums import PartnerStatusControlActionEnum
 
 agent_partner_router = APIRouter()
 

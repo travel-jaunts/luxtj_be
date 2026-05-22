@@ -1,10 +1,10 @@
-from datetime import date
+from datetime import date, datetime
 
 from pydantic import Field, field_validator, model_validator
 
 from common.serializerlib import ApiSerializerBaseModel
-from luxtj.domain.enums import CampaignChannelEnum, ScheduleFrequencyEnum
-from luxtj.domain.model import MarketingCampaign
+from luxtj.domains.enums import CampaignChannelEnum, ScheduleFrequencyEnum, CampaignStatusEnum
+from luxtj.domains.model import MarketingCampaign
 from luxtj.utils import mockutils
 
 
@@ -69,10 +69,12 @@ class CampaignSerializer(ApiSerializerBaseModel):
     campaign_id: str
     campaign_name: str
     description: str
+    status: CampaignStatusEnum
     channel: CampaignChannelEnum
     audience: list[dict[str, object]]
     content: CampaignContentBody
     schedule: CampaignScheduleBody
+    created_at: datetime
 
     @classmethod
     def from_campaign(cls, campaign: MarketingCampaign) -> CampaignSerializer:
@@ -80,6 +82,7 @@ class CampaignSerializer(ApiSerializerBaseModel):
             campaign_id=str(campaign.id),
             campaign_name=campaign.name,
             description=campaign.description,
+            status=campaign.status,
             channel=campaign.channel,
             audience=[
                 {"userId": item, "userEmail": mockutils.random_user_email()}
@@ -93,4 +96,5 @@ class CampaignSerializer(ApiSerializerBaseModel):
                 frequency=campaign.frequency,
                 frequency_schedule=campaign.frequency_schedule,
             ),
+            created_at=campaign.created_at,
         )

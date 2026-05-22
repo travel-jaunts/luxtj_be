@@ -5,7 +5,7 @@ from datetime import datetime
 from enum import StrEnum
 
 from admin_api.customer.offers.domainmodel import OfferDomainModel
-from luxtj.domain.enums import (
+from luxtj.domains.enums import (
     BookingTypeEnum,
     OfferApplicabilityEnum,
     OfferCostBearerEnum,

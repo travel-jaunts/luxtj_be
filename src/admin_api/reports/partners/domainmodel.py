@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from enum import StrEnum
 
-from luxtj.domain.enums import PartnerTypeEnum
+from luxtj.domains.enums import PartnerTypeEnum
 from luxtj.utils import mockutils, timeutils
 
 

@@ -1,8 +1,8 @@
 from luxtj.application.dto.marketing import CreateCampaignDTO, UpdateCampaignDTO
 from luxtj.application.interface.event import IDomainEventPublisher
-from luxtj.domain.event.marketing import DEMarketingCampaignCreated
-from luxtj.domain.model import MarketingCampaign
-from luxtj.domain.repository.marketing import IMarketingRepository
+from luxtj.domains.event.marketing import DEMarketingCampaignCreated
+from luxtj.domains.model import MarketingCampaign
+from luxtj.domains.repository.marketing import IMarketingRepository
 
 
 class MarketingService:

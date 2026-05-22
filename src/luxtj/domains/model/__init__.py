@@ -6,7 +6,7 @@ from sqlalchemy.dialects.postgresql import ARRAY
 from sqlalchemy.dialects.postgresql import UUID as PGUUID
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
-from luxtj.domain.enums import CampaignChannelEnum, ScheduleFrequencyEnum
+from luxtj.domains.enums import CampaignChannelEnum, ScheduleFrequencyEnum, CampaignStatusEnum
 from luxtj.utils import timeutils
 
 
@@ -34,8 +34,9 @@ class MarketingCampaign(Base, TimestampMixin, SoftDeleteMixin):
     __tablename__ = "marketing_campaigns"
 
     id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), primary_key=True, default=uuid7)
-    name: Mapped[str] = mapped_column(String(255), nullable=False)
+    name: Mapped[str] = mapped_column(String(255), nullable=False, unique=True)
     description: Mapped[str] = mapped_column(Text, nullable=False)
+    status: Mapped[CampaignStatusEnum] = mapped_column(String(32), nullable=False)
     channel: Mapped[CampaignChannelEnum] = mapped_column(String(64), nullable=False)
     audience: Mapped[list[str]] = mapped_column(ARRAY(String), nullable=False)
     content: Mapped[str] = mapped_column(Text, nullable=False)

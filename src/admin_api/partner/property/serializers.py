@@ -14,7 +14,7 @@ from common.serializerlib import (
     ImageMetadataSerializer,
     LocationMetadataSerializer,
 )
-from luxtj.domain.enums import PartnerKYCStatusEnum, PropertySourceEnum, PropertyStatusEnum
+from luxtj.domains.enums import PartnerKYCStatusEnum, PropertySourceEnum, PropertyStatusEnum
 
 
 class PartnerBizKpiSummary(ApiSerializerBaseModel):

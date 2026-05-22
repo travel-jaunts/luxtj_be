@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from datetime import date
 
-from luxtj.domain.enums import OfferStatusEnum
+from luxtj.domains.enums import OfferStatusEnum
 
 
 @dataclass

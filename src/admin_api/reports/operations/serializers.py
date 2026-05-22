@@ -12,7 +12,7 @@ from admin_api.reports.operations.domainmodel import (
     SupportResolutionTimeSummaryDomainModel,
 )
 from common.serializerlib import ApiSerializerBaseModel
-from luxtj.domain.enums import PartnerTypeEnum
+from luxtj.domains.enums import PartnerTypeEnum
 
 
 class OperationsReportQuery(ApiSerializerBaseModel):

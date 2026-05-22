@@ -2,7 +2,7 @@ from datetime import date
 
 from admin_api.customer.support.domainmodel import SupportKpiSummary, SupportTicketDomainModel
 from common.service.metadata import PaginationMeta
-from luxtj.domain.enums import SupportTicketStatusEnum
+from luxtj.domains.enums import SupportTicketStatusEnum
 from luxtj.utils import mockutils, timeutils
 
 

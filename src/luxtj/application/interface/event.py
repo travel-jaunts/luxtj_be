@@ -1,6 +1,6 @@
 from typing import Protocol
 
-from luxtj.domain.event.base import BaseDomainEvent
+from luxtj.domains.event.base import BaseDomainEvent
 
 
 class IDomainEventPublisher(Protocol):

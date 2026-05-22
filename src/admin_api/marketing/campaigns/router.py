@@ -9,7 +9,7 @@ from admin_api.marketing.campaigns.serializers import (
 from admin_api.marketing.campaigns.service import build_marketing_service
 from common.serializerlib import ApiSuccessResponse, RequestProcessStatus
 from luxtj.application.dto.marketing import CreateCampaignDTO
-from luxtj.domain.service.marketing import MarketingService
+from luxtj.domains.service.marketing import MarketingService
 
 campaigns_router = APIRouter(prefix="/campaigns")
 

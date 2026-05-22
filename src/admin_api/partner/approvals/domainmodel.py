@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from datetime import datetime
 
-from luxtj.domain.enums import ApprovalStatusEnum, ApprovalTypeEnum
+from luxtj.domains.enums import ApprovalStatusEnum, ApprovalTypeEnum
 from luxtj.utils import mockutils
 
 

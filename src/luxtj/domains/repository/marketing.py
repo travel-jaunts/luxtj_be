@@ -1,7 +1,7 @@
 from typing import Protocol
 
 from luxtj.application.dto.marketing import CreateCampaignDTO, UpdateCampaignDTO
-from luxtj.domain.model import MarketingCampaign
+from luxtj.domains.model import MarketingCampaign
 
 
 class IMarketingRepository(Protocol):

@@ -5,9 +5,9 @@ from fastapi import Depends
 from common.injectorlib import domain_event_publisher_handle
 from luxtj.application.dto.marketing import CreateCampaignDTO, UpdateCampaignDTO
 from luxtj.application.service.event import InProcessEventPublisher
-from luxtj.domain.model import MarketingCampaign
-from luxtj.domain.repository.marketing import IMarketingRepository
-from luxtj.domain.service.marketing import MarketingService
+from luxtj.domains.model import MarketingCampaign
+from luxtj.domains.repository.marketing import IMarketingRepository
+from luxtj.domains.service.marketing import MarketingService
 from luxtj.utils import mockutils
 from luxtj.utils.timeutils import datetime_now
 

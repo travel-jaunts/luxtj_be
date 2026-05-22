@@ -5,7 +5,7 @@ from admin_api.customer.users.domainmodel import CustomerDomainModel
 from common.serializerlib import (
     ApiSerializerBaseModel,
 )
-from luxtj.domain.enums import (
+from luxtj.domains.enums import (
     CustomerTierEnum,
     SupportCategoryEnum,
     SupportEscalationLevelEnum,

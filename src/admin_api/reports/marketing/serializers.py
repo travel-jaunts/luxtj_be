@@ -12,7 +12,7 @@ from admin_api.reports.marketing.domainmodel import (
     OfferPerformanceTotalsDomainModel,
 )
 from common.serializerlib import AmountSerializer, ApiSerializerBaseModel
-from luxtj.domain.enums import (
+from luxtj.domains.enums import (
     BookingTypeEnum,
     OfferApplicabilityEnum,
     OfferCostBearerEnum,
