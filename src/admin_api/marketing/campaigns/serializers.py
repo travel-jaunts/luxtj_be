@@ -1,6 +1,6 @@
 from datetime import date, datetime
 
-from pydantic import Field, field_validator, model_validator
+from pydantic import Field, model_validator
 
 from common.serializerlib import ApiSerializerBaseModel
 from luxtj.domains.enums import CampaignChannelEnum, ScheduleFrequencyEnum, CampaignStatusEnum
@@ -37,13 +37,6 @@ class CampaignScheduleBody(ApiSerializerBaseModel):
         None,
         description="Cron expression or natural language description for recurring schedules (required if frequency is recurring)",
     )
-
-    @field_validator("start_date")
-    @classmethod
-    def validate_start_date(cls, value: date) -> date:
-        if value < date.today():
-            raise ValueError("start_date must be greater than or equal to today's date")
-        return value
 
     @model_validator(mode="after")
     def validate_frequency_schedule(self) -> CampaignScheduleBody:
