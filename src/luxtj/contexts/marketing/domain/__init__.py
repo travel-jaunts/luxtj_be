@@ -1,3 +1,4 @@
+from luxtj.contexts.marketing.domain.campaign import MarketingCampaign
 from luxtj.contexts.marketing.domain.events import (
     DEMarketingCampaignCreated,
     MarketingCampaignCreated,
@@ -5,5 +6,6 @@ from luxtj.contexts.marketing.domain.events import (
 
 __all__ = [
     "DEMarketingCampaignCreated",
+    "MarketingCampaign",
     "MarketingCampaignCreated",
 ]

@@ -1,18 +1,6 @@
-from typing import Protocol
+from luxtj.contexts.marketing.application.ports import AudienceResolver, IMarketingRepository
 
-from luxtj.application.dto.marketing import CreateCampaignDTO, UpdateCampaignDTO
-from luxtj.domains.model import MarketingCampaign
-
-
-class IMarketingRepository(Protocol):
-    async def list(self) -> list[MarketingCampaign]: ...
-
-    async def create(self, campaign_data: CreateCampaignDTO) -> MarketingCampaign: ...
-
-    async def get_by_id(self, campaign_id: str) -> MarketingCampaign: ...
-
-    async def update(
-        self, campaign_id: str, update_data: UpdateCampaignDTO
-    ) -> MarketingCampaign: ...
-
-    async def delete(self, campaign_id: str) -> MarketingCampaign: ...
+__all__ = [
+    "AudienceResolver",
+    "IMarketingRepository",
+]

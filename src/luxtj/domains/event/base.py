@@ -1,6 +1,10 @@
 from datetime import datetime
 from typing import Annotated, Any, Literal
-from uuid import uuid7
+
+try:
+    from uuid import uuid7
+except ImportError:  # pragma: no cover - Python < 3.14 compatibility for local tooling
+    from uuid import uuid4 as uuid7
 
 from pydantic import AnyUrl, BaseModel, ConfigDict, Field, StringConstraints
 

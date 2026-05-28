@@ -1,3 +1,4 @@
+from luxtj.contexts.marketing.presentation.http.router import campaigns_router
 from luxtj.contexts.marketing.presentation.http.schemas import (
     CampaignAudienceBody,
     CampaignContentBody,
@@ -12,4 +13,5 @@ __all__ = [
     "CampaignScheduleBody",
     "CampaignSerializer",
     "CreateCampaignBody",
+    "campaigns_router",
 ]
