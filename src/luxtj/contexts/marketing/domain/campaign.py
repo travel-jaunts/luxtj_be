@@ -10,7 +10,7 @@ from luxtj.contexts.marketing.domain.enums import (
     CampaignStatusEnum,
     ScheduleFrequencyEnum,
 )
-from luxtj.domains.event.base import BaseDomainEvent
+from luxtj.shared_kernel.domain import BaseDomainEvent
 
 try:
     from uuid import uuid7
@@ -32,7 +32,9 @@ class MarketingCampaign:
     frequency_schedule: str | None
     created_at: datetime
     updated_at: datetime
-    _events: list[BaseDomainEvent] = field(default_factory=list, init=False, repr=False)
+    _events: list[BaseDomainEvent] = field(
+        default_factory=list[BaseDomainEvent], init=False, repr=False
+    )
 
     @classmethod
     def create(

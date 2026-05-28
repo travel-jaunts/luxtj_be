@@ -5,7 +5,7 @@ from typing import Any
 from pydantic import Field
 
 from luxtj.contexts.marketing.domain.campaign import MarketingCampaign
-from luxtj.domains.event.base import BaseDomainEvent
+from luxtj.shared_kernel.domain import BaseDomainEvent
 
 
 class MarketingCampaignCreated(BaseDomainEvent):

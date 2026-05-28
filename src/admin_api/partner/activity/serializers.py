@@ -13,7 +13,7 @@ from common.serializerlib import (
     BankDetailsSerializer,
     ImageMetadataSerializer,
 )
-from luxtj.domains.enums import PartnerKYCStatusEnum
+from luxtj.contexts.partner.domain.enums import PartnerKYCStatusEnum
 
 
 class ActivityPartnerBizKpiSummary(ApiSerializerBaseModel):

@@ -10,7 +10,6 @@ from admin_api.reports.finance.domainmodel import (
     finance_trend_dates,
     mock_finance_trend_point,
 )
-
 from luxtj.utils import timeutils
 
 

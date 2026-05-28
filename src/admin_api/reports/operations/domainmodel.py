@@ -5,7 +5,7 @@ from datetime import date, datetime
 
 from admin_api.customer.support.domainmodel import SupportKpiSummary
 from admin_api.partner.approvals.domainmodel import ApprovalSummaryDomainModel
-from luxtj.domains.enums import PartnerTypeEnum
+from luxtj.contexts.reports.domain.enums import PartnerTypeEnum
 from luxtj.utils import mockutils
 
 

@@ -1,7 +1,11 @@
 from dataclasses import dataclass
 from datetime import datetime
 
-from luxtj.domains.enums import PartnerKYCStatusEnum, PropertySourceEnum, PropertyStatusEnum
+from luxtj.contexts.partner.domain.enums import (
+    PartnerKYCStatusEnum,
+    PropertySourceEnum,
+    PropertyStatusEnum,
+)
 from luxtj.utils import mockutils
 
 

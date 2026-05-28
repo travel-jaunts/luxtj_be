@@ -5,7 +5,10 @@ from fastapi import FastAPI
 from httpx import AsyncClient
 
 from common.serializerlib import HealthStatusResult
-from luxtj.application.service.event import InProcessEventPublisher, PrintInProcessEventSubscriber
+from luxtj.shared_kernel.infrastructure.events import (
+    InProcessEventPublisher,
+    PrintInProcessEventSubscriber,
+)
 from luxtj.utils import timeutils
 
 

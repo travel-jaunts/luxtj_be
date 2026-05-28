@@ -8,7 +8,6 @@ from admin_api.reports.operations.domainmodel import (
     PartnerResponseTimeSummaryDomainModel,
     SupportResolutionTimeSummaryDomainModel,
 )
-
 from luxtj.utils import timeutils
 
 

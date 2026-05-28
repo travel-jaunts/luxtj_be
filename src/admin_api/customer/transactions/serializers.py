@@ -6,7 +6,7 @@ from admin_api.customer.transactions.domainmodel import (
 )
 from admin_api.customer.users.domainmodel import CustomerDomainModel
 from common.serializerlib import AmountSerializer, ApiSerializerBaseModel
-from luxtj.domains.enums import (
+from luxtj.contexts.customer.domain.enums import (
     CustomerTierEnum,
     PaymentMethodEnum,
     PaymentSourceEnum,

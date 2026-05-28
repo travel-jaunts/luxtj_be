@@ -19,7 +19,7 @@ from admin_api.partner.offers.dto import (
     UpdateSeasonalPricingDTO,
 )
 from common.serializerlib import AmountSerializer, ApiSerializerBaseModel
-from luxtj.domains.enums import OfferStatusEnum, OfferTypeEnum
+from luxtj.contexts.partner.domain.enums import OfferStatusEnum, OfferTypeEnum
 
 
 class PartnerOfferDetailLineItem(ApiSerializerBaseModel):

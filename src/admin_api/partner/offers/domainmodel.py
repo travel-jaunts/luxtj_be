@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from datetime import date, datetime, timedelta
 
-from luxtj.domains.enums import OfferStatusEnum
+from luxtj.contexts.partner.domain.enums import OfferStatusEnum
 from luxtj.utils import mockutils
 
 

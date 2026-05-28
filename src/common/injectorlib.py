@@ -2,7 +2,7 @@ from fastapi import FastAPI, Request
 from httpx import AsyncClient
 
 from common.kernellib import get_domain_event_publisher, get_http_client
-from luxtj.application.service.event import InProcessEventPublisher
+from luxtj.shared_kernel.infrastructure.events import InProcessEventPublisher
 
 
 def fastapi_app_handle(request: Request) -> FastAPI:

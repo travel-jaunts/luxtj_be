@@ -1,17 +1,17 @@
-from luxtj.application.interface.event import IDomainEventPublisher
 from luxtj.contexts.marketing.application.commands import (
     CreateCampaignCommand,
     UpdateCampaignCommand,
 )
 from luxtj.contexts.marketing.application.ports import AudienceResolver, MarketingRepository
 from luxtj.contexts.marketing.domain.campaign import MarketingCampaign
+from luxtj.shared_kernel.application import DomainEventPublisher
 
 
 class MarketingService:
     def __init__(
         self,
         marketing_repository: MarketingRepository,
-        event_publisher: IDomainEventPublisher,
+        event_publisher: DomainEventPublisher,
         audience_resolver: AudienceResolver | None = None,
     ):
         self.marketing_repository = marketing_repository

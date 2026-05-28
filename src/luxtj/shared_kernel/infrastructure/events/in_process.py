@@ -1,8 +1,8 @@
 import asyncio
 from abc import ABC, abstractmethod
 
-from luxtj.application.interface.event import IDomainEventPublisher
-from luxtj.domains.event.base import BaseDomainEvent
+from luxtj.shared_kernel.application.event_bus import DomainEventPublisher
+from luxtj.shared_kernel.domain.events import BaseDomainEvent
 
 
 class BaseInProcessEventSubscriber(ABC):
@@ -63,12 +63,11 @@ class BaseInProcessEventSubscriber(ABC):
         """Handle one domain event from the queue."""
 
 
-class InProcessEventPublisher(IDomainEventPublisher):
+class InProcessEventPublisher(DomainEventPublisher):
     def __init__(self):
         self.event_queue = asyncio.Queue[BaseDomainEvent](maxsize=100)
 
     async def publish(self, event: BaseDomainEvent) -> None:
-        """In-process event publisher that directly invokes handlers."""
         await self.event_queue.put(event)
 
 

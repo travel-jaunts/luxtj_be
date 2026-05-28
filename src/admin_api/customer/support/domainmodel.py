@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from datetime import datetime
 
 from admin_api.customer.users.domainmodel import CustomerDomainModel
-from luxtj.domains.enums import (
+from luxtj.contexts.customer.domain.enums import (
     SupportCategoryEnum,
     SupportEscalationLevelEnum,
     SupportTicketPriorityEnum,

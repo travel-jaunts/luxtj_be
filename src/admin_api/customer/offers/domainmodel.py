@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from datetime import datetime
 
-from luxtj.domains.enums import (
+from luxtj.contexts.customer.domain.enums import (
     BookingTypeEnum,
     OfferApplicabilityEnum,
     OfferCostBearerEnum,

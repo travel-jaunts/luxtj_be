@@ -12,7 +12,7 @@ from luxtj.contexts.marketing.domain.enums import (
     ScheduleFrequencyEnum,
 )
 from luxtj.contexts.marketing.infrastructure.persistence import InMemoryMarketingRepository
-from luxtj.domains.event.base import BaseDomainEvent
+from luxtj.shared_kernel.domain import BaseDomainEvent
 
 
 class CapturingEventPublisher:
