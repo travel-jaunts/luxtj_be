@@ -36,6 +36,3 @@ class MarketingCampaignCreated(BaseDomainEvent):
                 "created_at": campaign.created_at.isoformat(),
             },
         )
-
-
-DEMarketingCampaignCreated = MarketingCampaignCreated

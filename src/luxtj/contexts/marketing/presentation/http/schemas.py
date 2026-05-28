@@ -6,7 +6,11 @@ from pydantic import Field, model_validator
 
 from common.serializerlib import ApiSerializerBaseModel
 from luxtj.contexts.marketing.domain.campaign import MarketingCampaign
-from luxtj.domains.enums import CampaignChannelEnum, CampaignStatusEnum, ScheduleFrequencyEnum
+from luxtj.contexts.marketing.domain.enums import (
+    CampaignChannelEnum,
+    CampaignStatusEnum,
+    ScheduleFrequencyEnum,
+)
 from luxtj.utils import mockutils
 
 

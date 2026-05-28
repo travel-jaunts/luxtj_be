@@ -11,7 +11,6 @@ from fastapi import APIRouter, Depends, FastAPI
 # from opentelemetry.sdk.trace.export import BatchSpanProcessor
 from admin_api.audit_logs import admin_audit_logs_router
 from admin_api.customer import customer_router
-from admin_api.marketing import marketing_router
 from admin_api.partner import partner_router
 from admin_api.reports import reports_router
 from api import config
@@ -21,6 +20,7 @@ from common.injectorlib import fastapi_app_handle
 from common.kernellib import health_check, init_app_state
 from common.middlewarelib import EndpointExceptionHandler, EnforcePostMethodOnly
 from common.serializerlib import ApiSuccessResponse, HealthStatusResult
+from luxtj.contexts.marketing.presentation.http import marketing_router
 
 
 @asynccontextmanager

@@ -5,7 +5,11 @@ from dataclasses import dataclass, field
 from datetime import UTC, date, datetime
 from uuid import UUID
 
-from luxtj.domains.enums import CampaignChannelEnum, CampaignStatusEnum, ScheduleFrequencyEnum
+from luxtj.contexts.marketing.domain.enums import (
+    CampaignChannelEnum,
+    CampaignStatusEnum,
+    ScheduleFrequencyEnum,
+)
 from luxtj.domains.event.base import BaseDomainEvent
 
 try:

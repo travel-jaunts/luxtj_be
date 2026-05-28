@@ -60,3 +60,7 @@ async def create_campaign(
         status=RequestProcessStatus.OK,
         output=CampaignSerializer.from_campaign(campaign),
     )
+
+
+marketing_router = APIRouter(prefix="/marketing", tags=["admin_marketing"])
+marketing_router.include_router(campaigns_router)

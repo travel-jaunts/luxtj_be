@@ -6,7 +6,7 @@ from luxtj.contexts.marketing.application.commands import (
 from luxtj.contexts.marketing.domain.campaign import MarketingCampaign
 
 
-class IMarketingRepository(Protocol):
+class MarketingRepository(Protocol):
     async def list(self) -> list[MarketingCampaign]: ...
 
     async def add(self, campaign: MarketingCampaign) -> MarketingCampaign: ...

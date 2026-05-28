@@ -1,10 +1,10 @@
 from luxtj.contexts.marketing.application.commands import CreateCampaignCommand
-from luxtj.contexts.marketing.application.ports import IMarketingRepository
+from luxtj.contexts.marketing.application.ports import MarketingRepository
 from luxtj.contexts.marketing.domain.campaign import MarketingCampaign
 from luxtj.utils import mockutils
 
 
-class InMemoryMarketingRepository(IMarketingRepository):
+class InMemoryMarketingRepository(MarketingRepository):
     def __init__(self) -> None:
         self._campaigns: dict[str, MarketingCampaign] = {}
 

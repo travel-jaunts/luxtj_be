@@ -6,8 +6,12 @@ from fastapi.testclient import TestClient
 from api.main import server_factory
 from luxtj.contexts.marketing.application.commands import CreateCampaignCommand
 from luxtj.contexts.marketing.application.use_cases import MarketingService
+from luxtj.contexts.marketing.domain.enums import (
+    CampaignChannelEnum,
+    CampaignStatusEnum,
+    ScheduleFrequencyEnum,
+)
 from luxtj.contexts.marketing.infrastructure.persistence import InMemoryMarketingRepository
-from luxtj.domains.enums import CampaignChannelEnum, CampaignStatusEnum, ScheduleFrequencyEnum
 from luxtj.domains.event.base import BaseDomainEvent
 
 

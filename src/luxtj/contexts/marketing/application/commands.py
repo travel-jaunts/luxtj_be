@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from datetime import date
 
-from luxtj.domains.enums import CampaignChannelEnum, ScheduleFrequencyEnum
+from luxtj.contexts.marketing.domain.enums import CampaignChannelEnum, ScheduleFrequencyEnum
 
 
 @dataclass(frozen=True)
@@ -27,7 +27,3 @@ class UpdateCampaignCommand:
     start_date: date
     frequency: ScheduleFrequencyEnum
     frequency_schedule: str | None = None
-
-
-CreateCampaignDTO = CreateCampaignCommand
-UpdateCampaignDTO = UpdateCampaignCommand

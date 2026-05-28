@@ -266,24 +266,3 @@ class PartnerTypeEnum(StrEnum):
     AFFILIATE = "affiliate"
 
 
-class CampaignChannelEnum(StrEnum):
-    """Enum to represent different outbound campaign channels"""
-
-    EMAIL = "email"
-    WHATSAPP = "whatsApp"
-    SMS = "SMS"
-    PUSH_NOTIFICATIONS = "push notifications"
-
-
-class ScheduleFrequencyEnum(StrEnum):
-    ONE_TIME = "one-time"
-    RECURRING = "recurring"
-
-
-class CampaignStatusEnum(StrEnum):
-    DRAFT = "draft"
-    SCHEDULED = "scheduled"
-    ACTIVE = "active"
-    PAUSED = "paused"
-    COMPLETED = "completed"
-    CANCELLED = "cancelled"

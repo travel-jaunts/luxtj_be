@@ -3,14 +3,14 @@ from luxtj.contexts.marketing.application.commands import (
     CreateCampaignCommand,
     UpdateCampaignCommand,
 )
-from luxtj.contexts.marketing.application.ports import AudienceResolver, IMarketingRepository
+from luxtj.contexts.marketing.application.ports import AudienceResolver, MarketingRepository
 from luxtj.contexts.marketing.domain.campaign import MarketingCampaign
 
 
 class MarketingService:
     def __init__(
         self,
-        marketing_repository: IMarketingRepository,
+        marketing_repository: MarketingRepository,
         event_publisher: IDomainEventPublisher,
         audience_resolver: AudienceResolver | None = None,
     ):
