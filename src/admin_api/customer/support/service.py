@@ -1,9 +1,9 @@
-from datetime import UTC, date, datetime
+from datetime import date
 
 from admin_api.customer.support.domainmodel import SupportKpiSummary, SupportTicketDomainModel
 from common.service.metadata import PaginationMeta
-from luxtj.domain.enums import SupportTicketStatusEnum
-from luxtj.utils import mockutils
+from luxtj.contexts.customer.domain.enums import SupportTicketStatusEnum
+from luxtj.utils import mockutils, timeutils
 
 
 class CustomerSupportService:
@@ -62,7 +62,7 @@ class CustomerSupportService:
         # TODO: Implement actual resolve ticket logic here
         mock = SupportTicketDomainModel.generate_mock()
         mock.status = SupportTicketStatusEnum.CLOSED
-        mock.resolution_date = datetime.now(tz=UTC)
+        mock.resolution_date = timeutils.datetime_now()
         return mock
 
     async def get_kpi_summary(self) -> SupportKpiSummary:

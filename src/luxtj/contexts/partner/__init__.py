@@ -1,0 +1,1 @@
+"""Partner bounded context."""

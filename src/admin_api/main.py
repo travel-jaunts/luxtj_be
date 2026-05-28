@@ -5,11 +5,11 @@ from fastapi import Depends, FastAPI
 
 from admin_api.audit_logs import admin_audit_logs_router
 from admin_api.customer import customer_router
-from admin_api.marketing import marketing_router
 from admin_api.reports import reports_router
 from common.injectorlib import fastapi_app_handle
 from common.kernellib import health_check, init_app_state
 from common.serializerlib import ApiSuccessResponse, HealthStatusResult
+from luxtj.contexts.marketing.presentation.http import marketing_router
 
 
 @asynccontextmanager
@@ -34,15 +34,15 @@ def server_factory() -> FastAPI:
     api_application.include_router(admin_audit_logs_router)
 
     @api_application.post("/ping", tags=["ops"])
-    def _() -> str:
+    async def _() -> str:
         return "pong"
 
     @api_application.post("/health", tags=["ops"])
-    def _(
+    async def _(
         app_core: Annotated[FastAPI, Depends(fastapi_app_handle)],
     ) -> ApiSuccessResponse[HealthStatusResult]:
         return ApiSuccessResponse(
-            output=health_check(app_core),
+            output=await health_check(app_core),
         )
 
     return api_application

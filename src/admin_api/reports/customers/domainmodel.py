@@ -1,11 +1,11 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import UTC, date, datetime
+from datetime import date, datetime
 from enum import StrEnum
 
 from admin_api.customer.users.domainmodel import CustomerDomainModel
-from luxtj.utils import mockutils
+from luxtj.utils import mockutils, timeutils
 
 
 class CustomerSpendCategoryEnum(StrEnum):
@@ -113,7 +113,7 @@ class CustomerValueReportDomainModel:
 
         return cls(
             title="Customer Value",
-            generated_at=datetime.now(tz=UTC),
+            generated_at=timeutils.datetime_now(),
             currency=currency,
             totals=CustomerValueTotalsDomainModel(
                 customer_count=len(rows),
@@ -152,7 +152,7 @@ def mock_customer_overview(
     active_customers = mockutils.random.randint(total_customers // 3, total_customers)
     return CustomerOverviewDomainModel(
         title="Customer Overview",
-        generated_at=datetime.now(tz=UTC),
+        generated_at=timeutils.datetime_now(),
         currency=currency,
         from_date=from_date,
         to_date=to_date,

@@ -1,8 +1,8 @@
 from dataclasses import dataclass
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timedelta
 from enum import StrEnum
 
-from luxtj.utils import mockutils
+from luxtj.utils import mockutils, timeutils
 
 
 class AuditLogActionCategoryEnum(StrEnum):
@@ -142,6 +142,6 @@ def date_range_to_utc_datetimes(
     from_date: datetime | None,
     to_date: datetime | None,
 ) -> tuple[datetime, datetime]:
-    end_datetime = to_date or datetime.now(tz=UTC)
+    end_datetime = to_date or timeutils.datetime_now()
     start_datetime = from_date or end_datetime - timedelta(days=7)
     return start_datetime, end_datetime

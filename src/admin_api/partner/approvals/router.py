@@ -17,7 +17,7 @@ from common.serializerlib import (
     RequestProcessStatus,
     SearchFilterParams,
 )
-from luxtj.domain.enums import ApprovalControlActionEnum
+from luxtj.contexts.partner.domain.enums import ApprovalControlActionEnum
 
 approvals_router = APIRouter()
 

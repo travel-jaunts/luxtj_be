@@ -3,24 +3,16 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, FastAPI
 
-# from opentelemetry import trace
-# from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
-# from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
-# from opentelemetry.sdk.resources import Resource
-# from opentelemetry.sdk.trace import TracerProvider
-# from opentelemetry.sdk.trace.export import BatchSpanProcessor
 from admin_api.audit_logs import admin_audit_logs_router
 from admin_api.customer import customer_router
-from admin_api.marketing import marketing_router
 from admin_api.partner import partner_router
 from admin_api.reports import reports_router
 from api import config
-
-# from api.idam import idam_router
 from common.injectorlib import fastapi_app_handle
 from common.kernellib import health_check, init_app_state
 from common.middlewarelib import EndpointExceptionHandler, EnforcePostMethodOnly
 from common.serializerlib import ApiSuccessResponse, HealthStatusResult
+from luxtj.contexts.marketing.presentation.http import marketing_router
 
 
 @asynccontextmanager
@@ -61,7 +53,7 @@ def server_factory() -> FastAPI:
         app_core: Annotated[FastAPI, Depends(fastapi_app_handle)],
     ) -> ApiSuccessResponse[HealthStatusResult]:
         return ApiSuccessResponse(
-            output=health_check(app_core),
+            output=await health_check(app_core),
         )
 
     api_application.add_middleware(EndpointExceptionHandler)

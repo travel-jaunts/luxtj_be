@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import UTC, date, datetime
+from datetime import date
 
 from admin_api.reports.finance.domainmodel import (
     FinanceMetricTypeEnum,
@@ -10,6 +10,7 @@ from admin_api.reports.finance.domainmodel import (
     finance_trend_dates,
     mock_finance_trend_point,
 )
+from luxtj.utils import timeutils
 
 
 class FinanceReportService:
@@ -41,7 +42,7 @@ class FinanceReportService:
 
         return FinanceReportDomainModel(
             title="Finance Overview",
-            generated_at=datetime.now(tz=UTC),
+            generated_at=timeutils.datetime_now(),
             currency=iso_currency_str,
             from_date=resolved_from_date,
             to_date=resolved_to_date,

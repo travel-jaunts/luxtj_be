@@ -1,18 +1,18 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import UTC, datetime
+from datetime import datetime
 from enum import StrEnum
 
 from admin_api.customer.offers.domainmodel import OfferDomainModel
-from luxtj.domain.enums import (
+from luxtj.contexts.reports.domain.enums import (
     BookingTypeEnum,
     OfferApplicabilityEnum,
     OfferCostBearerEnum,
     OfferStatusEnum,
     OfferTypeEnum,
 )
-from luxtj.utils import mockutils
+from luxtj.utils import mockutils, timeutils
 
 
 class CampaignChannelEnum(StrEnum):
@@ -99,7 +99,7 @@ class CampaignPerformanceReportDomainModel:
     ) -> CampaignPerformanceReportDomainModel:
         return cls(
             title="Campaign Performance",
-            generated_at=datetime.now(tz=UTC),
+            generated_at=timeutils.datetime_now(),
             currency=currency,
             totals=CampaignPerformanceTotalsDomainModel(
                 impressions=sum(row.impressions for row in rows),
@@ -204,7 +204,7 @@ class OfferPerformanceReportDomainModel:
     ) -> OfferPerformanceReportDomainModel:
         return cls(
             title="Offer Performance",
-            generated_at=datetime.now(tz=UTC),
+            generated_at=timeutils.datetime_now(),
             currency=currency,
             totals=OfferPerformanceTotalsDomainModel(
                 usage_count=sum(row.usage_count for row in rows),

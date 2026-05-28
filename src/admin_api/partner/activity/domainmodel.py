@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from enum import StrEnum
 
-from luxtj.domain.enums import PartnerKYCStatusEnum
+from luxtj.contexts.partner.domain.enums import PartnerKYCStatusEnum
 from luxtj.utils import mockutils
 
 

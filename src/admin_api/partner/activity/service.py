@@ -7,7 +7,7 @@ from admin_api.partner.activity.domainmodel import (
 )
 from admin_api.partner.activity.dto import UpdateActivityPartnerDetailsDTO
 from common.service.metadata import PaginationMeta
-from luxtj.domain.enums import PartnerStatusControlActionEnum
+from luxtj.contexts.partner.domain.enums import PartnerStatusControlActionEnum
 from luxtj.utils import mockutils
 
 
