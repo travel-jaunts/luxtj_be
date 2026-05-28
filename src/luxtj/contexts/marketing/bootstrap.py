@@ -1,22 +1,24 @@
 from typing import Annotated
 
 from fastapi import Depends
+from sqlalchemy.ext.asyncio import AsyncSession
 
-from common.injectorlib import domain_event_publisher_handle
+from common.injectorlib import database_session_handle, domain_event_publisher_handle
 from luxtj.contexts.marketing.application.ports import AudienceResolver, MarketingRepository
 from luxtj.contexts.marketing.application.use_cases import MarketingService
 from luxtj.contexts.marketing.infrastructure.persistence import (
-    InMemoryMarketingRepository,
     MockMarketingAudienceResolver,
+    SqlAlchemyMarketingRepository,
 )
 from luxtj.shared_kernel.application import DomainEventPublisher
 
-_MARKETING_REPOSITORY = InMemoryMarketingRepository()
 _AUDIENCE_RESOLVER = MockMarketingAudienceResolver()
 
 
-def build_marketing_repository() -> MarketingRepository:
-    return _MARKETING_REPOSITORY
+def build_marketing_repository(
+    session: Annotated[AsyncSession, Depends(database_session_handle)],
+) -> MarketingRepository:
+    return SqlAlchemyMarketingRepository(session)
 
 
 def build_marketing_audience_resolver() -> AudienceResolver:

@@ -34,15 +34,15 @@ def server_factory() -> FastAPI:
     api_application.include_router(admin_audit_logs_router)
 
     @api_application.post("/ping", tags=["ops"])
-    def _() -> str:
+    async def _() -> str:
         return "pong"
 
     @api_application.post("/health", tags=["ops"])
-    def _(
+    async def _(
         app_core: Annotated[FastAPI, Depends(fastapi_app_handle)],
     ) -> ApiSuccessResponse[HealthStatusResult]:
         return ApiSuccessResponse(
-            output=health_check(app_core),
+            output=await health_check(app_core),
         )
 
     return api_application

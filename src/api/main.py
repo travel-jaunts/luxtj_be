@@ -53,7 +53,7 @@ def server_factory() -> FastAPI:
         app_core: Annotated[FastAPI, Depends(fastapi_app_handle)],
     ) -> ApiSuccessResponse[HealthStatusResult]:
         return ApiSuccessResponse(
-            output=health_check(app_core),
+            output=await health_check(app_core),
         )
 
     api_application.add_middleware(EndpointExceptionHandler)

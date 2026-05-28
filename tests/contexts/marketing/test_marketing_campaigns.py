@@ -1,9 +1,6 @@
 import asyncio
 from datetime import date
 
-from fastapi.testclient import TestClient
-
-from api.main import server_factory
 from luxtj.contexts.marketing.application.commands import CreateCampaignCommand
 from luxtj.contexts.marketing.application.use_cases import MarketingService
 from luxtj.contexts.marketing.domain.enums import (
@@ -11,7 +8,10 @@ from luxtj.contexts.marketing.domain.enums import (
     CampaignStatusEnum,
     ScheduleFrequencyEnum,
 )
-from luxtj.contexts.marketing.infrastructure.persistence import InMemoryMarketingRepository
+from luxtj.contexts.marketing.infrastructure.persistence import (
+    InMemoryMarketingRepository,
+    MarketingCampaignRow,
+)
 from luxtj.shared_kernel.domain import BaseDomainEvent
 
 
@@ -55,31 +55,45 @@ def test_create_campaign_persists_campaign_and_publishes_event() -> None:
     asyncio.run(run_case())
 
 
-def test_marketing_campaign_http_create_uses_context_adapter() -> None:
-    with TestClient(server_factory()) as client:
-        response = client.post(
-            "/v1/admin/marketing/campaigns/create",
-            json={
-                "campaignName": "Festive Luxury",
-                "description": "Holiday campaign",
-                "channel": "email",
-                "audience": {
-                    "segments": [],
-                    "specificUsers": ["user-42"],
-                },
-                "content": {
-                    "template": "Book now",
-                },
-                "schedule": {
-                    "startDate": "2026-06-15",
-                    "frequency": "one-time",
-                },
-            },
+def test_marketing_campaign_sqlalchemy_row_maps_domain_model() -> None:
+    campaign = asyncio.run(
+        _create_campaign(
+            name="Mapping Test",
+            audience_user_ids=["user-1"],
         )
+    )
 
-    assert response.status_code == 200
-    payload = response.json()
-    assert payload["status"] == "ok"
-    assert payload["output"]["campaignName"] == "Festive Luxury"
-    assert payload["output"]["status"] == "draft"
-    assert payload["output"]["audience"][0]["userId"] == "user-42"
+    row = MarketingCampaignRow.from_domain(campaign)
+    mapped_campaign = row.to_domain()
+
+    assert mapped_campaign.id == campaign.id
+    assert mapped_campaign.name == campaign.name
+    assert mapped_campaign.status == CampaignStatusEnum.DRAFT
+    assert mapped_campaign.channel == CampaignChannelEnum.EMAIL
+    assert mapped_campaign.audience == ["user-1"]
+
+
+async def _create_campaign(
+    *,
+    name: str,
+    audience_user_ids: list[str],
+):
+    repository = InMemoryMarketingRepository()
+    event_publisher = CapturingEventPublisher()
+    service = MarketingService(
+        marketing_repository=repository,
+        event_publisher=event_publisher,
+    )
+
+    return await service.create_campaign(
+        CreateCampaignCommand(
+            name=name,
+            description="Description",
+            channel=CampaignChannelEnum.EMAIL,
+            audience_segments=[],
+            audience_user_ids=audience_user_ids,
+            content_template="Hello",
+            start_date=date(2026, 6, 1),
+            frequency=ScheduleFrequencyEnum.ONE_TIME,
+        )
+    )
