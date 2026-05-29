@@ -51,15 +51,16 @@ known-first-party = [
     "src"
 ]
 
-[tool.pytest]
+[tool.pytest.ini_options]
 env_files = [
     ".dev.env"
 ]
 addopts = [
-    "-ra", 
-    "--cov", 
+    "-ra",
+    "--cov",
     "--import-mode=importlib",
 ]
+asyncio_mode = "auto"
 testpaths = [
     "tests",
 ]
@@ -70,6 +71,7 @@ pythonpath = [
 [dependency-groups]
 dev = [
     "pytest>=9.0.3",
+    "pytest-asyncio>=0.24",
     "pytest-cov>=7.1.0",
     "pytest-dotenv>=0.5.2",
     "ruff>=0.15.3",
