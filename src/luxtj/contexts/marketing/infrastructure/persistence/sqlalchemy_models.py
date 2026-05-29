@@ -36,6 +36,7 @@ class MarketingCampaignRow(MarketingBase):
     frequency_schedule: Mapped[str | None] = mapped_column(String(255), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    deleted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
     @classmethod
     def from_domain(cls, campaign: MarketingCampaign) -> MarketingCampaignRow:
@@ -52,6 +53,7 @@ class MarketingCampaignRow(MarketingBase):
             frequency_schedule=campaign.frequency_schedule,
             created_at=campaign.created_at,
             updated_at=campaign.updated_at,
+            deleted_at=campaign.deleted_at,
         )
 
     def update_from_domain(self, campaign: MarketingCampaign) -> None:
@@ -65,6 +67,7 @@ class MarketingCampaignRow(MarketingBase):
         self.frequency = campaign.frequency.value
         self.frequency_schedule = campaign.frequency_schedule
         self.updated_at = campaign.updated_at
+        self.deleted_at = campaign.deleted_at
 
     def to_domain(self) -> MarketingCampaign:
         from luxtj.contexts.marketing.domain.campaign import MarketingCampaign
@@ -82,4 +85,5 @@ class MarketingCampaignRow(MarketingBase):
             frequency_schedule=self.frequency_schedule,
             created_at=self.created_at,
             updated_at=self.updated_at,
+            deleted_at=self.deleted_at,
         )

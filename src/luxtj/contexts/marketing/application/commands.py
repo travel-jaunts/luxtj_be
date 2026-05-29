@@ -22,6 +22,16 @@ class CreateCampaignCommand:
 
 
 @dataclass(frozen=True)
+class DuplicateCampaignCommand:
+    id: str
+
+
+@dataclass(frozen=True)
+class PauseCampaignCommand:
+    id: str
+
+
+@dataclass(frozen=True)
 class UpdateCampaignCommand:
     id: str
     name: str | None = None

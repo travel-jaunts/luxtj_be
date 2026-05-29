@@ -2,8 +2,8 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 from dataclasses import dataclass, field
-from datetime import date, datetime
-from uuid import UUID
+from datetime import date, datetime, timedelta
+from uuid import UUID, uuid7
 
 from luxtj.contexts.marketing.domain.enums import (
     CampaignChannelEnum,
@@ -17,10 +17,6 @@ from luxtj.contexts.marketing.domain.policies import (
 from luxtj.shared_kernel.domain import BaseDomainEvent
 from luxtj.utils import timeutils
 
-try:
-    from uuid import uuid7
-except ImportError:  # pragma: no cover - Python < 3.14 compatibility for local tooling
-    from uuid import uuid4 as uuid7
 
 
 @dataclass
@@ -37,6 +33,7 @@ class MarketingCampaign:
     frequency_schedule: str | None
     created_at: datetime
     updated_at: datetime
+    deleted_at: datetime | None = None
     _events: list[BaseDomainEvent] = field(
         default_factory=list[BaseDomainEvent], init=False, repr=False
     )
@@ -82,6 +79,39 @@ class MarketingCampaign:
         campaign.record_event(MarketingCampaignCreated.from_campaign(campaign))
         return campaign
 
+    @classmethod
+    def duplicate(cls, source: MarketingCampaign) -> MarketingCampaign:
+        from luxtj.contexts.marketing.domain.events import MarketingCampaignDuplicated
+
+        new_start_date = date.today() + timedelta(days=2)
+        now = timeutils.datetime_now()
+        
+        campaign_creation_policies.enforce_all(
+            CampaignCreationContext(
+                start_date=new_start_date,
+                frequency=source.frequency,
+                frequency_schedule=source.frequency_schedule,
+            )
+        )
+        
+        duplicate_campaign = cls(
+            id=uuid7(),
+            name=source.name,
+            description=source.description,
+            status=CampaignStatusEnum.DRAFT,
+            channel=source.channel,
+            audience=list(source.audience),
+            content=source.content,
+            start_date=new_start_date,
+            frequency=source.frequency,
+            frequency_schedule=source.frequency_schedule,
+            created_at=now,
+            updated_at=now,
+        )
+
+        duplicate_campaign.record_event(MarketingCampaignDuplicated.from_campaigns(source, duplicate_campaign))
+        return duplicate_campaign
+
     def update(
         self,
         *,
@@ -95,6 +125,8 @@ class MarketingCampaign:
         frequency_schedule: str | None = None,
         status: CampaignStatusEnum | None = None,
     ) -> None:
+        from luxtj.contexts.marketing.domain.events import MarketingCampaignUpdated
+
         if name is not None:
             self.name = name
         if description is not None:
@@ -114,6 +146,18 @@ class MarketingCampaign:
         if status is not None:
             self.status = status
         self.updated_at = timeutils.datetime_now()
+        
+        self.record_event(MarketingCampaignUpdated.from_campaign(self))
+        
+    def delete(self) -> None:
+        from luxtj.contexts.marketing.domain.events import MarketingCampaignDeleted
+        self.record_event(MarketingCampaignDeleted.from_campaign(self))
+
+    def pause(self) -> None:
+        from luxtj.contexts.marketing.domain.events import MarketingCampaignPaused
+        self.status = CampaignStatusEnum.PAUSED
+        self.updated_at = timeutils.datetime_now()
+        self.record_event(MarketingCampaignPaused.from_campaign(self))
 
     def record_event(self, event: BaseDomainEvent) -> None:
         self._events.append(event)

@@ -1,14 +1,10 @@
-from datetime import datetime
 from typing import Annotated, Any, Literal
-
-try:
-    from uuid import uuid7
-except ImportError:  # pragma: no cover - Python < 3.14 compatibility for local tooling
-    from uuid import uuid4 as uuid7
+from datetime import datetime
+from uuid import uuid7
 
 from pydantic import AnyUrl, BaseModel, ConfigDict, Field, StringConstraints
 
-NonEmptyStr = Annotated[str, StringConstraints(min_length=1)]
+NonEmptyStr = Annotated[str, StringConstraints(min_length=3)]
 
 
 class BaseDomainEvent(BaseModel):

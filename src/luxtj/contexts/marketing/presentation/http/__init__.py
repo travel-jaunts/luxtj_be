@@ -5,6 +5,7 @@ from luxtj.contexts.marketing.presentation.http.schemas import (
     CampaignScheduleBody,
     CampaignSerializer,
     CreateCampaignBody,
+    UpdateCampaignBody,
 )
 
 __all__ = [
@@ -13,6 +14,7 @@ __all__ = [
     "CampaignScheduleBody",
     "CampaignSerializer",
     "CreateCampaignBody",
+    "UpdateCampaignBody",
     "campaigns_router",
     "marketing_router",
 ]

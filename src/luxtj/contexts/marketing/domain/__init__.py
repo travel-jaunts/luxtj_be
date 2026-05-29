@@ -11,7 +11,13 @@ from luxtj.contexts.marketing.domain.errors import (
     RecurringScheduleRequiredError,
     StartDateInPastError,
 )
-from luxtj.contexts.marketing.domain.events import MarketingCampaignCreated
+from luxtj.contexts.marketing.domain.events import (
+    MarketingCampaignCreated,
+    MarketingCampaignDeleted,
+    MarketingCampaignDuplicated,
+    MarketingCampaignPaused,
+    MarketingCampaignUpdated,
+)
 from luxtj.contexts.marketing.domain.policies import (
     CampaignCreationContext,
     CampaignCreationPolicies,
@@ -30,6 +36,10 @@ __all__ = [
     "InvalidCronExpressionError",
     "MarketingCampaign",
     "MarketingCampaignCreated",
+    "MarketingCampaignDeleted",
+    "MarketingCampaignDuplicated",
+    "MarketingCampaignPaused",
+    "MarketingCampaignUpdated",
     "MarketingDomainError",
     "RecurringSchedulePolicy",
     "RecurringScheduleRequiredError",

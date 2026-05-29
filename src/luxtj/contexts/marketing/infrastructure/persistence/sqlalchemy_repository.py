@@ -5,6 +5,7 @@ from luxtj.contexts.marketing.domain.campaign import MarketingCampaign
 from luxtj.contexts.marketing.infrastructure.persistence.sqlalchemy_models import (
     MarketingCampaignRow,
 )
+from luxtj.utils import timeutils
 
 
 class SqlAlchemyMarketingRepository:
@@ -13,7 +14,9 @@ class SqlAlchemyMarketingRepository:
 
     async def list(self) -> list[MarketingCampaign]:
         rows = await self.session.scalars(
-            select(MarketingCampaignRow).order_by(MarketingCampaignRow.created_at.desc())
+            select(MarketingCampaignRow)
+            .where(MarketingCampaignRow.deleted_at.is_(None))
+            .order_by(MarketingCampaignRow.created_at.desc())
         )
         return [row.to_domain() for row in rows]
 
@@ -40,6 +43,7 @@ class SqlAlchemyMarketingRepository:
         if row is None:
             raise KeyError(campaign_id)
 
-        campaign = row.to_domain()
-        await self.session.delete(row)
-        return campaign
+        now = timeutils.datetime_now()
+        row.deleted_at = now
+        row.updated_at = now
+        return row.to_domain()
