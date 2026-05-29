@@ -4,7 +4,7 @@ from fastapi import FastAPI, Request
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from luxtj.shared_kernel.infrastructure.events import InProcessEventPublisher
+from luxtj.shared_kernel.infrastructure.events import InProcessEventPublisher, OutboxEventPublisher
 from luxtj.shared_kernel.infrastructure.persistence import AsyncSessionFactory, session_scope
 
 
@@ -27,3 +27,7 @@ def database_session_factory_handle(request: Request) -> AsyncSessionFactory:
 async def database_session_handle(request: Request) -> AsyncIterator[AsyncSession]:
     async with session_scope(request.app.state.database_session_factory) as session:
         yield session
+
+
+def outbox_event_publisher_handle(session: AsyncSession) -> OutboxEventPublisher:
+    return OutboxEventPublisher(session)

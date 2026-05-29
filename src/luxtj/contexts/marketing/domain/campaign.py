@@ -18,7 +18,6 @@ from luxtj.shared_kernel.domain import BaseDomainEvent
 from luxtj.utils import timeutils
 
 
-
 @dataclass
 class MarketingCampaign:
     id: UUID
@@ -85,7 +84,7 @@ class MarketingCampaign:
 
         new_start_date = date.today() + timedelta(days=2)
         now = timeutils.datetime_now()
-        
+
         campaign_creation_policies.enforce_all(
             CampaignCreationContext(
                 start_date=new_start_date,
@@ -93,7 +92,7 @@ class MarketingCampaign:
                 frequency_schedule=source.frequency_schedule,
             )
         )
-        
+
         duplicate_campaign = cls(
             id=uuid7(),
             name=source.name,
@@ -109,7 +108,9 @@ class MarketingCampaign:
             updated_at=now,
         )
 
-        duplicate_campaign.record_event(MarketingCampaignDuplicated.from_campaigns(source, duplicate_campaign))
+        duplicate_campaign.record_event(
+            MarketingCampaignDuplicated.from_campaigns(source, duplicate_campaign)
+        )
         return duplicate_campaign
 
     def update(
@@ -146,15 +147,17 @@ class MarketingCampaign:
         if status is not None:
             self.status = status
         self.updated_at = timeutils.datetime_now()
-        
+
         self.record_event(MarketingCampaignUpdated.from_campaign(self))
-        
+
     def delete(self) -> None:
         from luxtj.contexts.marketing.domain.events import MarketingCampaignDeleted
+
         self.record_event(MarketingCampaignDeleted.from_campaign(self))
 
     def pause(self) -> None:
         from luxtj.contexts.marketing.domain.events import MarketingCampaignPaused
+
         self.status = CampaignStatusEnum.PAUSED
         self.updated_at = timeutils.datetime_now()
         self.record_event(MarketingCampaignPaused.from_campaign(self))

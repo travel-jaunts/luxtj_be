@@ -107,7 +107,9 @@ async def duplicate_campaign(
     marketing_service: Annotated[MarketingService, Depends(build_marketing_service)],
 ) -> ApiSuccessResponse[CampaignSerializer] | ApiErrorResponse:
     try:
-        campaign = await marketing_service.duplicate_campaign(DuplicateCampaignCommand(id=campaign_id))
+        campaign = await marketing_service.duplicate_campaign(
+            DuplicateCampaignCommand(id=campaign_id)
+        )
     except KeyError:
         return ApiErrorResponse(error_message=f"Campaign {campaign_id} not found")
 

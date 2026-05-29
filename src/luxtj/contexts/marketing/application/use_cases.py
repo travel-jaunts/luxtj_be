@@ -39,7 +39,7 @@ class MarketingService:
             frequency_schedule=command.frequency_schedule,
         )
         campaign = await self.marketing_repository.add(campaign)
-        await self._publish_pending_events(campaign)
+        await self._flush_events(campaign)
         return campaign
 
     async def update_campaign(self, command: UpdateCampaignCommand) -> MarketingCampaign:
@@ -56,32 +56,33 @@ class MarketingService:
             status=command.status,
         )
         campaign = await self.marketing_repository.save(campaign)
-        await self._publish_pending_events(campaign)
+        await self._flush_events(campaign)
         return campaign
 
     async def duplicate_campaign(self, command: DuplicateCampaignCommand) -> MarketingCampaign:
         source = await self.marketing_repository.get_by_id(command.id)
         duplicate = MarketingCampaign.duplicate(source)
         duplicate = await self.marketing_repository.add(duplicate)
-        await self._publish_pending_events(duplicate)
+        await self._flush_events(duplicate)
         return duplicate
 
     async def pause_campaign(self, command: PauseCampaignCommand) -> MarketingCampaign:
         campaign = await self.marketing_repository.get_by_id(command.id)
         campaign.pause()
         campaign = await self.marketing_repository.save(campaign)
-        await self._publish_pending_events(campaign)
+        await self._flush_events(campaign)
         return campaign
 
     async def delete_campaign(self, campaign_id: str) -> MarketingCampaign:
         campaign = await self.marketing_repository.delete(campaign_id)
         campaign.delete()
-        await self._publish_pending_events(campaign)
+        await self._flush_events(campaign)
         return campaign
 
-    async def _publish_pending_events(self, campaign: MarketingCampaign) -> None:
-        for event in campaign.pull_events():
-            await self.event_publisher.publish(event)
+    async def _flush_events(self, *aggregates: MarketingCampaign) -> None:
+        for aggregate in aggregates:
+            for event in aggregate.pull_events():
+                await self.event_publisher.publish(event)
 
     async def _resolve_audience(self, command: CreateCampaignCommand) -> list[str]:
         if self.audience_resolver is None:

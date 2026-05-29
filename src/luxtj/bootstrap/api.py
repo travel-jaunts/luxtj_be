@@ -21,6 +21,7 @@ from luxtj.shared_kernel.infrastructure.events import (
     PrintInProcessEventSubscriber,
 )
 from luxtj.shared_kernel.infrastructure.persistence import (
+    SharedKernelBase,
     build_async_engine,
     build_async_session_factory,
     dispose_async_engine,
@@ -36,7 +37,7 @@ from luxtj.utils import timeutils
 
 def get_registered_metadata() -> tuple[MetaData, ...]:
     # Register context metadata here so startup table creation can cover all contexts.
-    return (MarketingBase.metadata,)
+    return (SharedKernelBase.metadata, MarketingBase.metadata)
 
 
 def _create_all_tables(connection: Connection) -> None:

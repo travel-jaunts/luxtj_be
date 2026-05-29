@@ -48,7 +48,9 @@ class MarketingCampaignDuplicated(BaseDomainEvent):
     )
 
     @classmethod
-    def from_campaigns(cls, source: MarketingCampaign, duplicate: MarketingCampaign) -> MarketingCampaignDuplicated:
+    def from_campaigns(
+        cls, source: MarketingCampaign, duplicate: MarketingCampaign
+    ) -> MarketingCampaignDuplicated:
         return cls(
             subject=str(duplicate.id),
             time=duplicate.created_at,
