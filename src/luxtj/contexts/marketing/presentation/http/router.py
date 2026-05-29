@@ -5,11 +5,12 @@ from fastapi import APIRouter, Body, Depends
 from luxtj.contexts.marketing.application.commands import CreateCampaignCommand
 from luxtj.contexts.marketing.application.use_cases import MarketingService
 from luxtj.contexts.marketing.bootstrap import build_marketing_service
+from luxtj.contexts.marketing.domain.errors import CampaignPolicyViolation
 from luxtj.contexts.marketing.presentation.http.schemas import (
     CampaignSerializer,
     CreateCampaignBody,
 )
-from luxtj.shared_kernel.presentation.http.schemas import ApiSuccessResponse, RequestProcessStatus
+from luxtj.shared_kernel.presentation.http.schemas import ApiErrorResponse, ApiSuccessResponse, RequestProcessStatus
 
 campaigns_router = APIRouter(prefix="/campaigns")
 
@@ -33,7 +34,7 @@ async def list_campaigns(
 
 @campaigns_router.post(
     "/create",
-    response_model=ApiSuccessResponse[CampaignSerializer],
+    response_model=ApiSuccessResponse[CampaignSerializer] | ApiErrorResponse,
     status_code=200,
     summary="Create a campaign",
     name="Create Campaign",
@@ -41,7 +42,7 @@ async def list_campaigns(
 async def create_campaign(
     marketing_service: Annotated[MarketingService, Depends(build_marketing_service)],
     create_campaign_body: Annotated[CreateCampaignBody, Body(...)],
-) -> ApiSuccessResponse[CampaignSerializer]:
+) -> ApiSuccessResponse[CampaignSerializer] | ApiErrorResponse:
     command = CreateCampaignCommand(
         name=create_campaign_body.campaign_name,
         description=create_campaign_body.description,
@@ -54,7 +55,10 @@ async def create_campaign(
         frequency_schedule=create_campaign_body.schedule.frequency_schedule,
     )
 
-    campaign = await marketing_service.create_campaign(command)
+    try:
+        campaign = await marketing_service.create_campaign(command)
+    except CampaignPolicyViolation as exc:
+        return ApiErrorResponse(error_message=str(exc))
 
     return ApiSuccessResponse(
         status=RequestProcessStatus.OK,

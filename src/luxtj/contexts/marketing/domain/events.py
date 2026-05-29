@@ -9,7 +9,7 @@ from luxtj.shared_kernel.domain import BaseDomainEvent
 
 
 class MarketingCampaignCreated(BaseDomainEvent):
-    source: str = "/luxtj/marketing/campaigns"
+    source: str = "/luxtj/contexts/marketing/domain/campaign"
     type: str = "com.luxtj.marketing.campaign.created.v1"
     datacontenttype: str | None = "application/json"
     data: dict[str, Any] | None = Field(
@@ -28,8 +28,8 @@ class MarketingCampaignCreated(BaseDomainEvent):
                 "description": campaign.description,
                 "status": campaign.status.value,
                 "channel": campaign.channel.value,
-                "audience": list(campaign.audience),
-                "content": campaign.content,
+                # "audience": list(campaign.audience),
+                # "content": campaign.content,
                 "start_date": campaign.start_date.isoformat(),
                 "frequency": campaign.frequency.value,
                 "frequency_schedule": campaign.frequency_schedule,

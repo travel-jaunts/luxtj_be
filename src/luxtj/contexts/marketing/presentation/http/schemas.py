@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from datetime import date, datetime
 
-from pydantic import Field, model_validator
+from pydantic import Field
 
 from luxtj.contexts.marketing.domain.campaign import MarketingCampaign
 from luxtj.contexts.marketing.domain.enums import (
@@ -36,12 +36,6 @@ class CampaignScheduleBody(ApiSerializerBaseModel):
         None,
         description="Cron expression or natural language description for recurring schedules.",
     )
-
-    @model_validator(mode="after")
-    def validate_frequency_schedule(self) -> CampaignScheduleBody:
-        if self.frequency == ScheduleFrequencyEnum.RECURRING and not self.frequency_schedule:
-            raise ValueError("frequency_schedule is required when frequency is recurring")
-        return self
 
 
 class CreateCampaignBody(ApiSerializerBaseModel):

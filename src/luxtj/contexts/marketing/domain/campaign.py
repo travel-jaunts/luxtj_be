@@ -10,6 +10,7 @@ from luxtj.contexts.marketing.domain.enums import (
     CampaignStatusEnum,
     ScheduleFrequencyEnum,
 )
+from luxtj.contexts.marketing.domain.policies import CampaignCreationContext, campaign_creation_policies
 from luxtj.shared_kernel.domain import BaseDomainEvent
 
 try:
@@ -51,12 +52,20 @@ class MarketingCampaign:
     ) -> MarketingCampaign:
         from luxtj.contexts.marketing.domain.events import MarketingCampaignCreated
 
+        campaign_creation_policies.enforce_all(
+            CampaignCreationContext(
+                start_date=start_date,
+                frequency=frequency,
+                frequency_schedule=frequency_schedule,
+            )
+        )
+
         now = datetime.now(UTC)
         campaign = cls(
             id=uuid7(),
             name=name,
             description=description,
-            status=CampaignStatusEnum.DRAFT,
+            status=CampaignStatusEnum.SCHEDULED,
             channel=channel,
             audience=list(dict.fromkeys(audience)),
             content=content,
