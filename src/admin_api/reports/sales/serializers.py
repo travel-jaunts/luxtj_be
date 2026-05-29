@@ -13,7 +13,7 @@ from admin_api.reports.sales.domainmodel import (
     SalesReportTotalsDomainModel,
     SalesReportTypeEnum,
 )
-from common.serializerlib import AmountSerializer, ApiSerializerBaseModel
+from luxtj.shared_kernel.presentation.http.schemas import AmountSerializer, ApiSerializerBaseModel
 
 
 class SalesReportQuery(ApiSerializerBaseModel):

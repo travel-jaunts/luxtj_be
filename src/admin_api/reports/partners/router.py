@@ -9,7 +9,11 @@ from admin_api.reports.partners.serializers import (
     PartnerSearchQuery,
 )
 from admin_api.reports.partners.service import PartnerReportService
-from common.serializerlib import ApiSuccessResponse, CurrencyQuery, RequestProcessStatus
+from luxtj.shared_kernel.presentation.http.schemas import (
+    ApiSuccessResponse,
+    CurrencyQuery,
+    RequestProcessStatus,
+)
 
 partners_router = APIRouter(prefix="/partners")
 

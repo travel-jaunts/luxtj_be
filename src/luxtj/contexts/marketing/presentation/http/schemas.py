@@ -4,13 +4,13 @@ from datetime import date, datetime
 
 from pydantic import Field, model_validator
 
-from common.serializerlib import ApiSerializerBaseModel
 from luxtj.contexts.marketing.domain.campaign import MarketingCampaign
 from luxtj.contexts.marketing.domain.enums import (
     CampaignChannelEnum,
     CampaignStatusEnum,
     ScheduleFrequencyEnum,
 )
+from luxtj.shared_kernel.presentation.http.schemas import ApiSerializerBaseModel
 from luxtj.utils import mockutils
 
 

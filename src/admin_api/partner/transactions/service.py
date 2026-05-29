@@ -7,7 +7,7 @@ from admin_api.partner.transactions.domainmodel import (
     PartnerRefundStatusEnum,
     PartnerTransactionsSummaryDomainModel,
 )
-from common.service.metadata import PaginationMeta
+from luxtj.shared_kernel.application.pagination import PaginationMeta
 from luxtj.utils import mockutils
 
 

@@ -13,7 +13,7 @@ from admin_api.reports.customers.domainmodel import (
     CustomerValueRowDomainModel,
     CustomerValueTotalsDomainModel,
 )
-from common.serializerlib import AmountSerializer, ApiSerializerBaseModel
+from luxtj.shared_kernel.presentation.http.schemas import AmountSerializer, ApiSerializerBaseModel
 
 
 class CustomerOverviewQuery(ApiSerializerBaseModel):

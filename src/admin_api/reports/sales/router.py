@@ -9,7 +9,11 @@ from admin_api.reports.sales.serializers import (
     SalesReportQuery,
 )
 from admin_api.reports.sales.service import SalesReportService
-from common.serializerlib import ApiSuccessResponse, CurrencyQuery, RequestProcessStatus
+from luxtj.shared_kernel.presentation.http.schemas import (
+    ApiSuccessResponse,
+    CurrencyQuery,
+    RequestProcessStatus,
+)
 
 sales_router = APIRouter(prefix="/sales")
 

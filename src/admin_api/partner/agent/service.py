@@ -6,8 +6,8 @@ from admin_api.partner.agent.domainmodel import (
     AgentPartnerDomainModel,
 )
 from admin_api.partner.agent.dto import UpdateAgentPartnerDetailsDTO
-from common.service.metadata import PaginationMeta
 from luxtj.contexts.partner.domain.enums import PartnerStatusControlActionEnum
+from luxtj.shared_kernel.application.pagination import PaginationMeta
 from luxtj.utils import mockutils
 
 

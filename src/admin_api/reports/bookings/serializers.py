@@ -12,7 +12,7 @@ from admin_api.reports.bookings.domainmodel import (
     BookingReportTotalsDomainModel,
     BookingReportTypeEnum,
 )
-from common.serializerlib import AmountSerializer, ApiSerializerBaseModel
+from luxtj.shared_kernel.presentation.http.schemas import AmountSerializer, ApiSerializerBaseModel
 
 
 class BookingReportQuery(ApiSerializerBaseModel):

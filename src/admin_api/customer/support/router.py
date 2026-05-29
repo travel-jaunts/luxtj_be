@@ -9,7 +9,7 @@ from admin_api.customer.support.serializers import (
     SupportTicketLineItem,
 )
 from admin_api.customer.support.service import CustomerSupportService
-from common.serializerlib import (
+from luxtj.shared_kernel.presentation.http.schemas import (
     ApiSuccessResponse,
     PaginatedResult,
     PaginationParams,

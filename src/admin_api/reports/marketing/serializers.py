@@ -11,7 +11,6 @@ from admin_api.reports.marketing.domainmodel import (
     OfferPerformanceRowDomainModel,
     OfferPerformanceTotalsDomainModel,
 )
-from common.serializerlib import AmountSerializer, ApiSerializerBaseModel
 from luxtj.contexts.reports.domain.enums import (
     BookingTypeEnum,
     OfferApplicabilityEnum,
@@ -19,6 +18,7 @@ from luxtj.contexts.reports.domain.enums import (
     OfferStatusEnum,
     OfferTypeEnum,
 )
+from luxtj.shared_kernel.presentation.http.schemas import AmountSerializer, ApiSerializerBaseModel
 
 
 class MarketingNameSearchQuery(ApiSerializerBaseModel):

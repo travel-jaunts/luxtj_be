@@ -10,7 +10,7 @@ from admin_api.reports.finance.domainmodel import (
     FinanceReportDomainModel,
     FinanceTrendPointDomainModel,
 )
-from common.serializerlib import AmountSerializer, ApiSerializerBaseModel
+from luxtj.shared_kernel.presentation.http.schemas import AmountSerializer, ApiSerializerBaseModel
 
 
 class FinanceReportQuery(ApiSerializerBaseModel):

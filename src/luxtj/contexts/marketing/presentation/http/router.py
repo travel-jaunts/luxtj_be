@@ -2,7 +2,6 @@ from typing import Annotated
 
 from fastapi import APIRouter, Body, Depends
 
-from common.serializerlib import ApiSuccessResponse, RequestProcessStatus
 from luxtj.contexts.marketing.application.commands import CreateCampaignCommand
 from luxtj.contexts.marketing.application.use_cases import MarketingService
 from luxtj.contexts.marketing.bootstrap import build_marketing_service
@@ -10,6 +9,7 @@ from luxtj.contexts.marketing.presentation.http.schemas import (
     CampaignSerializer,
     CreateCampaignBody,
 )
+from luxtj.shared_kernel.presentation.http.schemas import ApiSuccessResponse, RequestProcessStatus
 
 campaigns_router = APIRouter(prefix="/campaigns")
 

@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends
 
 from admin_api.customer.bookings.serializers import BookingBizKpiSummary, CustomerBookingLineItem
 from admin_api.customer.bookings.service import CustomerBookingService
-from common.serializerlib import (
+from luxtj.shared_kernel.presentation.http.schemas import (
     ApiSuccessResponse,
     CurrencyQuery,
     PaginatedResult,

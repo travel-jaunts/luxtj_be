@@ -4,7 +4,11 @@ from fastapi import APIRouter, Depends, HTTPException
 
 from admin_api.audit_logs.serializers import AuditLogEvent
 from admin_api.audit_logs.service import AuditLogService
-from common.serializerlib import ApiSuccessResponse, RequestProcessStatus, SearchFilterParams
+from luxtj.shared_kernel.presentation.http.schemas import (
+    ApiSuccessResponse,
+    RequestProcessStatus,
+    SearchFilterParams,
+)
 
 audit_logs_router = APIRouter()
 

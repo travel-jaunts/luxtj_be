@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends
 
 from admin_api.reports.operations.serializers import OperationsReport, OperationsReportQuery
 from admin_api.reports.operations.service import OperationsReportService
-from common.serializerlib import ApiSuccessResponse, RequestProcessStatus
+from luxtj.shared_kernel.presentation.http.schemas import ApiSuccessResponse, RequestProcessStatus
 
 operations_router = APIRouter(prefix="/operations")
 

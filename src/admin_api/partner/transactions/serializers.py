@@ -8,7 +8,7 @@ from admin_api.partner.transactions.domainmodel import (
     PartnerRefundStatusEnum,
     PartnerTransactionsSummaryDomainModel,
 )
-from common.serializerlib import AmountSerializer, ApiSerializerBaseModel
+from luxtj.shared_kernel.presentation.http.schemas import AmountSerializer, ApiSerializerBaseModel
 
 
 class PartnerTransactionsSummary(ApiSerializerBaseModel):

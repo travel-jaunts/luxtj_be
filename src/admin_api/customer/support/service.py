@@ -1,8 +1,8 @@
 from datetime import date
 
 from admin_api.customer.support.domainmodel import SupportKpiSummary, SupportTicketDomainModel
-from common.service.metadata import PaginationMeta
 from luxtj.contexts.customer.domain.enums import SupportTicketStatusEnum
+from luxtj.shared_kernel.application.pagination import PaginationMeta
 from luxtj.utils import mockutils, timeutils
 
 

@@ -6,7 +6,7 @@ from admin_api.customer.users.domainmodel import (
 )
 from admin_api.customer.users.dto import UpdateUserDTO
 from admin_api.customer.users.serializers import SignupOptionParams
-from common.service.metadata import PaginationMeta
+from luxtj.shared_kernel.application.pagination import PaginationMeta
 from luxtj.utils import mockutils
 
 

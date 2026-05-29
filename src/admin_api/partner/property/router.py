@@ -9,14 +9,14 @@ from admin_api.partner.property.serializers import (
     UpdatePropertyPartnerDetailsBody,
 )
 from admin_api.partner.property.service import PartnerService
-from common.serializerlib import (
+from luxtj.contexts.partner.domain.enums import PartnerStatusControlActionEnum
+from luxtj.shared_kernel.presentation.http.schemas import (
     ApiSuccessResponse,
     PaginatedResult,
     PaginationParams,
     RequestProcessStatus,
     SearchFilterParams,
 )
-from luxtj.contexts.partner.domain.enums import PartnerStatusControlActionEnum
 
 property_partner_router = APIRouter()
 

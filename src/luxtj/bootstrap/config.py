@@ -1,8 +1,8 @@
 import os
 
-from api.version import __version__ as api_version
+from luxtj._version import __version__
 
-VERSION: str = api_version
+VERSION: str = __version__
 ENVIRONMENT: str = os.getenv("LTJBE_ENV", "unknown")
 OTEL_SERVICE_NAME: str = f"luxtj-be-{ENVIRONMENT}"
 OTEL_ENDPOINT: str | None = os.getenv("LTJBE_OTLP_ENDPOINT")

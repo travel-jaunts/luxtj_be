@@ -7,17 +7,17 @@ from admin_api.partner.property.domainmodel import (
     PropertyPartnerDomainModel,
 )
 from admin_api.partner.property.dto import UpdatePropertyPartnerDetailsDTO
-from common.serializerlib import (
+from luxtj.contexts.partner.domain.enums import (
+    PartnerKYCStatusEnum,
+    PropertySourceEnum,
+    PropertyStatusEnum,
+)
+from luxtj.shared_kernel.presentation.http.schemas import (
     AmountSerializer,
     ApiSerializerBaseModel,
     BankDetailsSerializer,
     ImageMetadataSerializer,
     LocationMetadataSerializer,
-)
-from luxtj.contexts.partner.domain.enums import (
-    PartnerKYCStatusEnum,
-    PropertySourceEnum,
-    PropertyStatusEnum,
 )
 
 

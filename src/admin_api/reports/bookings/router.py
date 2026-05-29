@@ -9,7 +9,11 @@ from admin_api.reports.bookings.serializers import (
     BookingReportQuery,
 )
 from admin_api.reports.bookings.service import BookingReportService
-from common.serializerlib import ApiSuccessResponse, CurrencyQuery, RequestProcessStatus
+from luxtj.shared_kernel.presentation.http.schemas import (
+    ApiSuccessResponse,
+    CurrencyQuery,
+    RequestProcessStatus,
+)
 
 bookings_router = APIRouter(prefix="/bookings")
 

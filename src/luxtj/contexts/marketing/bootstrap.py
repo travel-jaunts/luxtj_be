@@ -3,7 +3,6 @@ from typing import Annotated
 from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from common.injectorlib import database_session_handle, domain_event_publisher_handle
 from luxtj.contexts.marketing.application.ports import AudienceResolver, MarketingRepository
 from luxtj.contexts.marketing.application.use_cases import MarketingService
 from luxtj.contexts.marketing.infrastructure.persistence import (
@@ -11,6 +10,10 @@ from luxtj.contexts.marketing.infrastructure.persistence import (
     SqlAlchemyMarketingRepository,
 )
 from luxtj.shared_kernel.application import DomainEventPublisher
+from luxtj.shared_kernel.presentation.http.dependencies import (
+    database_session_handle,
+    domain_event_publisher_handle,
+)
 
 _AUDIENCE_RESOLVER = MockMarketingAudienceResolver()
 

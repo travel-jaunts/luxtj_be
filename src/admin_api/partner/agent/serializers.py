@@ -7,7 +7,7 @@ from admin_api.partner.agent.domainmodel import (
     AgentPartnerStatusEnum,
 )
 from admin_api.partner.agent.dto import UpdateAgentPartnerDetailsDTO
-from common.serializerlib import (
+from luxtj.shared_kernel.presentation.http.schemas import (
     AmountSerializer,
     ApiSerializerBaseModel,
     BankDetailsSerializer,

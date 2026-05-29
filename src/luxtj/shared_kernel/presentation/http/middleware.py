@@ -5,7 +5,7 @@ from fastapi.responses import JSONResponse
 from opentelemetry import trace
 from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
 
-from common.serializerlib import ApiErrorResponse
+from luxtj.shared_kernel.presentation.http.schemas import ApiErrorResponse
 
 
 class EnforcePostMethodOnly(BaseHTTPMiddleware):
