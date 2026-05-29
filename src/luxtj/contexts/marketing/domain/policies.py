@@ -38,7 +38,7 @@ class CampaignPolicy(ABC):
 
     @abstractmethod
     def enforce(self, ctx: CampaignCreationContext) -> None:
-        """Raise CampaignPolicyViolation if the policy is violated."""
+        """Raise CampaignPolicyViolationError if the policy is violated."""
 
 
 class StartDatePolicy(CampaignPolicy):

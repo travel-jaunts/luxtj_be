@@ -43,21 +43,18 @@ class MarketingService:
     async def get_campaign(self, campaign_id: str) -> MarketingCampaign:
         return await self.marketing_repository.get_by_id(campaign_id)
 
-    async def update_campaign(
-        self,
-        campaign_id: str,
-        update_data: UpdateCampaignCommand,
-    ) -> MarketingCampaign:
-        campaign = await self.marketing_repository.get_by_id(campaign_id)
+    async def update_campaign(self, command: UpdateCampaignCommand) -> MarketingCampaign:
+        campaign = await self.marketing_repository.get_by_id(command.id)
         campaign.update(
-            name=update_data.name,
-            description=update_data.description,
-            channel=update_data.channel,
-            audience=update_data.audience_user_ids,
-            content=update_data.content_template,
-            start_date=update_data.start_date,
-            frequency=update_data.frequency,
-            frequency_schedule=update_data.frequency_schedule,
+            name=command.name,
+            description=command.description,
+            channel=command.channel,
+            audience=command.audience_user_ids,
+            content=command.content_template,
+            start_date=command.start_date,
+            frequency=command.frequency,
+            frequency_schedule=command.frequency_schedule,
+            status=command.status,
         )
         return await self.marketing_repository.save(campaign)
 

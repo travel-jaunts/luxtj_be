@@ -15,7 +15,6 @@ from luxtj.contexts.marketing.infrastructure.persistence import (
 )
 from tests.conftest import CapturingEventPublisher
 
-
 # ---------------------------------------------------------------------------
 # Application layer — MarketingService
 # ---------------------------------------------------------------------------
@@ -40,9 +39,7 @@ async def test_create_campaign_publishes_created_event(
     event_publisher: CapturingEventPublisher,
     make_campaign_command,
 ) -> None:
-    campaign = await marketing_service.create_campaign(
-        make_campaign_command(name="Summer Escapes")
-    )
+    campaign = await marketing_service.create_campaign(make_campaign_command(name="Summer Escapes"))
 
     created_events = event_publisher.of_type("com.luxtj.marketing.campaign.created.v1")
     assert len(created_events) == 1

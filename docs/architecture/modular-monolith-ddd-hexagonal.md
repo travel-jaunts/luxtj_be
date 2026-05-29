@@ -516,19 +516,19 @@ class MarketingDomainError(Exception):
     pass
 
 
-class CampaignPolicyViolation(MarketingDomainError):
+class CampaignPolicyViolationError(MarketingDomainError):
     pass
 
 
-class StartDateInPastError(CampaignPolicyViolation):
+class StartDateInPastError(CampaignPolicyViolationError):
     pass
 
 
-class RecurringScheduleRequiredError(CampaignPolicyViolation):
+class RecurringScheduleRequiredError(CampaignPolicyViolationError):
     pass
 ```
 
-The base `CampaignPolicyViolation` acts as a catch-all for the presentation layer. Specific subclasses let tests and callers react to individual violations without relying on error message strings.
+The base `CampaignPolicyViolationError` acts as a catch-all for the presentation layer. Specific subclasses let tests and callers react to individual violations without relying on error message strings.
 
 ### Policy Base Class
 
@@ -552,7 +552,7 @@ class CampaignCreationContext:
 class CampaignPolicy(ABC):
     @abstractmethod
     def enforce(self, ctx: CampaignCreationContext) -> None:
-        """Raise CampaignPolicyViolation if the rule is violated."""
+        """Raise CampaignPolicyViolationError if the rule is violated."""
 ```
 
 ### Implementing a Policy
@@ -614,11 +614,11 @@ Presentation adapters catch the base policy violation type and convert it to the
 ```python
 try:
     campaign = await marketing_service.create_campaign(command)
-except CampaignPolicyViolation as exc:
+except CampaignPolicyViolationError as exc:
     return ApiErrorResponse(error_message=str(exc))
 ```
 
-The application layer (use cases) should let `CampaignPolicyViolation` propagate naturally. Use cases orchestrate, they do not own business rules.
+The application layer (use cases) should let `CampaignPolicyViolationError` propagate naturally. Use cases orchestrate, they do not own business rules.
 
 ### Adding a New Policy
 

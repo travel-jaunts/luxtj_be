@@ -2,17 +2,17 @@ class MarketingDomainError(Exception):
     pass
 
 
-class CampaignPolicyViolation(MarketingDomainError):
+class CampaignPolicyViolationError(MarketingDomainError):
     pass
 
 
-class StartDateInPastError(CampaignPolicyViolation):
+class StartDateInPastError(CampaignPolicyViolationError):
     pass
 
 
-class RecurringScheduleRequiredError(CampaignPolicyViolation):
+class RecurringScheduleRequiredError(CampaignPolicyViolationError):
     pass
 
 
-class InvalidCronExpressionError(CampaignPolicyViolation):
+class InvalidCronExpressionError(CampaignPolicyViolationError):
     pass

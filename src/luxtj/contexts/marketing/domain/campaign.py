@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 from dataclasses import dataclass, field
-from datetime import UTC, date, datetime
+from datetime import date, datetime
 from uuid import UUID
 
 from luxtj.contexts.marketing.domain.enums import (
@@ -10,8 +10,12 @@ from luxtj.contexts.marketing.domain.enums import (
     CampaignStatusEnum,
     ScheduleFrequencyEnum,
 )
-from luxtj.contexts.marketing.domain.policies import CampaignCreationContext, campaign_creation_policies
+from luxtj.contexts.marketing.domain.policies import (
+    CampaignCreationContext,
+    campaign_creation_policies,
+)
 from luxtj.shared_kernel.domain import BaseDomainEvent
+from luxtj.utils import timeutils
 
 try:
     from uuid import uuid7
@@ -60,7 +64,7 @@ class MarketingCampaign:
             )
         )
 
-        now = datetime.now(UTC)
+        now = timeutils.datetime_now()
         campaign = cls(
             id=uuid7(),
             name=name,
@@ -81,24 +85,35 @@ class MarketingCampaign:
     def update(
         self,
         *,
-        name: str,
-        description: str,
-        channel: CampaignChannelEnum,
-        audience: Sequence[str],
-        content: str,
-        start_date: date,
-        frequency: ScheduleFrequencyEnum,
-        frequency_schedule: str | None,
+        name: str | None = None,
+        description: str | None = None,
+        channel: CampaignChannelEnum | None = None,
+        audience: Sequence[str] | None = None,
+        content: str | None = None,
+        start_date: date | None = None,
+        frequency: ScheduleFrequencyEnum | None = None,
+        frequency_schedule: str | None = None,
+        status: CampaignStatusEnum | None = None,
     ) -> None:
-        self.name = name
-        self.description = description
-        self.channel = channel
-        self.audience = list(dict.fromkeys(audience))
-        self.content = content
-        self.start_date = start_date
-        self.frequency = frequency
-        self.frequency_schedule = frequency_schedule
-        self.updated_at = datetime.now(UTC)
+        if name is not None:
+            self.name = name
+        if description is not None:
+            self.description = description
+        if channel is not None:
+            self.channel = channel
+        if audience is not None:
+            self.audience = list(dict.fromkeys(audience))
+        if content is not None:
+            self.content = content
+        if start_date is not None:
+            self.start_date = start_date
+        if frequency is not None:
+            self.frequency = frequency
+        if frequency_schedule is not None:
+            self.frequency_schedule = frequency_schedule
+        if status is not None:
+            self.status = status
+        self.updated_at = timeutils.datetime_now()
 
     def record_event(self, event: BaseDomainEvent) -> None:
         self._events.append(event)

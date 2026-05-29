@@ -47,6 +47,24 @@ class CreateCampaignBody(ApiSerializerBaseModel):
     schedule: CampaignScheduleBody
 
 
+class UpdateCampaignBody(ApiSerializerBaseModel):
+    campaign_name: str | None = Field(None, description="Campaign name")
+    description: str | None = Field(None, description="Campaign description")
+    channel: CampaignChannelEnum | None = Field(None, description="Campaign channel")
+    audience_user_ids: list[str] | None = Field(
+        None, description="List of specific user identifiers to target."
+    )
+    content_template: str | None = Field(
+        None, description="Content template with placeholders for personalization"
+    )
+    start_date: date | None = Field(None, description="Campaign start date")
+    frequency: ScheduleFrequencyEnum | None = Field(None, description="Campaign schedule frequency")
+    frequency_schedule: str | None = Field(
+        None, description="Cron expression for recurring schedules."
+    )
+    status: CampaignStatusEnum | None = Field(None, description="Campaign status")
+
+
 class CampaignSerializer(ApiSerializerBaseModel):
     campaign_id: str
     campaign_name: str

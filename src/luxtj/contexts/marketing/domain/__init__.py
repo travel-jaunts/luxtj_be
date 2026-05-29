@@ -5,7 +5,7 @@ from luxtj.contexts.marketing.domain.enums import (
     ScheduleFrequencyEnum,
 )
 from luxtj.contexts.marketing.domain.errors import (
-    CampaignPolicyViolation,
+    CampaignPolicyViolationError,
     InvalidCronExpressionError,
     MarketingDomainError,
     RecurringScheduleRequiredError,
@@ -25,7 +25,7 @@ __all__ = [
     "CampaignCreationContext",
     "CampaignCreationPolicies",
     "CampaignPolicy",
-    "CampaignPolicyViolation",
+    "CampaignPolicyViolationError",
     "CampaignStatusEnum",
     "InvalidCronExpressionError",
     "MarketingCampaign",
