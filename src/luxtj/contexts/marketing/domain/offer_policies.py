@@ -29,9 +29,7 @@ class ValidityDatesPolicy(OfferPolicy):
                 f"validity_start must be in the future, got {ctx.validity_start}"
             )
         if ctx.validity_end <= ctx.validity_start:
-            raise OfferPolicyViolationError(
-                "validity_end must be after validity_start"
-            )
+            raise OfferPolicyViolationError("validity_end must be after validity_start")
 
 
 class DiscountValuePolicy(OfferPolicy):

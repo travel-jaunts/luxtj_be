@@ -14,6 +14,10 @@ from admin_api.customer import customer_router
 from admin_api.partner import partner_router
 from admin_api.reports import reports_router
 from luxtj.bootstrap import config
+from luxtj.contexts.action_centre.infrastructure.persistence import ActionCentreBase
+
+# from luxtj.contexts.action_centre.infrastructure.projector import ActionCentreOutboxProjector
+from luxtj.contexts.action_centre.presentation.http import action_centre_router
 from luxtj.contexts.marketing.infrastructure.persistence import MarketingBase
 from luxtj.contexts.marketing.presentation.http import marketing_router
 from luxtj.shared_kernel.infrastructure.events import (
@@ -37,7 +41,7 @@ from luxtj.utils import timeutils
 
 def get_registered_metadata() -> tuple[MetaData, ...]:
     # Register context metadata here so startup table creation can cover all contexts.
-    return (SharedKernelBase.metadata, MarketingBase.metadata)
+    return (SharedKernelBase.metadata, MarketingBase.metadata, ActionCentreBase.metadata)
 
 
 def _create_all_tables(connection: Connection) -> None:
@@ -72,14 +76,20 @@ async def init_app_state(fastapi_app: FastAPI):
         fastapi_app.state.database_engine = database_engine
         if config.DATABASE_AUTO_CREATE:
             await create_required_tables(database_engine)
-        fastapi_app.state.database_session_factory = build_async_session_factory(
-            database_engine,
-        )
+        session_factory = build_async_session_factory(database_engine)
+        fastapi_app.state.database_session_factory = session_factory
+
+        # action_centre_projector = ActionCentreOutboxProjector(session_factory)
+        # fastapi_app.state.action_centre_projector = action_centre_projector
+        # await action_centre_projector.start()
 
         async with AsyncClient() as client:
             fastapi_app.state.http_client = client
             yield
     finally:
+        # if getattr(fastapi_app.state, "action_centre_projector", None) is not None:
+        #     await fastapi_app.state.action_centre_projector.stop()
+
         await print_subscriber.stop()
         await dispose_async_engine(fastapi_app.state.database_engine)
 
@@ -124,6 +134,7 @@ def server_factory() -> FastAPI:
     admin_router.include_router(partner_router)
     admin_router.include_router(reports_router)
     admin_router.include_router(marketing_router)
+    admin_router.include_router(action_centre_router)
     admin_router.include_router(admin_audit_logs_router)
     api_application.include_router(admin_router)
     # CAUTION: in case admin apis need to be removed, comment above lines

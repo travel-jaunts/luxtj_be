@@ -37,9 +37,7 @@ class Offer:
     created_at: datetime
     updated_at: datetime
     deleted_at: datetime | None = None
-    _events: list[BaseDomainEvent] = field(
-        default_factory=list, init=False, repr=False
-    )
+    _events: list[BaseDomainEvent] = field(default_factory=list, init=False, repr=False)
 
     @classmethod
     def create(

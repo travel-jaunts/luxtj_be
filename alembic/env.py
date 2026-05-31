@@ -2,18 +2,22 @@ import asyncio
 import os
 import sys
 from logging.config import fileConfig
+from pathlib import Path
 
+from alembic import context
 from sqlalchemy import pool
 from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import async_engine_from_config
 
-from alembic import context
-
 # Allow imports from src/ when running alembic from the project root
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
 
-from luxtj.contexts.marketing.infrastructure.persistence.sqlalchemy_models import MarketingBase  # noqa: E402
-from luxtj.shared_kernel.infrastructure.persistence.outbox_model import SharedKernelBase  # noqa: E402
+from luxtj.contexts.marketing.infrastructure.persistence.sqlalchemy_models import (
+    MarketingBase,
+)
+from luxtj.shared_kernel.infrastructure.persistence.outbox_model import (
+    SharedKernelBase,
+)
 
 config = context.config
 

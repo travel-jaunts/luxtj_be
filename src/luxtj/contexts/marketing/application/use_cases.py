@@ -9,7 +9,11 @@ from luxtj.contexts.marketing.application.commands import (
     SearchOffersCommand,
     UpdateCampaignCommand,
 )
-from luxtj.contexts.marketing.application.ports import AudienceResolver, MarketingRepository, OfferRepository
+from luxtj.contexts.marketing.application.ports import (
+    AudienceResolver,
+    MarketingRepository,
+    OfferRepository,
+)
 from luxtj.contexts.marketing.domain.campaign import MarketingCampaign
 from luxtj.contexts.marketing.domain.offer import Offer
 from luxtj.shared_kernel.application import DomainEventPublisher

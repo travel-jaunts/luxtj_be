@@ -110,7 +110,9 @@ class CreateOfferBody(ApiSerializerBaseModel):
     min_booking_value_currency: str = Field(..., description="Currency code for min booking value")
     validity_start: datetime = Field(..., description="Offer validity start (must be in future)")
     validity_end: datetime = Field(..., description="Offer validity end (must be after start)")
-    usage_limit_per_user: int | None = Field(None, description="Max uses per user; null = unlimited")
+    usage_limit_per_user: int | None = Field(
+        None, description="Max uses per user; null = unlimited"
+    )
     applicability_on: list[str] = Field(
         default_factory=list, description="Product categories this offer applies to"
     )

@@ -3,7 +3,11 @@ from typing import Annotated
 from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from luxtj.contexts.marketing.application.ports import AudienceResolver, MarketingRepository, OfferRepository
+from luxtj.contexts.marketing.application.ports import (
+    AudienceResolver,
+    MarketingRepository,
+    OfferRepository,
+)
 from luxtj.contexts.marketing.application.use_cases import MarketingService, OffersService
 from luxtj.contexts.marketing.infrastructure.persistence import (
     MockMarketingAudienceResolver,

@@ -4,10 +4,10 @@ from uuid import UUID
 from fastapi import APIRouter, Body, Depends
 
 from luxtj.contexts.marketing.application.commands import (
+    CreateOfferCommand,
     DeleteOfferCommand,
     PauseOfferCommand,
     RescindOfferCommand,
-    CreateOfferCommand,
 )
 from luxtj.contexts.marketing.application.use_cases import OffersService
 from luxtj.contexts.marketing.bootstrap import build_offers_service
