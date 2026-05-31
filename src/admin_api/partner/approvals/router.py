@@ -10,14 +10,14 @@ from admin_api.partner.approvals.serializers import (
     LifetimeApprovalSummary,
 )
 from admin_api.partner.approvals.service import PartnerApprovalsService
-from common.serializerlib import (
+from luxtj.contexts.partner.domain.enums import ApprovalControlActionEnum
+from luxtj.shared_kernel.presentation.http.schemas import (
     ApiSuccessResponse,
     PaginatedResult,
     PaginationParams,
     RequestProcessStatus,
     SearchFilterParams,
 )
-from luxtj.contexts.partner.domain.enums import ApprovalControlActionEnum
 
 approvals_router = APIRouter()
 

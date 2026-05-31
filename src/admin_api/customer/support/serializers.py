@@ -2,15 +2,15 @@ from pydantic import AwareDatetime
 
 from admin_api.customer.support.domainmodel import SupportKpiSummary, SupportTicketDomainModel
 from admin_api.customer.users.domainmodel import CustomerDomainModel
-from common.serializerlib import (
-    ApiSerializerBaseModel,
-)
 from luxtj.contexts.customer.domain.enums import (
     CustomerTierEnum,
     SupportCategoryEnum,
     SupportEscalationLevelEnum,
     SupportTicketPriorityEnum,
     SupportTicketStatusEnum,
+)
+from luxtj.shared_kernel.presentation.http.schemas import (
+    ApiSerializerBaseModel,
 )
 
 

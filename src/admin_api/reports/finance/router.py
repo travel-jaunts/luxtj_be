@@ -4,7 +4,11 @@ from fastapi import APIRouter, Depends
 
 from admin_api.reports.finance.serializers import FinanceReport, FinanceReportQuery
 from admin_api.reports.finance.service import FinanceReportService
-from common.serializerlib import ApiSuccessResponse, CurrencyQuery, RequestProcessStatus
+from luxtj.shared_kernel.presentation.http.schemas import (
+    ApiSuccessResponse,
+    CurrencyQuery,
+    RequestProcessStatus,
+)
 
 finance_router = APIRouter(prefix="/finance")
 

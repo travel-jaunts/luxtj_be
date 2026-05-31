@@ -7,7 +7,7 @@ from admin_api.customer.users.domainmodel import (
     CustomerTierEnum,
 )
 from admin_api.customer.users.dto import UpdateUserDTO
-from common.serializerlib import AmountSerializer, ApiSerializerBaseModel
+from luxtj.shared_kernel.presentation.http.schemas import AmountSerializer, ApiSerializerBaseModel
 
 
 class CustomerBizKpiSummary(ApiSerializerBaseModel):

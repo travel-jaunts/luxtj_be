@@ -5,7 +5,6 @@ from admin_api.customer.transactions.domainmodel import (
     PaymentRefundKpiSummaryDomainModel,
 )
 from admin_api.customer.users.domainmodel import CustomerDomainModel
-from common.serializerlib import AmountSerializer, ApiSerializerBaseModel
 from luxtj.contexts.customer.domain.enums import (
     CustomerTierEnum,
     PaymentMethodEnum,
@@ -13,6 +12,7 @@ from luxtj.contexts.customer.domain.enums import (
     PaymentStatusEnum,
     TransactionTypeEnum,
 )
+from luxtj.shared_kernel.presentation.http.schemas import AmountSerializer, ApiSerializerBaseModel
 
 
 class TransactionCustomer(ApiSerializerBaseModel):

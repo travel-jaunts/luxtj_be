@@ -8,7 +8,7 @@ from admin_api.customer.transactions.serializers import (
     RefundPaymentBody,
 )
 from admin_api.customer.transactions.service import CustomerPaymentService
-from common.serializerlib import (
+from luxtj.shared_kernel.presentation.http.schemas import (
     ApiSuccessResponse,
     CurrencyQuery,
     PaginatedResult,

@@ -492,7 +492,173 @@ luxtj.contexts.marketing -> admin_api
 luxtj.contexts.finance.infrastructure -> luxtj.contexts.marketing.infrastructure
 ```
 
-## Testing Strategy
+## Domain Policies
+
+A **domain policy** (also called a business rule or guard) is a named check that must hold true before a domain operation is allowed. Policies enforce invariants that cross multiple fields or depend on external domain facts (e.g. "the date must be in the future"). They differ from field-level validation in that they express **why** a value is rejected in domain language, not just that it is malformed.
+
+### Where Policies Live
+
+Policies live in `domain/policies.py` of the owning context. They may only import from:
+
+- Python standard library
+- `domain/errors.py` (same context)
+- `domain/enums.py` (same context)
+- `shared_kernel.domain`
+
+They must not import from application, infrastructure, or presentation layers.
+
+### Error Hierarchy
+
+Each context defines its own domain error hierarchy in `domain/errors.py`:
+
+```python
+class MarketingDomainError(Exception):
+    pass
+
+
+class CampaignPolicyViolationError(MarketingDomainError):
+    pass
+
+
+class StartDateInPastError(CampaignPolicyViolationError):
+    pass
+
+
+class RecurringScheduleRequiredError(CampaignPolicyViolationError):
+    pass
+```
+
+The base `CampaignPolicyViolationError` acts as a catch-all for the presentation layer. Specific subclasses let tests and callers react to individual violations without relying on error message strings.
+
+### Policy Base Class
+
+Define a single abstract base for all policies within an aggregate operation. Use a **context object** (a frozen dataclass) to carry all data that policies might inspect. This keeps policy signatures stable as new rules are added — new fields go on the context, not on every policy's method signature.
+
+```python
+from abc import ABC, abstractmethod
+from dataclasses import dataclass
+from datetime import date
+
+
+@dataclass(frozen=True)
+class CampaignCreationContext:
+    """All data available to creation policies. Extend this to expose new inputs to future rules."""
+
+    start_date: date
+    frequency: ScheduleFrequencyEnum
+    frequency_schedule: str | None
+
+
+class CampaignPolicy(ABC):
+    @abstractmethod
+    def enforce(self, ctx: CampaignCreationContext) -> None:
+        """Raise CampaignPolicyViolationError if the rule is violated."""
+```
+
+### Implementing a Policy
+
+Each policy is a small class with a single `enforce` method. Policies should be stateless; instantiate them once and reuse them.
+
+```python
+class StartDatePolicy(CampaignPolicy):
+    def enforce(self, ctx: CampaignCreationContext) -> None:
+        if ctx.start_date < date.today():
+            raise StartDateInPastError(
+                f"start_date must be today or in the future, got {ctx.start_date}"
+            )
+```
+
+### Composing Policies
+
+Group related policies into a composite class. Add new policies to `_policies` without touching callers.
+
+```python
+class CampaignCreationPolicies:
+    _policies: tuple[CampaignPolicy, ...] = (
+        StartDatePolicy(),
+        RecurringSchedulePolicy(),
+    )
+
+    def enforce_all(self, ctx: CampaignCreationContext) -> None:
+        for policy in self._policies:
+            policy.enforce(ctx)
+
+
+_creation_policies = CampaignCreationPolicies()
+```
+
+### Applying Policies in Domain Factory Methods
+
+Call `enforce_all` at the top of the domain factory method, before constructing the entity. If any policy raises, the entity is never created and no state change occurs.
+
+```python
+@classmethod
+def create(cls, *, start_date: date, frequency: ScheduleFrequencyEnum, ...) -> MarketingCampaign:
+    _creation_policies.enforce_all(
+        CampaignCreationContext(
+            start_date=start_date,
+            frequency=frequency,
+            frequency_schedule=frequency_schedule,
+        )
+    )
+    # entity construction only reaches here if all policies passed
+    return cls(status=CampaignStatusEnum.SCHEDULED, ...)
+```
+
+Domain methods that mutate an existing entity follow the same pattern: build a context from the incoming change, run the relevant policies, then apply the change.
+
+### Handling Policy Violations in the Presentation Layer
+
+Presentation adapters catch the base policy violation type and convert it to the appropriate transport response. They must not catch specific subclasses unless they need to map each violation to a different HTTP status or response field.
+
+```python
+try:
+    campaign = await marketing_service.create_campaign(command)
+except CampaignPolicyViolationError as exc:
+    return ApiErrorResponse(error_message=str(exc))
+```
+
+The application layer (use cases) should let `CampaignPolicyViolationError` propagate naturally. Use cases orchestrate, they do not own business rules.
+
+### Adding a New Policy
+
+1. Add new domain error subclasses to `domain/errors.py` if needed.
+2. Extend `CampaignCreationContext` (or the relevant context dataclass) with any new fields required.
+3. Implement the new `CampaignPolicy` subclass in `domain/policies.py`.
+4. Add an instance to the `_policies` tuple of the relevant composite.
+5. Write a pure unit test in `tests/contexts/marketing/domain/` — no database, no FastAPI.
+
+No other files need to change.
+
+### Testing Policies
+
+Policy tests are pure unit tests. They test the policy class directly; they do not need the full entity or an application use case.
+
+```python
+def test_start_date_in_past_raises():
+    policy = StartDatePolicy()
+    ctx = CampaignCreationContext(
+        start_date=date(2000, 1, 1),
+        frequency=ScheduleFrequencyEnum.ONE_TIME,
+        frequency_schedule=None,
+    )
+    with pytest.raises(StartDateInPastError):
+        policy.enforce(ctx)
+
+
+def test_start_date_today_is_valid():
+    policy = StartDatePolicy()
+    ctx = CampaignCreationContext(
+        start_date=date.today(),
+        frequency=ScheduleFrequencyEnum.ONE_TIME,
+        frequency_schedule=None,
+    )
+    policy.enforce(ctx)  # must not raise
+```
+
+Domain entity tests verify that `create()` delegates to policies correctly; they do not re-test individual policy logic.
+
+
 
 Test by layer:
 

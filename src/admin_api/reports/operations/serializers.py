@@ -11,8 +11,8 @@ from admin_api.reports.operations.domainmodel import (
     PartnerResponseTimeSummaryDomainModel,
     SupportResolutionTimeSummaryDomainModel,
 )
-from common.serializerlib import ApiSerializerBaseModel
 from luxtj.contexts.reports.domain.enums import PartnerTypeEnum
+from luxtj.shared_kernel.presentation.http.schemas import ApiSerializerBaseModel
 
 
 class OperationsReportQuery(ApiSerializerBaseModel):

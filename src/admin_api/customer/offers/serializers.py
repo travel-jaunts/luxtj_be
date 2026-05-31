@@ -2,7 +2,6 @@ from pydantic import AwareDatetime, Field
 
 from admin_api.customer.offers.domainmodel import OfferDomainModel, OffersKpiSummaryDomainModel
 from admin_api.customer.offers.dto import CreateOfferDTO, UpdateOfferDTO
-from common.serializerlib import AmountSerializer, ApiSerializerBaseModel
 from luxtj.contexts.customer.domain.enums import (
     BookingTypeEnum,
     OfferApplicabilityEnum,
@@ -10,6 +9,7 @@ from luxtj.contexts.customer.domain.enums import (
     OfferStatusEnum,
     OfferTypeEnum,
 )
+from luxtj.shared_kernel.presentation.http.schemas import AmountSerializer, ApiSerializerBaseModel
 
 
 class OffersKpiSummarySerializer(ApiSerializerBaseModel):

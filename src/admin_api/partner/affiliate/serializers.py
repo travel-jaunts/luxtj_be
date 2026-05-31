@@ -5,7 +5,7 @@ from admin_api.partner.affiliate.domainmodel import (
     AffiliatePartnerStatusEnum,
 )
 from admin_api.partner.affiliate.dto import UpdateAffiliatePartnerDetailsDTO
-from common.serializerlib import AmountSerializer, ApiSerializerBaseModel
+from luxtj.shared_kernel.presentation.http.schemas import AmountSerializer, ApiSerializerBaseModel
 
 
 class AffiliatePartnerBizKpiSummary(ApiSerializerBaseModel):

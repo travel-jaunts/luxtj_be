@@ -9,7 +9,11 @@ from admin_api.reports.customers.serializers import (
     CustomerValueReport,
 )
 from admin_api.reports.customers.service import CustomerReportService
-from common.serializerlib import ApiSuccessResponse, CurrencyQuery, RequestProcessStatus
+from luxtj.shared_kernel.presentation.http.schemas import (
+    ApiSuccessResponse,
+    CurrencyQuery,
+    RequestProcessStatus,
+)
 
 customers_router = APIRouter(prefix="/customers")
 

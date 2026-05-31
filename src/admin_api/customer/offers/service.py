@@ -2,7 +2,7 @@ from datetime import date
 
 from admin_api.customer.offers.domainmodel import OfferDomainModel, OffersKpiSummaryDomainModel
 from admin_api.customer.offers.dto import CreateOfferDTO, UpdateOfferDTO
-from common.service.metadata import PaginationMeta
+from luxtj.shared_kernel.application.pagination import PaginationMeta
 from luxtj.utils import mockutils
 
 

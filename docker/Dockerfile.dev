@@ -4,7 +4,8 @@ FROM python:3.14-slim AS dev
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONUNBUFFERED=1
+    PYTHONUNBUFFERED=1 \
+    PYTHONPATH=/app/src
 
 WORKDIR /app
 
@@ -17,5 +18,5 @@ RUN uv sync --frozen
 
 EXPOSE 8000
 
-CMD ["uv", "run", "uvicorn", "api.main:server_factory", "--factory",\
+CMD ["uv", "run", "uvicorn", "luxtj.bootstrap.api:server_factory", "--factory",\
      "--host", "0.0.0.0", "--port", "8000", "--reload"]

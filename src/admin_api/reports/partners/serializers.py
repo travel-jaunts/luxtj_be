@@ -10,7 +10,7 @@ from admin_api.reports.partners.domainmodel import (
     PartnerReportTypeEnum,
     PartnerTypeEnum,
 )
-from common.serializerlib import AmountSerializer, ApiSerializerBaseModel
+from luxtj.shared_kernel.presentation.http.schemas import AmountSerializer, ApiSerializerBaseModel
 
 
 class PartnerReportQuery(ApiSerializerBaseModel):

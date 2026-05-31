@@ -17,7 +17,7 @@ from admin_api.partner.offers.serializers import (
     UpdateSeasonalPricingBody,
 )
 from admin_api.partner.offers.service import PartnerOffersService
-from common.serializerlib import (
+from luxtj.shared_kernel.presentation.http.schemas import (
     ApiSuccessResponse,
     PaginatedResult,
     PaginationParams,

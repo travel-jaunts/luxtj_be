@@ -10,7 +10,7 @@ from admin_api.partner.approvals.domainmodel import (
     LifetimeApprovalSummaryDomainModel,
 )
 from admin_api.partner.approvals.dto import ApprovalActionDTO
-from common.serializerlib import (
+from luxtj.shared_kernel.presentation.http.schemas import (
     ApiSerializerBaseModel,
     BankDetailsSerializer,
     ImageMetadataSerializer,

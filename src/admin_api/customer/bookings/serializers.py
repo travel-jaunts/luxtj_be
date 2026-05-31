@@ -4,7 +4,6 @@ from admin_api.customer.bookings.domainmodel import (
     BookingBizKpiSummaryDomainModel,
     CustomerBookingDomainModel,
 )
-from common.serializerlib import AmountSerializer, ApiSerializerBaseModel
 from luxtj.contexts.customer.domain.enums import (
     BookingSourceEnum,
     BookingStatusEnum,
@@ -13,6 +12,7 @@ from luxtj.contexts.customer.domain.enums import (
     PaymentStatusEnum,
     RefundStatusEnum,
 )
+from luxtj.shared_kernel.presentation.http.schemas import AmountSerializer, ApiSerializerBaseModel
 
 
 class BookingBizKpiSummary(ApiSerializerBaseModel):

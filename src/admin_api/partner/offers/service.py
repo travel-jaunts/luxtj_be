@@ -16,7 +16,7 @@ from admin_api.partner.offers.dto import (
     UpdatePropertyPricingDTO,
     UpdateSeasonalPricingDTO,
 )
-from common.service.metadata import PaginationMeta
+from luxtj.shared_kernel.application.pagination import PaginationMeta
 from luxtj.utils import mockutils
 
 

@@ -12,7 +12,7 @@ from admin_api.partner.transactions.serializers import (
     PartnerTransactionsSummary,
 )
 from admin_api.partner.transactions.service import PartnerTransactionsService
-from common.serializerlib import (
+from luxtj.shared_kernel.presentation.http.schemas import (
     ApiSuccessResponse,
     CurrencyQuery,
     PaginatedResult,

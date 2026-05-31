@@ -4,7 +4,7 @@ from admin_api.customer.transactions.domainmodel import (
     CustomerPaymentDomainModel,
     PaymentRefundKpiSummaryDomainModel,
 )
-from common.service.metadata import PaginationMeta
+from luxtj.shared_kernel.application.pagination import PaginationMeta
 from luxtj.utils import mockutils
 
 

@@ -9,7 +9,7 @@ from admin_api.customer.offers.serializers import (
     UpdateOfferDetailsBody,
 )
 from admin_api.customer.offers.service import CustomerOffersService
-from common.serializerlib import (
+from luxtj.shared_kernel.presentation.http.schemas import (
     ApiSuccessResponse,
     CurrencyQuery,
     PaginatedResult,

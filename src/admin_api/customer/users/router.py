@@ -10,7 +10,7 @@ from admin_api.customer.users.serializers import (
     UpdateUserDetailsBody,
 )
 from admin_api.customer.users.service import CustomerUserService
-from common.serializerlib import (
+from luxtj.shared_kernel.presentation.http.schemas import (
     ApiSuccessResponse,
     CurrencyQuery,
     PaginatedResult,

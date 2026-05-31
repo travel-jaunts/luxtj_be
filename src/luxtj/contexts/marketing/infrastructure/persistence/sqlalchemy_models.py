@@ -4,17 +4,20 @@ from datetime import date, datetime
 from typing import TYPE_CHECKING
 from uuid import UUID
 
-from sqlalchemy import JSON, Date, DateTime, String, Text
+from sqlalchemy import JSON, Date, DateTime, Float, Integer, String, Text
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 from luxtj.contexts.marketing.domain.enums import (
     CampaignChannelEnum,
     CampaignStatusEnum,
+    OfferStatusEnum,
+    OfferTypeEnum,
     ScheduleFrequencyEnum,
 )
 
 if TYPE_CHECKING:
     from luxtj.contexts.marketing.domain.campaign import MarketingCampaign
+    from luxtj.contexts.marketing.domain.offer import Offer
 
 
 class MarketingBase(DeclarativeBase):
@@ -36,6 +39,7 @@ class MarketingCampaignRow(MarketingBase):
     frequency_schedule: Mapped[str | None] = mapped_column(String(255), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    deleted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
     @classmethod
     def from_domain(cls, campaign: MarketingCampaign) -> MarketingCampaignRow:
@@ -52,6 +56,7 @@ class MarketingCampaignRow(MarketingBase):
             frequency_schedule=campaign.frequency_schedule,
             created_at=campaign.created_at,
             updated_at=campaign.updated_at,
+            deleted_at=campaign.deleted_at,
         )
 
     def update_from_domain(self, campaign: MarketingCampaign) -> None:
@@ -65,6 +70,7 @@ class MarketingCampaignRow(MarketingBase):
         self.frequency = campaign.frequency.value
         self.frequency_schedule = campaign.frequency_schedule
         self.updated_at = campaign.updated_at
+        self.deleted_at = campaign.deleted_at
 
     def to_domain(self) -> MarketingCampaign:
         from luxtj.contexts.marketing.domain.campaign import MarketingCampaign
@@ -82,4 +88,87 @@ class MarketingCampaignRow(MarketingBase):
             frequency_schedule=self.frequency_schedule,
             created_at=self.created_at,
             updated_at=self.updated_at,
+            deleted_at=self.deleted_at,
+        )
+
+
+class MarketingOfferRow(MarketingBase):
+    __tablename__ = "marketing_offers"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True)
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
+    code: Mapped[str] = mapped_column(String(32), nullable=False, unique=True)
+    type: Mapped[str] = mapped_column(String(32), nullable=False)
+    discount_value: Mapped[float] = mapped_column(Float, nullable=False)
+    min_booking_value: Mapped[float] = mapped_column(Float, nullable=False)
+    min_booking_value_currency: Mapped[str] = mapped_column(String(8), nullable=False)
+    validity_start: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    validity_end: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    usage_limit_per_user: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    applicability_on: Mapped[list[str]] = mapped_column(JSON, nullable=False)
+    stackable: Mapped[bool] = mapped_column(nullable=False, default=False)
+    auto_apply: Mapped[bool] = mapped_column(nullable=False, default=True)
+    status: Mapped[str] = mapped_column(String(32), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    deleted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+    @classmethod
+    def from_domain(cls, offer: Offer) -> MarketingOfferRow:
+        return cls(
+            id=str(offer.id),
+            name=offer.name,
+            code=offer.code,
+            type=offer.type.value,
+            discount_value=offer.discount_value,
+            min_booking_value=offer.min_booking_value,
+            min_booking_value_currency=offer.min_booking_value_currency,
+            validity_start=offer.validity_start,
+            validity_end=offer.validity_end,
+            usage_limit_per_user=offer.usage_limit_per_user,
+            applicability_on=list(offer.applicability_on),
+            stackable=offer.stackable,
+            auto_apply=offer.auto_apply,
+            status=offer.status.value,
+            created_at=offer.created_at,
+            updated_at=offer.updated_at,
+            deleted_at=offer.deleted_at,
+        )
+
+    def update_from_domain(self, offer: Offer) -> None:
+        self.name = offer.name
+        self.discount_value = offer.discount_value
+        self.min_booking_value = offer.min_booking_value
+        self.min_booking_value_currency = offer.min_booking_value_currency
+        self.validity_start = offer.validity_start
+        self.validity_end = offer.validity_end
+        self.usage_limit_per_user = offer.usage_limit_per_user
+        self.applicability_on = list(offer.applicability_on)
+        self.stackable = offer.stackable
+        self.auto_apply = offer.auto_apply
+        self.status = offer.status.value
+        self.updated_at = offer.updated_at
+        self.deleted_at = offer.deleted_at
+
+    def to_domain(self) -> Offer:
+        from luxtj.contexts.marketing.domain.offer import Offer
+
+        return Offer(
+            id=UUID(self.id),
+            name=self.name,
+            code=self.code,
+            type=OfferTypeEnum(self.type),
+            discount_value=self.discount_value,
+            min_booking_value=self.min_booking_value,
+            min_booking_value_currency=self.min_booking_value_currency,
+            validity_start=self.validity_start,
+            validity_end=self.validity_end,
+            usage_limit_per_user=self.usage_limit_per_user,
+            applicability_on=list(self.applicability_on),
+            stackable=self.stackable,
+            auto_apply=self.auto_apply,
+            status=OfferStatusEnum(self.status),
+            created_at=self.created_at,
+            updated_at=self.updated_at,
+            deleted_at=self.deleted_at,
         )

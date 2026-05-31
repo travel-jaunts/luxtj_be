@@ -162,4 +162,3 @@ cython_debug/
 
 # AI tools
 .codex/
-dev/

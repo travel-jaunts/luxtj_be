@@ -7,7 +7,7 @@ from admin_api.audit_logs.domainmodel import (
     AuditLogEventDomainModel,
     AuditLogSeverityEnum,
 )
-from common.serializerlib import ApiSerializerBaseModel
+from luxtj.shared_kernel.presentation.http.schemas import ApiSerializerBaseModel
 
 
 class AuditLogActor(ApiSerializerBaseModel):

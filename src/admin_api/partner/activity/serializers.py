@@ -7,13 +7,13 @@ from admin_api.partner.activity.domainmodel import (
     ActivityPartnerStatusEnum,
 )
 from admin_api.partner.activity.dto import UpdateActivityPartnerDetailsDTO
-from common.serializerlib import (
+from luxtj.contexts.partner.domain.enums import PartnerKYCStatusEnum
+from luxtj.shared_kernel.presentation.http.schemas import (
     AmountSerializer,
     ApiSerializerBaseModel,
     BankDetailsSerializer,
     ImageMetadataSerializer,
 )
-from luxtj.contexts.partner.domain.enums import PartnerKYCStatusEnum
 
 
 class ActivityPartnerBizKpiSummary(ApiSerializerBaseModel):

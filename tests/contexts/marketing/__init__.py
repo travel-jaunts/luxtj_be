@@ -1,1 +1,0 @@
-"""Marketing context tests."""

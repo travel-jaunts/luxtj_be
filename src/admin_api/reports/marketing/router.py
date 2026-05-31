@@ -7,7 +7,11 @@ from admin_api.reports.marketing.serializers import (
     OfferPerformanceReport,
 )
 from admin_api.reports.marketing.service import MarketingReportService
-from common.serializerlib import ApiSuccessResponse, CurrencyQuery, RequestProcessStatus
+from luxtj.shared_kernel.presentation.http.schemas import (
+    ApiSuccessResponse,
+    CurrencyQuery,
+    RequestProcessStatus,
+)
 
 marketing_router = APIRouter(prefix="/marketing")
 
