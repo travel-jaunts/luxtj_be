@@ -1,6 +1,10 @@
+from uuid import UUID
+
 from luxtj.contexts.marketing.application.commands import CreateCampaignCommand
 from luxtj.contexts.marketing.application.ports import MarketingRepository
 from luxtj.contexts.marketing.domain.campaign import MarketingCampaign
+from luxtj.contexts.marketing.domain.enums import OfferStatusEnum, OfferTypeEnum
+from luxtj.contexts.marketing.domain.offer import Offer
 from luxtj.utils import mockutils, timeutils
 
 
@@ -36,3 +40,35 @@ class MockMarketingAudienceResolver:
             return list(command.audience_user_ids)
 
         return mockutils.random_user_ids(2, 10)
+
+
+class InMemoryOfferRepository:
+    def __init__(self) -> None:
+        self._offers: dict[str, Offer] = {}
+
+    async def add(self, offer: Offer) -> None:
+        self._offers[str(offer.id)] = offer
+
+    async def get_by_id(self, offer_id: UUID) -> Offer:
+        offer = self._offers.get(str(offer_id))
+        if offer is None:
+            raise KeyError(str(offer_id))
+        return offer
+
+    async def search(
+        self,
+        name: str | None,
+        status: OfferStatusEnum | None,
+        type: OfferTypeEnum | None,
+    ) -> list[Offer]:
+        results = [o for o in self._offers.values() if o.status != OfferStatusEnum.DELETED]
+        if name is not None:
+            results = [o for o in results if name.lower() in o.name.lower()]
+        if status is not None:
+            results = [o for o in results if o.status == status]
+        if type is not None:
+            results = [o for o in results if o.type == type]
+        return results
+
+    async def save(self, offer: Offer) -> None:
+        self._offers[str(offer.id)] = offer

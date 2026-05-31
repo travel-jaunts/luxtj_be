@@ -16,3 +16,11 @@ class RecurringScheduleRequiredError(CampaignPolicyViolationError):
 
 class InvalidCronExpressionError(CampaignPolicyViolationError):
     pass
+
+
+class OfferDomainError(MarketingDomainError):
+    pass
+
+
+class OfferPolicyViolationError(OfferDomainError):
+    pass

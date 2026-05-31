@@ -3,11 +3,12 @@ from typing import Annotated
 from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from luxtj.contexts.marketing.application.ports import AudienceResolver, MarketingRepository
-from luxtj.contexts.marketing.application.use_cases import MarketingService
+from luxtj.contexts.marketing.application.ports import AudienceResolver, MarketingRepository, OfferRepository
+from luxtj.contexts.marketing.application.use_cases import MarketingService, OffersService
 from luxtj.contexts.marketing.infrastructure.persistence import (
     MockMarketingAudienceResolver,
     SqlAlchemyMarketingRepository,
+    SqlAlchemyOfferRepository,
 )
 from luxtj.shared_kernel.application import DomainEventPublisher
 from luxtj.shared_kernel.infrastructure.events import OutboxEventPublisher
@@ -43,4 +44,20 @@ def build_marketing_service(
         marketing_repository=marketing_repository,
         event_publisher=event_publisher,
         audience_resolver=audience_resolver,
+    )
+
+
+def build_offer_repository(
+    session: Annotated[AsyncSession, Depends(database_session_handle)],
+) -> OfferRepository:
+    return SqlAlchemyOfferRepository(session)
+
+
+def build_offers_service(
+    event_publisher: Annotated[DomainEventPublisher, Depends(build_outbox_event_publisher)],
+    offer_repository: Annotated[OfferRepository, Depends(build_offer_repository)],
+) -> OffersService:
+    return OffersService(
+        repository=offer_repository,
+        event_publisher=event_publisher,
     )

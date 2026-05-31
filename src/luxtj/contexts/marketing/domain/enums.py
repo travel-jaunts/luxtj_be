@@ -22,3 +22,18 @@ class CampaignStatusEnum(StrEnum):
     PAUSED = "paused"
     COMPLETED = "completed"
     CANCELLED = "cancelled"
+
+
+class OfferTypeEnum(StrEnum):
+    FLAT = "flat"
+    PERCENTAGE_OFF = "percentage_off"
+    BUNDLE = "bundle"
+    REFERRAL = "referral"
+
+
+class OfferStatusEnum(StrEnum):
+    ACTIVE = "active"
+    EXPIRED = "expired"
+    PAUSED = "paused"
+    RESCINDED = "rescinded"
+    DELETED = "deleted"

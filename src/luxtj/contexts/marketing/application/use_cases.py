@@ -1,11 +1,17 @@
 from luxtj.contexts.marketing.application.commands import (
     CreateCampaignCommand,
+    CreateOfferCommand,
+    DeleteOfferCommand,
     DuplicateCampaignCommand,
     PauseCampaignCommand,
+    PauseOfferCommand,
+    RescindOfferCommand,
+    SearchOffersCommand,
     UpdateCampaignCommand,
 )
-from luxtj.contexts.marketing.application.ports import AudienceResolver, MarketingRepository
+from luxtj.contexts.marketing.application.ports import AudienceResolver, MarketingRepository, OfferRepository
 from luxtj.contexts.marketing.domain.campaign import MarketingCampaign
+from luxtj.contexts.marketing.domain.offer import Offer
 from luxtj.shared_kernel.application import DomainEventPublisher
 
 
@@ -88,3 +94,65 @@ class MarketingService:
         if self.audience_resolver is None:
             return list(command.audience_user_ids)
         return await self.audience_resolver.resolve_campaign_audience(command)
+
+
+class OffersService:
+    def __init__(
+        self,
+        repository: OfferRepository,
+        event_publisher: DomainEventPublisher,
+    ):
+        self.repository = repository
+        self.event_publisher = event_publisher
+
+    async def create_offer(self, command: CreateOfferCommand) -> Offer:
+        offer = Offer.create(
+            name=command.name,
+            code=command.code,
+            type=command.type,
+            discount_value=command.discount_value,
+            min_booking_value=command.min_booking_value,
+            min_booking_value_currency=command.min_booking_value_currency,
+            validity_start=command.validity_start,
+            validity_end=command.validity_end,
+            usage_limit_per_user=command.usage_limit_per_user,
+            applicability_on=command.applicability_on,
+            stackable=command.stackable,
+            auto_apply=command.auto_apply,
+        )
+        await self.repository.add(offer)
+        await self._flush_events(offer)
+        return offer
+
+    async def search_offers(self, command: SearchOffersCommand) -> list[Offer]:
+        return await self.repository.search(
+            name=command.name,
+            status=command.status,
+            type=command.type,
+        )
+
+    async def pause_offer(self, command: PauseOfferCommand) -> Offer:
+        offer = await self.repository.get_by_id(command.offer_id)
+        offer.pause()
+        await self.repository.save(offer)
+        await self._flush_events(offer)
+        return offer
+
+    async def rescind_offer(self, command: RescindOfferCommand) -> Offer:
+        offer = await self.repository.get_by_id(command.offer_id)
+        offer.rescind()
+        await self.repository.save(offer)
+        await self._flush_events(offer)
+        return offer
+
+    async def delete_offer(self, command: DeleteOfferCommand) -> Offer:
+        offer = await self.repository.get_by_id(command.offer_id)
+        offer.delete()
+        await self.repository.save(offer)
+        await self._flush_events(offer)
+        return offer
+
+    async def _flush_events(self, *aggregates: Offer) -> None:
+        for aggregate in aggregates:
+            for event in aggregate.pull_events():
+                await self.event_publisher.publish(event)

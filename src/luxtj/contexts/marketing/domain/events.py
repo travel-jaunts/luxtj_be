@@ -1,11 +1,14 @@
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from pydantic import Field
 
 from luxtj.contexts.marketing.domain.campaign import MarketingCampaign
 from luxtj.shared_kernel.domain import BaseDomainEvent
+
+if TYPE_CHECKING:
+    from luxtj.contexts.marketing.domain.offer import Offer
 
 
 class MarketingCampaignCreated(BaseDomainEvent):
@@ -150,5 +153,87 @@ class MarketingCampaignPaused(BaseDomainEvent):
                 "name": campaign.name,
                 "status": campaign.status.value,
                 "updated_at": campaign.updated_at.isoformat(),
+            },
+        )
+
+
+class OfferCreated(BaseDomainEvent):
+    source: str = "/luxtj/contexts/marketing/domain/offer"
+    type: str = "com.luxtj.marketing.offer.created.v1"
+    datacontenttype: str | None = "application/json"
+    data: dict[str, Any] | None = Field(default=None)
+
+    @classmethod
+    def from_offer(cls, offer: Offer) -> OfferCreated:
+        return cls(
+            subject=str(offer.id),
+            time=offer.created_at,
+            data={
+                "id": str(offer.id),
+                "name": offer.name,
+                "code": offer.code,
+                "type": offer.type.value,
+                "status": offer.status.value,
+                "created_at": offer.created_at.isoformat(),
+            },
+        )
+
+
+class OfferPaused(BaseDomainEvent):
+    source: str = "/luxtj/contexts/marketing/domain/offer"
+    type: str = "com.luxtj.marketing.offer.paused.v1"
+    datacontenttype: str | None = "application/json"
+    data: dict[str, Any] | None = Field(default=None)
+
+    @classmethod
+    def from_offer(cls, offer: Offer) -> OfferPaused:
+        return cls(
+            subject=str(offer.id),
+            time=offer.updated_at,
+            data={
+                "id": str(offer.id),
+                "name": offer.name,
+                "status": offer.status.value,
+                "updated_at": offer.updated_at.isoformat(),
+            },
+        )
+
+
+class OfferRescinded(BaseDomainEvent):
+    source: str = "/luxtj/contexts/marketing/domain/offer"
+    type: str = "com.luxtj.marketing.offer.rescinded.v1"
+    datacontenttype: str | None = "application/json"
+    data: dict[str, Any] | None = Field(default=None)
+
+    @classmethod
+    def from_offer(cls, offer: Offer) -> OfferRescinded:
+        return cls(
+            subject=str(offer.id),
+            time=offer.updated_at,
+            data={
+                "id": str(offer.id),
+                "name": offer.name,
+                "status": offer.status.value,
+                "updated_at": offer.updated_at.isoformat(),
+            },
+        )
+
+
+class OfferDeleted(BaseDomainEvent):
+    source: str = "/luxtj/contexts/marketing/domain/offer"
+    type: str = "com.luxtj.marketing.offer.deleted.v1"
+    datacontenttype: str | None = "application/json"
+    data: dict[str, Any] | None = Field(default=None)
+
+    @classmethod
+    def from_offer(cls, offer: Offer) -> OfferDeleted:
+        return cls(
+            subject=str(offer.id),
+            time=offer.deleted_at,
+            data={
+                "id": str(offer.id),
+                "name": offer.name,
+                "status": offer.status.value,
+                "deleted_at": offer.deleted_at.isoformat() if offer.deleted_at else None,
             },
         )
