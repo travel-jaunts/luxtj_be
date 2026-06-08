@@ -18,13 +18,16 @@ from luxtj.contexts.marketing.infrastructure.persistence.sqlalchemy_models impor
 from luxtj.shared_kernel.infrastructure.persistence.outbox_model import (
     SharedKernelBase,
 )
+from luxtj.contexts.acquisition.infrastructure.persistence.sqlalchemy_models import (
+    AcquisitionBase,
+)
 
 config = context.config
 
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
-target_metadata = [SharedKernelBase.metadata, MarketingBase.metadata]
+target_metadata = [SharedKernelBase.metadata, MarketingBase.metadata, AcquisitionBase.metadata]
 
 
 def _get_url() -> str:
