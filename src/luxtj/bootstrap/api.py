@@ -14,6 +14,8 @@ from admin_api.customer import customer_router
 from admin_api.partner import partner_router
 from admin_api.reports import reports_router
 from luxtj.bootstrap import config
+from luxtj.contexts.acquisition.infrastructure.persistence.sqlalchemy_models import AcquisitionBase
+from luxtj.contexts.acquisition.presentation.http.router import router as waitlist_router
 from luxtj.contexts.action_centre.infrastructure.persistence import ActionCentreBase
 
 # from luxtj.contexts.action_centre.infrastructure.projector import ActionCentreOutboxProjector
@@ -41,7 +43,12 @@ from luxtj.utils import timeutils
 
 def get_registered_metadata() -> tuple[MetaData, ...]:
     # Register context metadata here so startup table creation can cover all contexts.
-    return (SharedKernelBase.metadata, MarketingBase.metadata, ActionCentreBase.metadata)
+    return (
+        SharedKernelBase.metadata,
+        MarketingBase.metadata,
+        ActionCentreBase.metadata,
+        AcquisitionBase.metadata,
+    )
 
 
 def _create_all_tables(connection: Connection) -> None:
@@ -140,6 +147,7 @@ def server_factory() -> FastAPI:
     # CAUTION: in case admin apis need to be removed, comment above lines
 
     public_router = APIRouter(prefix="/v1")
+    public_router.include_router(waitlist_router)
     # public_router.include_router(idam_router)
     api_application.include_router(public_router)
 
