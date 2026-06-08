@@ -12,14 +12,14 @@ from sqlalchemy.ext.asyncio import async_engine_from_config
 # Allow imports from src/ when running alembic from the project root
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
 
+from luxtj.contexts.acquisition.infrastructure.persistence.sqlalchemy_models import (
+    AcquisitionBase,
+)
 from luxtj.contexts.marketing.infrastructure.persistence.sqlalchemy_models import (
     MarketingBase,
 )
 from luxtj.shared_kernel.infrastructure.persistence.outbox_model import (
     SharedKernelBase,
-)
-from luxtj.contexts.acquisition.infrastructure.persistence.sqlalchemy_models import (
-    AcquisitionBase,
 )
 
 config = context.config
