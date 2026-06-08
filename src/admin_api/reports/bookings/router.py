@@ -46,6 +46,7 @@ async def booking_report_data(
         group_by=report_query.group_by,
         from_date=report_query.from_date,
         to_date=report_query.to_date,
+        time_scale=report_query.time_scale,
         customer_ids=customer_ids,
         iso_currency_str=iso_currency_str,
     )

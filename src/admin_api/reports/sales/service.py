@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from datetime import date
 
+from admin_api.reports.enums import TimeScaleEnum
 from admin_api.reports.sales.domainmodel import (
     SalesDimensionOptionDomainModel,
     SalesDimensionTypeEnum,
@@ -12,6 +13,7 @@ from admin_api.reports.sales.domainmodel import (
     mock_sales_report_row,
     month_range,
 )
+from admin_api.reports.timeranges import weekly_range, yearly_range
 
 DESTINATION_OPTIONS = [
     ("DXB", "Dubai"),
@@ -38,6 +40,7 @@ class SalesReportService:
         report_type: SalesReportTypeEnum,
         from_date: date | None = None,
         to_date: date | None = None,
+        time_scale: TimeScaleEnum = TimeScaleEnum.WEEKLY,
         destination_ids: list[str] | None = None,
         property_ids: list[str] | None = None,
         iso_currency_str: str,
@@ -58,7 +61,19 @@ class SalesReportService:
                 property_ids=property_ids,
                 iso_currency_str=iso_currency_str,
             )
-        return self._daily_sales(
+        if time_scale == TimeScaleEnum.MONTHLY:
+            return self._monthly_sales(
+                from_date=from_date,
+                to_date=to_date,
+                iso_currency_str=iso_currency_str,
+            )
+        if time_scale == TimeScaleEnum.YEARLY:
+            return self._yearly_sales(
+                from_date=from_date,
+                to_date=to_date,
+                iso_currency_str=iso_currency_str,
+            )
+        return self._weekly_sales(
             from_date=from_date,
             to_date=to_date,
             iso_currency_str=iso_currency_str,
@@ -148,6 +163,64 @@ class SalesReportService:
         return SalesReportDomainModel.from_rows(
             report_type=SalesReportTypeEnum.MONTHLY,
             title="Monthly Sales",
+            currency=iso_currency_str,
+            rows=rows,
+        )
+
+    def _weekly_sales(
+        self,
+        *,
+        from_date: date | None,
+        to_date: date | None,
+        iso_currency_str: str,
+    ) -> SalesReportDomainModel:
+        rows = [
+            mock_sales_report_row(
+                timestamp=report_week,
+                period_type=SalesPeriodTypeEnum.MONTHLY,
+                dimension_type=SalesDimensionTypeEnum.OVERALL,
+                dimension_id="ALL",
+                dimension_name="All Sales",
+                currency=iso_currency_str,
+            )
+            for report_week in weekly_range(
+                from_date=from_date,
+                to_date=to_date,
+                fallback_weeks=12,
+            )
+        ]
+        return SalesReportDomainModel.from_rows(
+            report_type=SalesReportTypeEnum.DAILY,
+            title="Weekly Sales",
+            currency=iso_currency_str,
+            rows=rows,
+        )
+
+    def _yearly_sales(
+        self,
+        *,
+        from_date: date | None,
+        to_date: date | None,
+        iso_currency_str: str,
+    ) -> SalesReportDomainModel:
+        rows = [
+            mock_sales_report_row(
+                timestamp=report_year,
+                period_type=SalesPeriodTypeEnum.MONTHLY,
+                dimension_type=SalesDimensionTypeEnum.OVERALL,
+                dimension_id="ALL",
+                dimension_name="All Sales",
+                currency=iso_currency_str,
+            )
+            for report_year in yearly_range(
+                from_date=from_date,
+                to_date=to_date,
+                fallback_years=3,
+            )
+        ]
+        return SalesReportDomainModel.from_rows(
+            report_type=SalesReportTypeEnum.DAILY,
+            title="Yearly Sales",
             currency=iso_currency_str,
             rows=rows,
         )

@@ -52,6 +52,7 @@ async def sales_report_data(
         report_type=report_query.report_type,
         from_date=report_query.from_date,
         to_date=report_query.to_date,
+        time_scale=report_query.time_scale,
         destination_ids=destination_ids,
         property_ids=property_ids,
         iso_currency_str=iso_currency_str,

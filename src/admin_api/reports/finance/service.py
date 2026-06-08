@@ -2,12 +2,15 @@ from __future__ import annotations
 
 from datetime import date
 
+from admin_api.reports.enums import TimeScaleEnum
 from admin_api.reports.finance.domainmodel import (
     FinanceMetricTypeEnum,
     FinanceReportDomainModel,
     default_finance_date_range,
     finance_metric_from_amount,
     finance_trend_dates,
+    finance_trend_weeks,
+    finance_trend_years,
     mock_finance_trend_point,
 )
 from luxtj.utils import timeutils
@@ -19,6 +22,7 @@ class FinanceReportService:
         *,
         from_date: date | None = None,
         to_date: date | None = None,
+        time_scale: TimeScaleEnum = TimeScaleEnum.WEEKLY,
         iso_currency_str: str,
     ) -> FinanceReportDomainModel:
         resolved_from_date, resolved_to_date = default_finance_date_range(
@@ -26,13 +30,27 @@ class FinanceReportService:
             to_date=to_date,
             fallback_days=30,
         )
-        trend = [
-            mock_finance_trend_point(timestamp=trend_date, currency=iso_currency_str)
-            for trend_date in finance_trend_dates(
+
+        if time_scale == TimeScaleEnum.MONTHLY:
+            trend_range = finance_trend_dates(
                 from_date=resolved_from_date,
                 to_date=resolved_to_date,
                 max_points=12,
             )
+        elif time_scale == TimeScaleEnum.YEARLY:
+            trend_range = finance_trend_years(
+                from_date=resolved_from_date,
+                to_date=resolved_to_date,
+            )
+        else:
+            trend_range = finance_trend_weeks(
+                from_date=resolved_from_date,
+                to_date=resolved_to_date,
+            )
+
+        trend = [
+            mock_finance_trend_point(timestamp=trend_date, currency=iso_currency_str)
+            for trend_date in trend_range
         ]
 
         revenue_amount = sum(point.revenue_amount for point in trend)

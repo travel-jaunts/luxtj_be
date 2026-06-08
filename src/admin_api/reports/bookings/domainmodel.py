@@ -168,6 +168,29 @@ def month_points(*, from_date: date, to_date: date) -> list[date]:
     return months
 
 
+def weekly_points(*, from_date: date, to_date: date) -> list[date]:
+    weeks: list[date] = []
+    current = from_date - timedelta(days=from_date.weekday())
+
+    while current <= to_date:
+        weeks.append(current)
+        current += timedelta(days=7)
+
+    return weeks
+
+
+def yearly_points(*, from_date: date, to_date: date) -> list[date]:
+    years: list[date] = []
+    current_year = from_date.year
+    final_year = to_date.year
+
+    while current_year <= final_year:
+        years.append(date(current_year, 1, 1))
+        current_year += 1
+
+    return years
+
+
 def mock_booking_report_row(
     *,
     group_by: BookingReportGroupByEnum,

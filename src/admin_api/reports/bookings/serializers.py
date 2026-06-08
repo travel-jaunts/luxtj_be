@@ -12,6 +12,7 @@ from admin_api.reports.bookings.domainmodel import (
     BookingReportTotalsDomainModel,
     BookingReportTypeEnum,
 )
+from admin_api.reports.enums import TimeScaleEnum
 from luxtj.shared_kernel.presentation.http.schemas import AmountSerializer, ApiSerializerBaseModel
 
 
@@ -28,6 +29,11 @@ class BookingReportQuery(ApiSerializerBaseModel):
     )
     from_date: date | None = Field(None, description="Start date for the report range")
     to_date: date | None = Field(None, description="End date for the report range")
+    time_scale: TimeScaleEnum = Field(
+        TimeScaleEnum.WEEKLY,
+        alias="timeScale",
+        description="Time scale for aggregating booking data. Supported values are weekly, monthly, and yearly.",
+    )
 
 
 class BookingCustomerSearchQuery(ApiSerializerBaseModel):

@@ -76,6 +76,29 @@ def finance_trend_dates(*, from_date: date, to_date: date, max_points: int) -> l
     return [*trend_dates[: max_points - 1], to_date]
 
 
+def finance_trend_weeks(*, from_date: date, to_date: date) -> list[date]:
+    weeks: list[date] = []
+    current = from_date - timedelta(days=from_date.weekday())
+
+    while current <= to_date:
+        weeks.append(current)
+        current += timedelta(days=7)
+
+    return weeks
+
+
+def finance_trend_years(*, from_date: date, to_date: date) -> list[date]:
+    years: list[date] = []
+    current_year = from_date.year
+    final_year = to_date.year
+
+    while current_year <= final_year:
+        years.append(date(current_year, 1, 1))
+        current_year += 1
+
+    return years
+
+
 def mock_finance_trend_point(*, timestamp: date, currency: str) -> FinanceTrendPointDomainModel:
     revenue_amount = mockutils.random_booking_amount(100_000.0, 1_500_000.0)
     payments_amount = mockutils.random_booking_amount(revenue_amount * 0.75, revenue_amount)

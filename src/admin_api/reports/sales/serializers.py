@@ -4,6 +4,7 @@ from datetime import date
 
 from pydantic import AwareDatetime, Field
 
+from admin_api.reports.enums import TimeScaleEnum
 from admin_api.reports.sales.domainmodel import (
     SalesDimensionOptionDomainModel,
     SalesDimensionTypeEnum,
@@ -24,6 +25,11 @@ class SalesReportQuery(ApiSerializerBaseModel):
     )
     from_date: date | None = Field(None, description="Start date for the report range")
     to_date: date | None = Field(None, description="End date for the report range")
+    time_scale: TimeScaleEnum = Field(
+        TimeScaleEnum.WEEKLY,
+        alias="timeScale",
+        description="Time scale for aggregating sales data. Supported values are weekly, monthly, and yearly.",
+    )
 
 
 class SalesDimensionSearchQuery(ApiSerializerBaseModel):

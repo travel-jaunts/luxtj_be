@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from datetime import date
 
+from admin_api.reports.enums import TimeScaleEnum
 from admin_api.reports.operations.domainmodel import (
     OperationsApprovalSummaryDomainModel,
     OperationsReportDomainModel,
@@ -17,6 +18,7 @@ class OperationsReportService:
         *,
         from_date: date | None = None,
         to_date: date | None = None,
+        time_scale: TimeScaleEnum = TimeScaleEnum.WEEKLY,
     ) -> OperationsReportDomainModel:
         return OperationsReportDomainModel(
             title="Operations Overview",

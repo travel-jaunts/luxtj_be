@@ -4,6 +4,7 @@ from datetime import date
 
 from pydantic import AwareDatetime, Field
 
+from admin_api.reports.enums import TimeScaleEnum
 from admin_api.reports.operations.domainmodel import (
     OperationsApprovalSummaryDomainModel,
     OperationsReportDomainModel,
@@ -18,6 +19,11 @@ from luxtj.shared_kernel.presentation.http.schemas import ApiSerializerBaseModel
 class OperationsReportQuery(ApiSerializerBaseModel):
     from_date: date | None = Field(None, description="Start date for the operations overview")
     to_date: date | None = Field(None, description="End date for the operations overview")
+    time_scale: TimeScaleEnum = Field(
+        TimeScaleEnum.WEEKLY,
+        alias="timeScale",
+        description="Time scale for aggregating operations data. Supported values are weekly, monthly, and yearly.",
+    )
 
 
 class OperationsApprovalSummary(ApiSerializerBaseModel):

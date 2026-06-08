@@ -11,8 +11,11 @@ from admin_api.reports.bookings.domainmodel import (
     day_points,
     mock_booking_report_row,
     month_points,
+    weekly_points,
     report_date_range,
+    yearly_points,
 )
+from admin_api.reports.enums import TimeScaleEnum
 
 CUSTOMER_OPTIONS = [
     BookingReportCustomerOptionDomainModel.from_customer_model(CustomerDomainModel.generate_mock())
@@ -28,6 +31,7 @@ class BookingReportService:
         group_by: BookingReportGroupByEnum,
         from_date: date | None = None,
         to_date: date | None = None,
+        time_scale: TimeScaleEnum = TimeScaleEnum.WEEKLY,
         customer_ids: list[str] | None = None,
         iso_currency_str: str,
     ) -> BookingReportDomainModel:
@@ -50,11 +54,24 @@ class BookingReportService:
                 iso_currency_str=iso_currency_str,
             )
         else:
-            rows = self._day_rows(
-                from_date=resolved_from_date,
-                to_date=resolved_to_date,
-                iso_currency_str=iso_currency_str,
-            )
+            if time_scale == TimeScaleEnum.MONTHLY:
+                rows = self._month_rows(
+                    from_date=resolved_from_date,
+                    to_date=resolved_to_date,
+                    iso_currency_str=iso_currency_str,
+                )
+            elif time_scale == TimeScaleEnum.YEARLY:
+                rows = self._year_rows(
+                    from_date=resolved_from_date,
+                    to_date=resolved_to_date,
+                    iso_currency_str=iso_currency_str,
+                )
+            else:
+                rows = self._week_rows(
+                    from_date=resolved_from_date,
+                    to_date=resolved_to_date,
+                    iso_currency_str=iso_currency_str,
+                )
 
         if report_type == BookingReportTypeEnum.CANCELLATIONS:
             title = f"Cancellations by {group_by.value}"
@@ -125,6 +142,42 @@ class BookingReportService:
                 currency=iso_currency_str,
             )
             for report_month in month_points(from_date=from_date, to_date=to_date)
+        ]
+
+    def _week_rows(
+        self,
+        *,
+        from_date: date,
+        to_date: date,
+        iso_currency_str: str,
+    ):
+        return [
+            mock_booking_report_row(
+                group_by=BookingReportGroupByEnum.DAY,
+                label=f"W{report_week.isocalendar()[1]} {report_week.year}",
+                period_start=report_week,
+                customer=None,
+                currency=iso_currency_str,
+            )
+            for report_week in weekly_points(from_date=from_date, to_date=to_date)
+        ]
+
+    def _year_rows(
+        self,
+        *,
+        from_date: date,
+        to_date: date,
+        iso_currency_str: str,
+    ):
+        return [
+            mock_booking_report_row(
+                group_by=BookingReportGroupByEnum.DAY,
+                label=str(report_year.year),
+                period_start=report_year,
+                customer=None,
+                currency=iso_currency_str,
+            )
+            for report_year in yearly_points(from_date=from_date, to_date=to_date)
         ]
 
     def _customer_rows(

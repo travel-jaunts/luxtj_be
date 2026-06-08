@@ -27,6 +27,7 @@ async def operations_report_data(
     report = await operations_report_service.get_report(
         from_date=report_query.from_date,
         to_date=report_query.to_date,
+        time_scale=report_query.time_scale,
     )
 
     return ApiSuccessResponse(
