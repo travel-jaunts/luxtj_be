@@ -40,4 +40,3 @@ def yearly_range(
         current_year += 1
 
     return years
-

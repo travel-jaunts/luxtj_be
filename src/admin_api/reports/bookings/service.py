@@ -11,8 +11,8 @@ from admin_api.reports.bookings.domainmodel import (
     day_points,
     mock_booking_report_row,
     month_points,
-    weekly_points,
     report_date_range,
+    weekly_points,
     yearly_points,
 )
 from admin_api.reports.enums import TimeScaleEnum

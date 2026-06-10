@@ -15,6 +15,9 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
 from luxtj.contexts.acquisition.infrastructure.persistence.sqlalchemy_models import (
     AcquisitionBase,
 )
+from luxtj.contexts.action_centre.infrastructure.persistence.sqlalchemy_models import (
+    ActionCentreBase,
+)
 from luxtj.contexts.marketing.infrastructure.persistence.sqlalchemy_models import (
     MarketingBase,
 )
@@ -27,7 +30,12 @@ config = context.config
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
-target_metadata = [SharedKernelBase.metadata, MarketingBase.metadata, AcquisitionBase.metadata]
+target_metadata = [
+    SharedKernelBase.metadata,
+    MarketingBase.metadata,
+    AcquisitionBase.metadata,
+    ActionCentreBase.metadata,
+]
 
 
 def _get_url() -> str:

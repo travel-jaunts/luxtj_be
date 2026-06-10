@@ -17,8 +17,7 @@ from luxtj.bootstrap import config
 from luxtj.contexts.acquisition.infrastructure.persistence.sqlalchemy_models import AcquisitionBase
 from luxtj.contexts.acquisition.presentation.http.router import router as waitlist_router
 from luxtj.contexts.action_centre.infrastructure.persistence import ActionCentreBase
-
-# from luxtj.contexts.action_centre.infrastructure.projector import ActionCentreOutboxProjector
+from luxtj.contexts.action_centre.infrastructure.projector import ActionCentreOutboxProjector
 from luxtj.contexts.action_centre.presentation.http import action_centre_router
 from luxtj.contexts.marketing.infrastructure.persistence import MarketingBase
 from luxtj.contexts.marketing.presentation.http import marketing_router
@@ -86,16 +85,16 @@ async def init_app_state(fastapi_app: FastAPI):
         session_factory = build_async_session_factory(database_engine)
         fastapi_app.state.database_session_factory = session_factory
 
-        # action_centre_projector = ActionCentreOutboxProjector(session_factory)
-        # fastapi_app.state.action_centre_projector = action_centre_projector
-        # await action_centre_projector.start()
+        action_centre_projector = ActionCentreOutboxProjector(session_factory)
+        fastapi_app.state.action_centre_projector = action_centre_projector
+        await action_centre_projector.start()
 
         async with AsyncClient() as client:
             fastapi_app.state.http_client = client
             yield
     finally:
-        # if getattr(fastapi_app.state, "action_centre_projector", None) is not None:
-        #     await fastapi_app.state.action_centre_projector.stop()
+        if getattr(fastapi_app.state, "action_centre_projector", None) is not None:
+            await fastapi_app.state.action_centre_projector.stop()
 
         await print_subscriber.stop()
         await dispose_async_engine(fastapi_app.state.database_engine)

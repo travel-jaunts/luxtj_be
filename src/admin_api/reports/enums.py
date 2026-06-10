@@ -5,4 +5,3 @@ class TimeScaleEnum(StrEnum):
     WEEKLY = "weekly"
     MONTHLY = "monthly"
     YEARLY = "yearly"
-
