@@ -4,6 +4,7 @@ from uuid import UUID
 from sqlalchemy import JSON, Date, DateTime, Float, Integer, String, Text
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
+from luxtj.contexts.marketing.domain.campaign import MarketingCampaign
 from luxtj.contexts.marketing.domain.enums import (
     CampaignChannelEnum,
     CampaignStatusEnum,
@@ -11,7 +12,6 @@ from luxtj.contexts.marketing.domain.enums import (
     OfferTypeEnum,
     ScheduleFrequencyEnum,
 )
-from luxtj.contexts.marketing.domain.campaign import MarketingCampaign
 from luxtj.contexts.marketing.domain.offer import Offer
 
 

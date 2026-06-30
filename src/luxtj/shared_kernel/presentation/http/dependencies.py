@@ -3,6 +3,7 @@ from collections.abc import AsyncIterator
 from fastapi import FastAPI, Request
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
+from twilio.http.async_http_client import AsyncTwilioHttpClient
 
 from luxtj.shared_kernel.infrastructure.events.in_process import InProcessEventPublisher
 from luxtj.shared_kernel.infrastructure.events.outbox import OutboxEventPublisher
@@ -35,3 +36,7 @@ async def database_session_handle(request: Request) -> AsyncIterator[AsyncSessio
 
 def outbox_event_publisher_handle(session: AsyncSession) -> OutboxEventPublisher:
     return OutboxEventPublisher(session)
+
+
+def twilio_client_handle(request: Request) -> AsyncTwilioHttpClient:
+    return request.app.state.twilio_http_client
