@@ -8,6 +8,7 @@ from sqlalchemy import text
 from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import AsyncEngine
 from sqlalchemy.schema import MetaData
+from twilio.http.async_http_client import AsyncTwilioHttpClient
 
 from admin_api.audit_logs.router import audit_logs_router as admin_audit_logs_router
 from admin_api.customer.router import customer_router
@@ -95,8 +96,9 @@ async def init_app_state(fastapi_app: FastAPI):
             fastapi_app.state.action_centre_projector = action_centre_projector
             await action_centre_projector.start()
 
-        async with AsyncClient() as client:
+        async with AsyncClient() as client, AsyncTwilioHttpClient() as async_http_client:
             fastapi_app.state.http_client = client
+            fastapi_app.state.twilio_http_client = async_http_client
             yield
     finally:
         if getattr(fastapi_app.state, "action_centre_projector", None) is not None:

@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 from admin_api.customer.offers.domainmodel import OfferDomainModel
 from admin_api.reports.marketing.domainmodel import (
     CampaignChannelEnum,

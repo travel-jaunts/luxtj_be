@@ -1,14 +1,10 @@
-from __future__ import annotations
-
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from pydantic import Field
 
 from luxtj.contexts.marketing.domain.campaign import MarketingCampaign
+from luxtj.contexts.marketing.domain.offer import Offer
 from luxtj.shared_kernel.domain.events import BaseDomainEvent
-
-if TYPE_CHECKING:
-    from luxtj.contexts.marketing.domain.offer import Offer
 
 
 class MarketingCampaignCreated(BaseDomainEvent):

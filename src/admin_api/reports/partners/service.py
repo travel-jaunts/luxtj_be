@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 from admin_api.reports.partners.domainmodel import (
     PartnerOptionDomainModel,
     PartnerReportDomainModel,

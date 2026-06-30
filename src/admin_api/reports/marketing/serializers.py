@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 from pydantic import AwareDatetime, Field
 
 from admin_api.reports.marketing.domainmodel import (

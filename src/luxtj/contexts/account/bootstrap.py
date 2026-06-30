@@ -3,6 +3,8 @@ from typing import Annotated
 
 from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
+from twilio.http.async_http_client import AsyncTwilioHttpClient
+from twilio.rest import Client
 
 from luxtj.bootstrap import config
 from luxtj.contexts.account.application.ports import (
@@ -25,7 +27,10 @@ from luxtj.contexts.account.infrastructure.persistence.sqlalchemy_repository imp
 )
 from luxtj.contexts.account.infrastructure.sms.null_sender import NullSmsOtpSender
 from luxtj.contexts.account.infrastructure.sms.twilio_sender import TwilioSmsOtpSender
-from luxtj.shared_kernel.presentation.http.dependencies import database_session_handle
+from luxtj.shared_kernel.presentation.http.dependencies import (
+    database_session_handle,
+    twilio_client_handle,
+)
 from luxtj.utils import timeutils
 
 
@@ -54,11 +59,16 @@ def build_otp_security() -> OtpSecurityService:
     return OtpSecurityService(pepper=config.AUTH_OTP_PEPPER)
 
 
-def build_sms_sender() -> SmsOtpSender:
+def build_sms_sender(
+    twilio_client: Annotated[AsyncTwilioHttpClient, Depends(twilio_client_handle)],
+) -> SmsOtpSender:
     if config.TWILIO_ACCOUNT_SID and config.TWILIO_AUTH_TOKEN and config.TWILIO_FROM_PHONE:
         return TwilioSmsOtpSender(
-            account_sid=config.TWILIO_ACCOUNT_SID,
-            auth_token=config.TWILIO_AUTH_TOKEN,
+            client=Client(
+                config.TWILIO_ACCOUNT_SID,
+                config.TWILIO_AUTH_TOKEN,
+                http_client=twilio_client,
+            ),
             from_phone=config.TWILIO_FROM_PHONE,
         )
     return NullSmsOtpSender()
