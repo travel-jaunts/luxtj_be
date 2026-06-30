@@ -3,11 +3,11 @@ from typing import Annotated
 
 from fastapi import Depends, FastAPI
 
-from admin_api.audit_logs import admin_audit_logs_router
-from admin_api.customer import customer_router
-from admin_api.reports import reports_router
+from admin_api.audit_logs.router import audit_logs_router as admin_audit_logs_router
+from admin_api.customer.router import customer_router
+from admin_api.reports.router import reports_router
 from luxtj.bootstrap.api import health_check, init_app_state
-from luxtj.contexts.marketing.presentation.http import marketing_router
+from luxtj.contexts.marketing.presentation.http.router import marketing_router
 from luxtj.shared_kernel.presentation.http.dependencies import fastapi_app_handle
 from luxtj.shared_kernel.presentation.http.schemas import ApiSuccessResponse, HealthStatusResult
 

@@ -4,8 +4,12 @@ from fastapi import FastAPI, Request
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from luxtj.shared_kernel.infrastructure.events import InProcessEventPublisher, OutboxEventPublisher
-from luxtj.shared_kernel.infrastructure.persistence import AsyncSessionFactory, session_scope
+from luxtj.shared_kernel.infrastructure.events.in_process import InProcessEventPublisher
+from luxtj.shared_kernel.infrastructure.events.outbox import OutboxEventPublisher
+from luxtj.shared_kernel.infrastructure.persistence.sqlalchemy import (
+    AsyncSessionFactory,
+    session_scope,
+)
 
 
 def fastapi_app_handle(request: Request) -> FastAPI:

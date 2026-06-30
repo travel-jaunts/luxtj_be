@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, Any
 from pydantic import Field
 
 from luxtj.contexts.marketing.domain.campaign import MarketingCampaign
-from luxtj.shared_kernel.domain import BaseDomainEvent
+from luxtj.shared_kernel.domain.events import BaseDomainEvent
 
 if TYPE_CHECKING:
     from luxtj.contexts.marketing.domain.offer import Offer

@@ -9,24 +9,28 @@ from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import AsyncEngine
 from sqlalchemy.schema import MetaData
 
-from admin_api.audit_logs import admin_audit_logs_router
-from admin_api.customer import customer_router
-from admin_api.partner import partner_router
-from admin_api.reports import reports_router
+from admin_api.audit_logs.router import audit_logs_router as admin_audit_logs_router
+from admin_api.customer.router import customer_router
+from admin_api.partner.router import partner_router
+from admin_api.reports.router import reports_router
 from luxtj.bootstrap import config
+from luxtj.contexts.account.infrastructure.persistence.sqlalchemy_models import AccountAuthBase
+from luxtj.contexts.account.presentation.http.router import account_auth_router
 from luxtj.contexts.acquisition.infrastructure.persistence.sqlalchemy_models import AcquisitionBase
 from luxtj.contexts.acquisition.presentation.http.router import router as waitlist_router
-from luxtj.contexts.action_centre.infrastructure.persistence import ActionCentreBase
+from luxtj.contexts.action_centre.infrastructure.persistence.sqlalchemy_models import (
+    ActionCentreBase,
+)
 from luxtj.contexts.action_centre.infrastructure.projector import ActionCentreOutboxProjector
-from luxtj.contexts.action_centre.presentation.http import action_centre_router
-from luxtj.contexts.marketing.infrastructure.persistence import MarketingBase
-from luxtj.contexts.marketing.presentation.http import marketing_router
-from luxtj.shared_kernel.infrastructure.events import (
+from luxtj.contexts.action_centre.presentation.http.router import action_centre_router
+from luxtj.contexts.marketing.infrastructure.persistence.sqlalchemy_models import MarketingBase
+from luxtj.contexts.marketing.presentation.http.router import marketing_router
+from luxtj.shared_kernel.infrastructure.events.in_process import (
     InProcessEventPublisher,
     PrintInProcessEventSubscriber,
 )
-from luxtj.shared_kernel.infrastructure.persistence import (
-    SharedKernelBase,
+from luxtj.shared_kernel.infrastructure.persistence.outbox_model import SharedKernelBase
+from luxtj.shared_kernel.infrastructure.persistence.sqlalchemy import (
     build_async_engine,
     build_async_session_factory,
     dispose_async_engine,
@@ -44,6 +48,7 @@ def get_registered_metadata() -> tuple[MetaData, ...]:
     # Register context metadata here so startup table creation can cover all contexts.
     return (
         SharedKernelBase.metadata,
+        AccountAuthBase.metadata,
         MarketingBase.metadata,
         ActionCentreBase.metadata,
         AcquisitionBase.metadata,
@@ -85,9 +90,10 @@ async def init_app_state(fastapi_app: FastAPI):
         session_factory = build_async_session_factory(database_engine)
         fastapi_app.state.database_session_factory = session_factory
 
-        action_centre_projector = ActionCentreOutboxProjector(session_factory)
-        fastapi_app.state.action_centre_projector = action_centre_projector
-        await action_centre_projector.start()
+        if config.ENABLE_OUTBOX_PROJECTOR:
+            action_centre_projector = ActionCentreOutboxProjector(session_factory)
+            fastapi_app.state.action_centre_projector = action_centre_projector
+            await action_centre_projector.start()
 
         async with AsyncClient() as client:
             fastapi_app.state.http_client = client
@@ -147,6 +153,7 @@ def server_factory() -> FastAPI:
 
     public_router = APIRouter(prefix="/v1")
     public_router.include_router(waitlist_router)
+    public_router.include_router(account_auth_router)
     # public_router.include_router(idam_router)
     api_application.include_router(public_router)
 

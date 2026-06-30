@@ -10,7 +10,7 @@ from luxtj.contexts.marketing.domain.offer_policies import (
     OfferCreationContext,
     offer_creation_policies,
 )
-from luxtj.shared_kernel.domain import BaseDomainEvent
+from luxtj.shared_kernel.domain.events import BaseDomainEvent
 from luxtj.utils import timeutils
 
 

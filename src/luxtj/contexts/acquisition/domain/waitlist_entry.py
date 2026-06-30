@@ -6,7 +6,7 @@ from uuid import UUID, uuid7
 
 from luxtj.contexts.acquisition.domain.enums import WaitlistStatus
 from luxtj.contexts.acquisition.domain.value_objects import AcquisitionContext, Email
-from luxtj.shared_kernel.domain import BaseDomainEvent
+from luxtj.shared_kernel.domain.events import BaseDomainEvent
 from luxtj.utils import timeutils
 
 
