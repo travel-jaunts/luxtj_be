@@ -9,8 +9,10 @@ from luxtj.contexts.marketing.domain.enums import (
     CampaignStatusEnum,
     ScheduleFrequencyEnum,
 )
-from luxtj.contexts.marketing.infrastructure.persistence import (
+from luxtj.contexts.marketing.infrastructure.persistence.in_memory import (
     InMemoryMarketingRepository,
+)
+from luxtj.contexts.marketing.infrastructure.persistence.sqlalchemy_models import (
     MarketingCampaignRow,
 )
 from tests.conftest import CapturingEventPublisher
@@ -20,7 +22,7 @@ from tests.conftest import CapturingEventPublisher
 # ---------------------------------------------------------------------------
 
 
-async def test_create_campaign_persists_and_returns_draft(
+async def test_create_campaign_persists_and_returns_scheduled(
     marketing_service: MarketingService,
     marketing_repo: InMemoryMarketingRepository,
     make_campaign_command,
@@ -29,7 +31,7 @@ async def test_create_campaign_persists_and_returns_draft(
         make_campaign_command(name="Summer Escapes", audience_user_ids=["user-1", "user-2"])
     )
 
-    assert campaign.status == CampaignStatusEnum.DRAFT
+    assert campaign.status == CampaignStatusEnum.SCHEDULED
     assert campaign.audience == ["user-1", "user-2"]
     assert await marketing_repo.get_by_id(str(campaign.id)) is campaign
 
@@ -68,8 +70,8 @@ async def test_update_campaign_applies_changes(
     original = await marketing_service.create_campaign(make_campaign_command(name="Original"))
 
     updated = await marketing_service.update_campaign(
-        str(original.id),
         UpdateCampaignCommand(
+            str(original.id),
             name="Updated",
             description="New description",
             channel=CampaignChannelEnum.SMS,
@@ -138,7 +140,7 @@ async def test_campaign_row_round_trip_preserves_all_fields(
     assert restored.id == original.id
     assert restored.name == original.name
     assert restored.description == original.description
-    assert restored.status == CampaignStatusEnum.DRAFT
+    assert restored.status == CampaignStatusEnum.SCHEDULED
     assert restored.channel == CampaignChannelEnum.EMAIL
     assert restored.audience == ["user-1"]
     assert restored.start_date == original.start_date

@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 from datetime import date
 
 from admin_api.reports.enums import TimeScaleEnum

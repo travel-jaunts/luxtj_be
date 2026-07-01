@@ -4,7 +4,7 @@ from dataclasses import dataclass
 
 from sqlalchemy.ext.asyncio import AsyncEngine
 
-from luxtj.shared_kernel.infrastructure.persistence import (
+from luxtj.shared_kernel.infrastructure.persistence.sqlalchemy import (
     AsyncSessionFactory,
     build_async_engine,
     build_async_session_factory,

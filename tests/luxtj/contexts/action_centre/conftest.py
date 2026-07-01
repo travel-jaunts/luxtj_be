@@ -1,7 +1,9 @@
 import pytest
 
 from luxtj.contexts.action_centre.application.use_cases import ActionCentreService
-from luxtj.contexts.action_centre.infrastructure.persistence import InMemoryActionItemRepository
+from luxtj.contexts.action_centre.infrastructure.persistence.in_memory import (
+    InMemoryActionItemRepository,
+)
 
 
 @pytest.fixture

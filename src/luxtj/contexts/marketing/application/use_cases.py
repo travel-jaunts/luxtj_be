@@ -16,7 +16,7 @@ from luxtj.contexts.marketing.application.ports import (
 )
 from luxtj.contexts.marketing.domain.campaign import MarketingCampaign
 from luxtj.contexts.marketing.domain.offer import Offer
-from luxtj.shared_kernel.application import DomainEventPublisher
+from luxtj.shared_kernel.application.event_bus import DomainEventPublisher
 
 
 class MarketingService:

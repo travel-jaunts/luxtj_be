@@ -4,7 +4,9 @@ from datetime import UTC, datetime, timedelta
 
 from luxtj.contexts.action_centre.application.use_cases import ActionCentreService
 from luxtj.contexts.action_centre.domain.enums import ActionItemStatus
-from luxtj.contexts.action_centre.infrastructure.persistence import InMemoryActionItemRepository
+from luxtj.contexts.action_centre.infrastructure.persistence.in_memory import (
+    InMemoryActionItemRepository,
+)
 
 
 async def test_summary_lists_all_registered_workflows_even_when_empty(

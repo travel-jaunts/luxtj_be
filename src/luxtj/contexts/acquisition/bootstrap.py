@@ -8,8 +8,8 @@ from luxtj.contexts.acquisition.application.use_cases import RegisterWaitlistEnt
 from luxtj.contexts.acquisition.infrastructure.persistence.sqlalchemy_repository import (
     SqlAlchemyWaitlistRepository,
 )
-from luxtj.shared_kernel.application import DomainEventPublisher
-from luxtj.shared_kernel.infrastructure.events import OutboxEventPublisher
+from luxtj.shared_kernel.application.event_bus import DomainEventPublisher
+from luxtj.shared_kernel.infrastructure.events.outbox import OutboxEventPublisher
 from luxtj.shared_kernel.presentation.http.dependencies import database_session_handle
 
 

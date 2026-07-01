@@ -116,3 +116,9 @@ class OfferApplicabilityEnum(StrEnum):
     COUPON_CODE = "coupon_code"
     USER_SEGMENT = "user_segment"
     PAYMENT_METHOD = "payment_method"
+
+
+class BucketDestinationKindEnum(StrEnum):
+    COUNTRY = "country"
+    CITY = "city"
+    PLACE = "place"

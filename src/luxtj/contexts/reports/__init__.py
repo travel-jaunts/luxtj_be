@@ -1,1 +1,0 @@
-"""Reports bounded context."""

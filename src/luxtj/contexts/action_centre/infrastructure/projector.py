@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 import asyncio
 import logging
 from datetime import datetime
@@ -9,7 +7,7 @@ from luxtj.contexts.action_centre.domain.events import (
     PENDING_EVENT_TYPE,
     RESOLVED_EVENT_TYPE,
 )
-from luxtj.contexts.action_centre.infrastructure.persistence import (
+from luxtj.contexts.action_centre.infrastructure.persistence.sqlalchemy_repository import (
     SqlAlchemyActionItemRepository,
     SqlAlchemyOutboxEventReader,
     SqlAlchemyProcessedOutboxCursor,

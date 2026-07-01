@@ -1,10 +1,8 @@
-from __future__ import annotations
-
 from typing import TYPE_CHECKING, Any
 
 from pydantic import Field
 
-from luxtj.shared_kernel.domain import BaseDomainEvent
+from luxtj.shared_kernel.domain.events import BaseDomainEvent
 
 if TYPE_CHECKING:
     from luxtj.contexts.acquisition.domain.waitlist_entry import WaitlistEntry

@@ -5,7 +5,7 @@ from luxtj.contexts.acquisition.application.commands import RegisterWaitlistEntr
 from luxtj.contexts.acquisition.application.ports import WaitlistEntryRepository
 from luxtj.contexts.acquisition.domain.errors import DuplicateEmailError
 from luxtj.contexts.acquisition.domain.waitlist_entry import WaitlistEntry
-from luxtj.shared_kernel.application import DomainEventPublisher
+from luxtj.shared_kernel.application.event_bus import DomainEventPublisher
 
 
 @dataclass(frozen=True)

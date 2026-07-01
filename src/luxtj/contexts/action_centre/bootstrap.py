@@ -5,7 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from luxtj.contexts.action_centre.application.ports import ActionItemRepository
 from luxtj.contexts.action_centre.application.use_cases import ActionCentreService
-from luxtj.contexts.action_centre.infrastructure.persistence import (
+from luxtj.contexts.action_centre.infrastructure.persistence.sqlalchemy_repository import (
     SqlAlchemyActionItemRepository,
 )
 from luxtj.shared_kernel.presentation.http.dependencies import database_session_handle

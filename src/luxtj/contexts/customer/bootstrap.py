@@ -1,0 +1,89 @@
+from typing import Annotated
+
+from fastapi import Depends
+from httpx import AsyncClient
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from luxtj.bootstrap import config
+from luxtj.contexts.customer.application.ports import (
+    BucketListRepository,
+    DestinationSuggestionProvider,
+)
+from luxtj.contexts.customer.application.use_cases import (
+    AddBucketListItem,
+    DeleteBucketListItem,
+    GetBucketList,
+    SuggestDestinations,
+    UpdateBucketListItem,
+)
+from luxtj.contexts.customer.infrastructure.persistence.sqlalchemy_repository import (
+    SqlAlchemyBucketListRepository,
+)
+from luxtj.contexts.customer.infrastructure.suggestions.third_party_provider import (
+    ThirdPartyDestinationSuggestionProvider,
+)
+from luxtj.shared_kernel.application.event_bus import DomainEventPublisher
+from luxtj.shared_kernel.infrastructure.events.outbox import OutboxEventPublisher
+from luxtj.shared_kernel.presentation.http.dependencies import (
+    database_session_handle,
+    http_client_handle,
+)
+
+
+def build_bucket_list_repository(
+    session: Annotated[AsyncSession, Depends(database_session_handle)],
+) -> BucketListRepository:
+    return SqlAlchemyBucketListRepository(session)
+
+
+def build_outbox_event_publisher(
+    session: Annotated[AsyncSession, Depends(database_session_handle)],
+) -> DomainEventPublisher:
+    return OutboxEventPublisher(session)
+
+
+def build_destination_suggestion_provider(
+    http_client: Annotated[AsyncClient, Depends(http_client_handle)],
+) -> DestinationSuggestionProvider:
+    return ThirdPartyDestinationSuggestionProvider(
+        http_client=http_client,
+        base_url=config.BUCKET_LIST_SUGGESTIONS_BASE_URL,
+        api_key=config.BUCKET_LIST_SUGGESTIONS_API_KEY,
+    )
+
+
+def build_add_bucket_list_item(
+    repository: Annotated[BucketListRepository, Depends(build_bucket_list_repository)],
+    event_publisher: Annotated[DomainEventPublisher, Depends(build_outbox_event_publisher)],
+) -> AddBucketListItem:
+    return AddBucketListItem(repository=repository, event_publisher=event_publisher)
+
+
+def build_update_bucket_list_item(
+    repository: Annotated[BucketListRepository, Depends(build_bucket_list_repository)],
+    event_publisher: Annotated[DomainEventPublisher, Depends(build_outbox_event_publisher)],
+) -> UpdateBucketListItem:
+    return UpdateBucketListItem(repository=repository, event_publisher=event_publisher)
+
+
+def build_delete_bucket_list_item(
+    repository: Annotated[BucketListRepository, Depends(build_bucket_list_repository)],
+    event_publisher: Annotated[DomainEventPublisher, Depends(build_outbox_event_publisher)],
+) -> DeleteBucketListItem:
+    return DeleteBucketListItem(repository=repository, event_publisher=event_publisher)
+
+
+def build_get_bucket_list(
+    repository: Annotated[BucketListRepository, Depends(build_bucket_list_repository)],
+) -> GetBucketList:
+    return GetBucketList(repository=repository)
+
+
+def build_suggest_destinations(
+    provider: Annotated[
+        DestinationSuggestionProvider,
+        Depends(build_destination_suggestion_provider),
+    ],
+    event_publisher: Annotated[DomainEventPublisher, Depends(build_outbox_event_publisher)],
+) -> SuggestDestinations:
+    return SuggestDestinations(provider=provider, event_publisher=event_publisher)

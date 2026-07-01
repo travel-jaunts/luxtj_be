@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 from dataclasses import dataclass, field
 from datetime import datetime
 from uuid import UUID, uuid7
@@ -10,7 +8,7 @@ from luxtj.contexts.marketing.domain.offer_policies import (
     OfferCreationContext,
     offer_creation_policies,
 )
-from luxtj.shared_kernel.domain import BaseDomainEvent
+from luxtj.shared_kernel.domain.events import BaseDomainEvent
 from luxtj.utils import timeutils
 
 

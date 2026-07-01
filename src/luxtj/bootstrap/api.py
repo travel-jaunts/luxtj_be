@@ -8,25 +8,34 @@ from sqlalchemy import text
 from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import AsyncEngine
 from sqlalchemy.schema import MetaData
+from starlette.middleware.cors import CORSMiddleware
+from twilio.http.async_http_client import AsyncTwilioHttpClient
 
-from admin_api.audit_logs import admin_audit_logs_router
-from admin_api.customer import customer_router
-from admin_api.partner import partner_router
-from admin_api.reports import reports_router
+from admin_api.audit_logs.router import audit_logs_router as admin_audit_logs_router
+from admin_api.customer.router import customer_router
+from admin_api.partner.router import partner_router
+from admin_api.reports.router import reports_router
 from luxtj.bootstrap import config
+from luxtj.contexts.account.infrastructure.persistence.sqlalchemy_models import AccountAuthBase
+from luxtj.contexts.account.presentation.http.router import account_auth_router
 from luxtj.contexts.acquisition.infrastructure.persistence.sqlalchemy_models import AcquisitionBase
 from luxtj.contexts.acquisition.presentation.http.router import router as waitlist_router
-from luxtj.contexts.action_centre.infrastructure.persistence import ActionCentreBase
+from luxtj.contexts.action_centre.infrastructure.persistence.sqlalchemy_models import (
+    ActionCentreBase,
+)
 from luxtj.contexts.action_centre.infrastructure.projector import ActionCentreOutboxProjector
-from luxtj.contexts.action_centre.presentation.http import action_centre_router
-from luxtj.contexts.marketing.infrastructure.persistence import MarketingBase
-from luxtj.contexts.marketing.presentation.http import marketing_router
-from luxtj.shared_kernel.infrastructure.events import (
+from luxtj.contexts.action_centre.presentation.http.router import action_centre_router
+from luxtj.contexts.customer.infrastructure.persistence.sqlalchemy_models import CustomerBase
+from luxtj.contexts.customer.presentation.http.router import customer_bucket_list_router
+from luxtj.contexts.marketing.infrastructure.persistence.sqlalchemy_models import MarketingBase
+from luxtj.contexts.marketing.presentation.http.router import marketing_router
+from luxtj.shared_kernel.infrastructure.events.in_process import (
     InProcessEventPublisher,
     PrintInProcessEventSubscriber,
 )
-from luxtj.shared_kernel.infrastructure.persistence import (
-    SharedKernelBase,
+from luxtj.shared_kernel.infrastructure.logging import get_logger_handle
+from luxtj.shared_kernel.infrastructure.persistence.outbox_model import SharedKernelBase
+from luxtj.shared_kernel.infrastructure.persistence.sqlalchemy import (
     build_async_engine,
     build_async_session_factory,
     dispose_async_engine,
@@ -39,14 +48,18 @@ from luxtj.shared_kernel.presentation.http.middleware import (
 from luxtj.shared_kernel.presentation.http.schemas import ApiSuccessResponse, HealthStatusResult
 from luxtj.utils import timeutils
 
+logger = get_logger_handle(__name__)
+
 
 def get_registered_metadata() -> tuple[MetaData, ...]:
     # Register context metadata here so startup table creation can cover all contexts.
     return (
         SharedKernelBase.metadata,
+        AccountAuthBase.metadata,
         MarketingBase.metadata,
         ActionCentreBase.metadata,
         AcquisitionBase.metadata,
+        CustomerBase.metadata,
     )
 
 
@@ -85,12 +98,14 @@ async def init_app_state(fastapi_app: FastAPI):
         session_factory = build_async_session_factory(database_engine)
         fastapi_app.state.database_session_factory = session_factory
 
-        action_centre_projector = ActionCentreOutboxProjector(session_factory)
-        fastapi_app.state.action_centre_projector = action_centre_projector
-        await action_centre_projector.start()
+        if config.ENABLE_OUTBOX_PROJECTOR:
+            action_centre_projector = ActionCentreOutboxProjector(session_factory)
+            fastapi_app.state.action_centre_projector = action_centre_projector
+            await action_centre_projector.start()
 
-        async with AsyncClient() as client:
+        async with AsyncClient() as client, AsyncTwilioHttpClient() as async_http_client:
             fastapi_app.state.http_client = client
+            fastapi_app.state.twilio_http_client = async_http_client
             yield
     finally:
         if getattr(fastapi_app.state, "action_centre_projector", None) is not None:
@@ -122,7 +137,7 @@ async def health_check(fastapi_app: FastAPI) -> HealthStatusResult:
 
 @asynccontextmanager
 async def api_application_lifespan(app: FastAPI):
-    print("API application startup: Initializing resources...")
+    logger.info("API application startup: Initializing resources...")
     async with init_app_state(app):
         yield
 
@@ -147,6 +162,8 @@ def server_factory() -> FastAPI:
 
     public_router = APIRouter(prefix="/v1")
     public_router.include_router(waitlist_router)
+    public_router.include_router(account_auth_router)
+    public_router.include_router(customer_bucket_list_router)
     # public_router.include_router(idam_router)
     api_application.include_router(public_router)
 
@@ -164,6 +181,15 @@ def server_factory() -> FastAPI:
 
     api_application.add_middleware(EndpointExceptionHandler)
     api_application.add_middleware(EnforcePostMethodOnly)  # outermost
+
+    if config.ENVIRONMENT == "development":
+        api_application.add_middleware(
+            CORSMiddleware,
+            allow_origins=["*"],
+            allow_credentials=True,
+            allow_methods=["*"],
+            allow_headers=["*"],
+        )
 
     return api_application
 

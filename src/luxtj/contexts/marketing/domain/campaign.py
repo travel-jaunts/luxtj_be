@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 from collections.abc import Sequence
 from dataclasses import dataclass, field
 from datetime import date, datetime, timedelta
@@ -14,7 +12,7 @@ from luxtj.contexts.marketing.domain.policies import (
     CampaignCreationContext,
     campaign_creation_policies,
 )
-from luxtj.shared_kernel.domain import BaseDomainEvent
+from luxtj.shared_kernel.domain.events import BaseDomainEvent
 from luxtj.utils import timeutils
 
 

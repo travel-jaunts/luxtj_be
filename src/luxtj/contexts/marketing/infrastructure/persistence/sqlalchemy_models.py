@@ -1,12 +1,10 @@
-from __future__ import annotations
-
 from datetime import date, datetime
-from typing import TYPE_CHECKING
 from uuid import UUID
 
 from sqlalchemy import JSON, Date, DateTime, Float, Integer, String, Text
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
+from luxtj.contexts.marketing.domain.campaign import MarketingCampaign
 from luxtj.contexts.marketing.domain.enums import (
     CampaignChannelEnum,
     CampaignStatusEnum,
@@ -14,10 +12,7 @@ from luxtj.contexts.marketing.domain.enums import (
     OfferTypeEnum,
     ScheduleFrequencyEnum,
 )
-
-if TYPE_CHECKING:
-    from luxtj.contexts.marketing.domain.campaign import MarketingCampaign
-    from luxtj.contexts.marketing.domain.offer import Offer
+from luxtj.contexts.marketing.domain.offer import Offer
 
 
 class MarketingBase(DeclarativeBase):

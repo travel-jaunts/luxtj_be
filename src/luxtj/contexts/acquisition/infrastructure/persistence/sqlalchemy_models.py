@@ -1,7 +1,5 @@
-from __future__ import annotations
-
 from datetime import datetime
-from typing import TYPE_CHECKING, Any
+from typing import Any
 from uuid import UUID
 
 from sqlalchemy import JSON, DateTime, String
@@ -9,9 +7,7 @@ from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 from luxtj.contexts.acquisition.domain.enums import WaitlistStatus
 from luxtj.contexts.acquisition.domain.value_objects import AcquisitionContext, Email
-
-if TYPE_CHECKING:
-    from luxtj.contexts.acquisition.domain.waitlist_entry import WaitlistEntry
+from luxtj.contexts.acquisition.domain.waitlist_entry import WaitlistEntry
 
 
 class AcquisitionBase(DeclarativeBase):
