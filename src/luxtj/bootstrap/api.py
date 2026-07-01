@@ -33,6 +33,7 @@ from luxtj.shared_kernel.infrastructure.events.in_process import (
     InProcessEventPublisher,
     PrintInProcessEventSubscriber,
 )
+from luxtj.shared_kernel.infrastructure.logging import get_logger_handle
 from luxtj.shared_kernel.infrastructure.persistence.outbox_model import SharedKernelBase
 from luxtj.shared_kernel.infrastructure.persistence.sqlalchemy import (
     build_async_engine,
@@ -46,6 +47,8 @@ from luxtj.shared_kernel.presentation.http.middleware import (
 )
 from luxtj.shared_kernel.presentation.http.schemas import ApiSuccessResponse, HealthStatusResult
 from luxtj.utils import timeutils
+
+logger = get_logger_handle(__name__)
 
 
 def get_registered_metadata() -> tuple[MetaData, ...]:
@@ -134,7 +137,7 @@ async def health_check(fastapi_app: FastAPI) -> HealthStatusResult:
 
 @asynccontextmanager
 async def api_application_lifespan(app: FastAPI):
-    print("API application startup: Initializing resources...")
+    logger.info("API application startup: Initializing resources...")
     async with init_app_state(app):
         yield
 

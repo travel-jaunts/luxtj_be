@@ -45,7 +45,9 @@ def _create_client(bucket_list_repository, suggestion_provider, event_publisher)
     return TestClient(app)
 
 
-def test_bucket_list_http_flow(bucket_list_repository, suggestion_provider, event_publisher, customer_account_id) -> None:
+def test_bucket_list_http_flow(
+    bucket_list_repository, suggestion_provider, event_publisher, customer_account_id
+) -> None:
     client = _create_client(bucket_list_repository, suggestion_provider, event_publisher)
     account_id = str(customer_account_id)
 

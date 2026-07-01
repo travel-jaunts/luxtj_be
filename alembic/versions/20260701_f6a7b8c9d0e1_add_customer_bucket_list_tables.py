@@ -48,7 +48,9 @@ def upgrade() -> None:
         sa.Column("created_at", sa.DateTime(timezone=True), nullable=False),
         sa.Column("updated_at", sa.DateTime(timezone=True), nullable=False),
         sa.Column("deleted_at", sa.DateTime(timezone=True), nullable=True),
-        sa.ForeignKeyConstraint(["bucket_list_id"], ["customer_bucket_lists.id"], ondelete="CASCADE"),
+        sa.ForeignKeyConstraint(
+            ["bucket_list_id"], ["customer_bucket_lists.id"], ondelete="CASCADE"
+        ),
         sa.PrimaryKeyConstraint("id"),
         sa.UniqueConstraint(
             "bucket_list_id",
@@ -86,10 +88,16 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
-    op.drop_index("ix_customer_bucket_items_destination_search", table_name="customer_bucket_list_items")
+    op.drop_index(
+        "ix_customer_bucket_items_destination_search", table_name="customer_bucket_list_items"
+    )
     op.drop_index("ix_customer_bucket_items_lookup", table_name="customer_bucket_list_items")
-    op.drop_index("ix_customer_bucket_list_items_is_active", table_name="customer_bucket_list_items")
-    op.drop_index("ix_customer_bucket_list_items_bucket_list_id", table_name="customer_bucket_list_items")
+    op.drop_index(
+        "ix_customer_bucket_list_items_is_active", table_name="customer_bucket_list_items"
+    )
+    op.drop_index(
+        "ix_customer_bucket_list_items_bucket_list_id", table_name="customer_bucket_list_items"
+    )
     op.drop_table("customer_bucket_list_items")
 
     op.drop_index("ix_customer_bucket_lists_account_id", table_name="customer_bucket_lists")

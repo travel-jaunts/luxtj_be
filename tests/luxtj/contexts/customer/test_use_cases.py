@@ -86,7 +86,9 @@ async def test_suggest_destinations_uses_provider_and_emits_event(
 
     assert result.selected.destination_name == "Paris"
     assert len(result.alternatives) == 2
-    assert event_publisher.events[-1].type == "com.luxtj.customer.bucket_list.suggestion.resolved.v1"
+    assert (
+        event_publisher.events[-1].type == "com.luxtj.customer.bucket_list.suggestion.resolved.v1"
+    )
 
 
 async def test_get_bucket_list_returns_only_active_items(
@@ -94,7 +96,9 @@ async def test_get_bucket_list_returns_only_active_items(
     customer_account_id,
     event_publisher,
 ) -> None:
-    add_use_case = AddBucketListItem(repository=bucket_list_repository, event_publisher=event_publisher)
+    add_use_case = AddBucketListItem(
+        repository=bucket_list_repository, event_publisher=event_publisher
+    )
     delete_use_case = DeleteBucketListItem(
         repository=bucket_list_repository,
         event_publisher=event_publisher,
@@ -117,5 +121,7 @@ async def test_get_bucket_list_returns_only_active_items(
     active = await get_use_case(GetBucketListQuery(account_id=customer_account_id))
     assert active.items == []
 
-    full = await get_use_case(GetBucketListQuery(account_id=customer_account_id, include_deleted=True))
+    full = await get_use_case(
+        GetBucketListQuery(account_id=customer_account_id, include_deleted=True)
+    )
     assert len(full.items) == 1

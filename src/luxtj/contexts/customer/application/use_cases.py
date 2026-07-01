@@ -59,7 +59,9 @@ class BucketListDTO:
     @classmethod
     def from_domain(cls, bucket_list: BucketList, *, include_deleted: bool) -> BucketListDTO:
         if include_deleted:
-            items = sorted(bucket_list.items, key=lambda value: (value.display_order, value.created_at))
+            items = sorted(
+                bucket_list.items, key=lambda value: (value.display_order, value.created_at)
+            )
         else:
             items = bucket_list.active_items()
         return cls(

@@ -166,7 +166,9 @@ async def view_bucket_list(
     use_case: Annotated[GetBucketList, Depends(build_get_bucket_list)],
     body: Annotated[ViewBucketListBody, Body(...)],
 ) -> ApiSuccessResponse[BucketListSerializer]:
-    bucket_list = await use_case(GetBucketListQuery(account_id=account_id, include_deleted=body.include_deleted))
+    bucket_list = await use_case(
+        GetBucketListQuery(account_id=account_id, include_deleted=body.include_deleted)
+    )
     return ApiSuccessResponse(
         status=RequestProcessStatus.OK,
         output=BucketListSerializer.from_dto(bucket_list),
