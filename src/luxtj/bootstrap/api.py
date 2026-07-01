@@ -8,6 +8,7 @@ from sqlalchemy import text
 from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import AsyncEngine
 from sqlalchemy.schema import MetaData
+from starlette.middleware.cors import CORSMiddleware
 from twilio.http.async_http_client import AsyncTwilioHttpClient
 
 from admin_api.audit_logs.router import audit_logs_router as admin_audit_logs_router
@@ -24,6 +25,8 @@ from luxtj.contexts.action_centre.infrastructure.persistence.sqlalchemy_models i
 )
 from luxtj.contexts.action_centre.infrastructure.projector import ActionCentreOutboxProjector
 from luxtj.contexts.action_centre.presentation.http.router import action_centre_router
+from luxtj.contexts.customer.infrastructure.persistence.sqlalchemy_models import CustomerBase
+from luxtj.contexts.customer.presentation.http.router import customer_bucket_list_router
 from luxtj.contexts.marketing.infrastructure.persistence.sqlalchemy_models import MarketingBase
 from luxtj.contexts.marketing.presentation.http.router import marketing_router
 from luxtj.shared_kernel.infrastructure.events.in_process import (
@@ -53,6 +56,7 @@ def get_registered_metadata() -> tuple[MetaData, ...]:
         MarketingBase.metadata,
         ActionCentreBase.metadata,
         AcquisitionBase.metadata,
+        CustomerBase.metadata,
     )
 
 
@@ -156,6 +160,7 @@ def server_factory() -> FastAPI:
     public_router = APIRouter(prefix="/v1")
     public_router.include_router(waitlist_router)
     public_router.include_router(account_auth_router)
+    public_router.include_router(customer_bucket_list_router)
     # public_router.include_router(idam_router)
     api_application.include_router(public_router)
 
@@ -173,6 +178,15 @@ def server_factory() -> FastAPI:
 
     api_application.add_middleware(EndpointExceptionHandler)
     api_application.add_middleware(EnforcePostMethodOnly)  # outermost
+
+    if config.ENVIRONMENT == "development":
+        api_application.add_middleware(
+            CORSMiddleware,
+            allow_origins=["*"],
+            allow_credentials=True,
+            allow_methods=["*"],
+            allow_headers=["*"],
+        )
 
     return api_application
 

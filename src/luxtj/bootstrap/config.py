@@ -26,3 +26,9 @@ TWILIO_FROM_PHONE: str | None = os.getenv("LTJBE_TWILIO_FROM_PHONE")
 ENABLE_OUTBOX_PROJECTOR: bool = (
     os.getenv("LTJBE_ENABLE_OUTBOX_PROJECTOR", "false").lower() == "true"
 )
+
+BUCKET_LIST_SUGGESTIONS_BASE_URL: str = os.getenv(
+    "LTJBE_BUCKET_LIST_SUGGESTIONS_BASE_URL",
+    "https://example.com",
+)
+BUCKET_LIST_SUGGESTIONS_API_KEY: str | None = os.getenv("LTJBE_BUCKET_LIST_SUGGESTIONS_API_KEY")
