@@ -23,7 +23,6 @@ from luxtj.contexts.acquisition.presentation.http.router import router as waitli
 from luxtj.contexts.action_centre.infrastructure.persistence.sqlalchemy_models import (
     ActionCentreBase,
 )
-from luxtj.contexts.action_centre.infrastructure.projector import ActionCentreOutboxProjector
 from luxtj.contexts.action_centre.presentation.http.router import action_centre_router
 from luxtj.contexts.customer.infrastructure.persistence.sqlalchemy_models import CustomerBase
 from luxtj.contexts.customer.presentation.http.router import customer_bucket_list_router
@@ -98,19 +97,11 @@ async def init_app_state(fastapi_app: FastAPI):
         session_factory = build_async_session_factory(database_engine)
         fastapi_app.state.database_session_factory = session_factory
 
-        if config.ENABLE_OUTBOX_PROJECTOR:
-            action_centre_projector = ActionCentreOutboxProjector(session_factory)
-            fastapi_app.state.action_centre_projector = action_centre_projector
-            await action_centre_projector.start()
-
         async with AsyncClient() as client, AsyncTwilioHttpClient() as async_http_client:
             fastapi_app.state.http_client = client
             fastapi_app.state.twilio_http_client = async_http_client
             yield
     finally:
-        if getattr(fastapi_app.state, "action_centre_projector", None) is not None:
-            await fastapi_app.state.action_centre_projector.stop()
-
         await print_subscriber.stop()
         await dispose_async_engine(fastapi_app.state.database_engine)
 
