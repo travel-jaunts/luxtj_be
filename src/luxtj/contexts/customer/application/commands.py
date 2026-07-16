@@ -1,7 +1,14 @@
 from dataclasses import dataclass
+from datetime import date
 from uuid import UUID
 
-from luxtj.contexts.customer.domain.enums import BucketDestinationKindEnum
+from luxtj.contexts.customer.domain.enums import (
+    AnniversaryForEnum,
+    BirthdayForEnum,
+    BucketDestinationKindEnum,
+    HolidayTypeEnum,
+    PersonalCalendarEventTypeEnum,
+)
 
 
 @dataclass(frozen=True)
@@ -35,3 +42,27 @@ class SuggestDestinationsCommand:
     query: str
     selected_kind: BucketDestinationKindEnum
     selected_name: str | None = None
+
+
+@dataclass(frozen=True)
+class AddPersonalCalendarEventCommand:
+    account_id: UUID
+    event_type: PersonalCalendarEventTypeEnum
+    event_date: date
+    holiday_types: list[HolidayTypeEnum]
+    birthday_for: BirthdayForEnum | None = None
+    anniversary_for: AnniversaryForEnum | None = None
+    person_name: str | None = None
+    person1_name: str | None = None
+    person2_name: str | None = None
+    event_name: str | None = None
+
+
+@dataclass(frozen=True)
+class AddPersonalCalendarPeriodCommand:
+    account_id: UUID
+    period_name: str
+    period_start: date
+    period_end: date
+    is_date_flexible: bool
+    holiday_types: list[HolidayTypeEnum]

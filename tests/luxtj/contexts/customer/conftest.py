@@ -7,9 +7,11 @@ from luxtj.contexts.customer.application.ports import (
     DestinationSuggestion,
     DestinationSuggestionProvider,
     DestinationSuggestionResult,
+    PersonalCalendarRepository,
 )
 from luxtj.contexts.customer.domain.bucket_list import BucketList
 from luxtj.contexts.customer.domain.enums import BucketDestinationKindEnum
+from luxtj.contexts.customer.domain.personal_calendar import PersonalCalendar
 
 
 class InMemoryBucketListRepository(BucketListRepository):
@@ -24,6 +26,20 @@ class InMemoryBucketListRepository(BucketListRepository):
 
     async def save(self, bucket_list: BucketList) -> None:
         self._by_account_id[bucket_list.account_id] = bucket_list
+
+
+class InMemoryPersonalCalendarRepository(PersonalCalendarRepository):
+    def __init__(self) -> None:
+        self._by_account_id: dict[UUID, PersonalCalendar] = {}
+
+    async def get_by_account_id(self, account_id: UUID) -> PersonalCalendar | None:
+        return self._by_account_id.get(account_id)
+
+    async def add(self, calendar: PersonalCalendar) -> None:
+        self._by_account_id[calendar.account_id] = calendar
+
+    async def save(self, calendar: PersonalCalendar) -> None:
+        self._by_account_id[calendar.account_id] = calendar
 
 
 class StubThirdPartySuggestionProvider(DestinationSuggestionProvider):
@@ -82,6 +98,11 @@ def customer_account_id() -> UUID:
 @pytest.fixture
 def bucket_list_repository() -> InMemoryBucketListRepository:
     return InMemoryBucketListRepository()
+
+
+@pytest.fixture
+def personal_calendar_repository() -> InMemoryPersonalCalendarRepository:
+    return InMemoryPersonalCalendarRepository()
 
 
 @pytest.fixture

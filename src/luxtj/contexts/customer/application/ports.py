@@ -4,6 +4,7 @@ from uuid import UUID
 
 from luxtj.contexts.customer.domain.bucket_list import BucketList
 from luxtj.contexts.customer.domain.enums import BucketDestinationKindEnum
+from luxtj.contexts.customer.domain.personal_calendar import PersonalCalendar
 
 
 class BucketListRepository(Protocol):
@@ -34,3 +35,9 @@ class DestinationSuggestionProvider(Protocol):
         selected_kind: BucketDestinationKindEnum,
         selected_name: str | None,
     ) -> DestinationSuggestionResult: ...
+
+
+class PersonalCalendarRepository(Protocol):
+    async def get_by_account_id(self, account_id: UUID) -> PersonalCalendar | None: ...
+    async def add(self, calendar: PersonalCalendar) -> None: ...
+    async def save(self, calendar: PersonalCalendar) -> None: ...

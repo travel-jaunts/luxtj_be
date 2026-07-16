@@ -122,3 +122,41 @@ class BucketDestinationKindEnum(StrEnum):
     COUNTRY = "country"
     CITY = "city"
     PLACE = "place"
+
+
+class PersonalCalendarEventTypeEnum(StrEnum):
+    BIRTHDAY = "birthday"
+    ANNIVERSARY = "anniversary"
+    SPECIAL_OCCASION = "special_occasion"
+
+
+class BirthdayForEnum(StrEnum):
+    MY_BIRTHDAY = "my_birthday"
+    SPOUSE_BIRTHDAY = "spouse_birthday"
+    FATHER_BIRTHDAY = "father_birthday"
+    MOTHER_BIRTHDAY = "mother_birthday"
+    CHILD_BIRTHDAY = "child_birthday"
+
+
+class AnniversaryForEnum(StrEnum):
+    MY_ANNIVERSARY = "my_anniversary"
+    PARENTS = "parents"
+    IN_LAWS = "in_laws"
+    OTHERS = "others"
+
+
+class HolidayTypeEnum(StrEnum):
+    AFRICAN_SAFARIS_AND_WILDLIFE_TOURS = "African Safaris & Wildlife Tours"
+    LUXURY_STAYS_HOTELS_VILLAS = "Luxury Stays Hotels/Villas"
+    WELLNESS_AND_SPA_RETREATS = "Wellness & Spa Retreats"
+    HONEYMOONS_AND_ROMANTIC_HOLIDAYS = "Honeymoons & Romantic Holidays"
+    FAMILY_LUXURY_HOLIDAYS = "Family Luxury Holidays"
+    SKI_GOLF_AND_CASINO_TRIPS = "Ski, Golf & Casino Trips"
+    CULTURE_FOOD_AND_SHOPPING_TOURS = "Culture, Food & Shopping Tours"
+    ALL_INCLUSIVE_LUXURY_DEALS = "All-Inclusive Luxury Deals"
+    ONCE_IN_A_LIFE_TIME_TRIPS = "Once In a Life Time trips"
+    DISNEY_AND_EURAIL_TICKETS = "Disney & Eurail Tickets"
+    SIGNATURE_EXPERIENCES = "Signature Experiences"
+
+
+HOLIDAY_TYPE_LIST: tuple[str, ...] = tuple(item.value for item in HolidayTypeEnum)

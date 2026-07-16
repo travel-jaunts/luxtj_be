@@ -8,16 +8,22 @@ from luxtj.bootstrap import config
 from luxtj.contexts.customer.application.ports import (
     BucketListRepository,
     DestinationSuggestionProvider,
+    PersonalCalendarRepository,
 )
 from luxtj.contexts.customer.application.use_cases import (
     AddBucketListItem,
+    AddPersonalCalendarEvent,
+    AddPersonalCalendarPeriod,
     DeleteBucketListItem,
     GetBucketList,
+    GetPersonalCalendarConsolidatedView,
+    GetPersonalCalendarHolidayTypes,
     SuggestDestinations,
     UpdateBucketListItem,
 )
 from luxtj.contexts.customer.infrastructure.persistence.sqlalchemy_repository import (
     SqlAlchemyBucketListRepository,
+    SqlAlchemyPersonalCalendarRepository,
 )
 from luxtj.contexts.customer.infrastructure.suggestions.third_party_provider import (
     ThirdPartyDestinationSuggestionProvider,
@@ -34,6 +40,12 @@ def build_bucket_list_repository(
     session: Annotated[AsyncSession, Depends(database_session_handle)],
 ) -> BucketListRepository:
     return SqlAlchemyBucketListRepository(session)
+
+
+def build_personal_calendar_repository(
+    session: Annotated[AsyncSession, Depends(database_session_handle)],
+) -> PersonalCalendarRepository:
+    return SqlAlchemyPersonalCalendarRepository(session)
 
 
 def build_outbox_event_publisher(
@@ -87,3 +99,25 @@ def build_suggest_destinations(
     event_publisher: Annotated[DomainEventPublisher, Depends(build_outbox_event_publisher)],
 ) -> SuggestDestinations:
     return SuggestDestinations(provider=provider, event_publisher=event_publisher)
+
+
+def build_add_personal_calendar_event(
+    repository: Annotated[PersonalCalendarRepository, Depends(build_personal_calendar_repository)],
+) -> AddPersonalCalendarEvent:
+    return AddPersonalCalendarEvent(repository=repository)
+
+
+def build_add_personal_calendar_period(
+    repository: Annotated[PersonalCalendarRepository, Depends(build_personal_calendar_repository)],
+) -> AddPersonalCalendarPeriod:
+    return AddPersonalCalendarPeriod(repository=repository)
+
+
+def build_get_personal_calendar_holiday_types() -> GetPersonalCalendarHolidayTypes:
+    return GetPersonalCalendarHolidayTypes()
+
+
+def build_get_personal_calendar_consolidated_view(
+    repository: Annotated[PersonalCalendarRepository, Depends(build_personal_calendar_repository)],
+) -> GetPersonalCalendarConsolidatedView:
+    return GetPersonalCalendarConsolidatedView(repository=repository)
