@@ -12,3 +12,19 @@ class BucketListItemNotFoundError(CustomerBucketListError):
 
 class InvalidIdealDaysError(CustomerBucketListError):
     pass
+
+
+class CustomerPersonalCalendarError(Exception):
+    pass
+
+
+class InvalidPersonalCalendarEventError(CustomerPersonalCalendarError):
+    pass
+
+
+class InvalidHolidayTypesError(CustomerPersonalCalendarError):
+    pass
+
+
+class InvalidPeriodDateRangeError(CustomerPersonalCalendarError):
+    pass

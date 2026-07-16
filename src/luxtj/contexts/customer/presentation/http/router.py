@@ -5,6 +5,8 @@ from fastapi import APIRouter, Body, Depends
 
 from luxtj.contexts.customer.application.commands import (
     AddBucketListItemCommand,
+    AddPersonalCalendarEventCommand,
+    AddPersonalCalendarPeriodCommand,
     DeleteBucketListItemCommand,
     SuggestDestinationsCommand,
     UpdateBucketListItemCommand,
@@ -12,24 +14,41 @@ from luxtj.contexts.customer.application.commands import (
 from luxtj.contexts.customer.application.queries import GetBucketListQuery
 from luxtj.contexts.customer.application.use_cases import (
     AddBucketListItem,
+    AddPersonalCalendarEvent,
+    AddPersonalCalendarPeriod,
     DeleteBucketListItem,
     GetBucketList,
+    GetPersonalCalendarConsolidatedView,
+    GetPersonalCalendarHolidayTypes,
     SuggestDestinations,
     UpdateBucketListItem,
 )
 from luxtj.contexts.customer.bootstrap import (
     build_add_bucket_list_item,
+    build_add_personal_calendar_event,
+    build_add_personal_calendar_period,
     build_delete_bucket_list_item,
     build_get_bucket_list,
+    build_get_personal_calendar_consolidated_view,
+    build_get_personal_calendar_holiday_types,
     build_suggest_destinations,
     build_update_bucket_list_item,
 )
-from luxtj.contexts.customer.domain.errors import CustomerBucketListError
+from luxtj.contexts.customer.domain.errors import (
+    CustomerBucketListError,
+    CustomerPersonalCalendarError,
+)
 from luxtj.contexts.customer.presentation.http.schemas import (
     AddBucketListItemBody,
+    AddPersonalCalendarEventBody,
+    AddPersonalCalendarPeriodBody,
     BucketListItemSerializer,
     BucketListSerializer,
     DestinationSuggestionResultSerializer,
+    HolidayTypeListSerializer,
+    PersonalCalendarConsolidatedViewSerializer,
+    PersonalCalendarEventItemSerializer,
+    PersonalCalendarPeriodItemSerializer,
     SuggestDestinationsBody,
     UpdateBucketListItemBody,
     ViewBucketListBody,
@@ -41,6 +60,10 @@ from luxtj.shared_kernel.presentation.http.schemas import (
 )
 
 customer_bucket_list_router = APIRouter(prefix="/bucket-list", tags=["customer_bucket_list"])
+customer_personal_calendar_router = APIRouter(
+    prefix="/personal-calendar",
+    tags=["customer_personal_calendar"],
+)
 
 
 @customer_bucket_list_router.post(
@@ -172,4 +195,105 @@ async def view_bucket_list(
     return ApiSuccessResponse(
         status=RequestProcessStatus.OK,
         output=BucketListSerializer.from_dto(bucket_list),
+    )
+
+
+@customer_personal_calendar_router.post(
+    "/{account_id}/events/add",
+    response_model=ApiSuccessResponse[PersonalCalendarEventItemSerializer] | ApiErrorResponse,
+    status_code=200,
+)
+async def add_personal_calendar_event(
+    account_id: UUID,
+    use_case: Annotated[AddPersonalCalendarEvent, Depends(build_add_personal_calendar_event)],
+    body: Annotated[AddPersonalCalendarEventBody, Body(...)],
+) -> ApiSuccessResponse[PersonalCalendarEventItemSerializer] | ApiErrorResponse:
+    try:
+        item = await use_case(
+            AddPersonalCalendarEventCommand(
+                account_id=account_id,
+                event_type=body.event_type,
+                event_date=body.event_date,
+                holiday_types=body.holiday_types,
+                birthday_for=body.birthday_for,
+                anniversary_for=body.anniversary_for,
+                person_name=body.person_name,
+                person1_name=body.person1_name,
+                person2_name=body.person2_name,
+                event_name=body.event_name,
+            )
+        )
+    except CustomerPersonalCalendarError as exc:
+        return ApiErrorResponse(error_message=str(exc))
+
+    return ApiSuccessResponse(
+        status=RequestProcessStatus.OK,
+        output=PersonalCalendarEventItemSerializer.from_dto(item),
+    )
+
+
+@customer_personal_calendar_router.post(
+    "/{account_id}/periods/add",
+    response_model=ApiSuccessResponse[PersonalCalendarPeriodItemSerializer] | ApiErrorResponse,
+    status_code=200,
+)
+async def add_personal_calendar_period(
+    account_id: UUID,
+    use_case: Annotated[AddPersonalCalendarPeriod, Depends(build_add_personal_calendar_period)],
+    body: Annotated[AddPersonalCalendarPeriodBody, Body(...)],
+) -> ApiSuccessResponse[PersonalCalendarPeriodItemSerializer] | ApiErrorResponse:
+    try:
+        item = await use_case(
+            AddPersonalCalendarPeriodCommand(
+                account_id=account_id,
+                period_name=body.period_name,
+                period_start=body.period_start,
+                period_end=body.period_end,
+                is_date_flexible=body.is_date_flexible,
+                holiday_types=body.holiday_types,
+            )
+        )
+    except CustomerPersonalCalendarError as exc:
+        return ApiErrorResponse(error_message=str(exc))
+
+    return ApiSuccessResponse(
+        status=RequestProcessStatus.OK,
+        output=PersonalCalendarPeriodItemSerializer.from_dto(item),
+    )
+
+
+@customer_personal_calendar_router.post(
+    "/holiday-types/view",
+    response_model=ApiSuccessResponse[HolidayTypeListSerializer],
+    status_code=200,
+)
+async def view_personal_calendar_holiday_types(
+    use_case: Annotated[
+        GetPersonalCalendarHolidayTypes,
+        Depends(build_get_personal_calendar_holiday_types),
+    ],
+) -> ApiSuccessResponse[HolidayTypeListSerializer]:
+    holiday_types = await use_case()
+    return ApiSuccessResponse(
+        status=RequestProcessStatus.OK,
+        output=HolidayTypeListSerializer.from_dto(holiday_types),
+    )
+
+
+@customer_personal_calendar_router.post(
+    "/{account_id}/view",
+    response_model=ApiSuccessResponse[PersonalCalendarConsolidatedViewSerializer],
+    status_code=200,
+)
+async def view_personal_calendar(
+    account_id: UUID,
+    use_case: Annotated[
+        GetPersonalCalendarConsolidatedView,
+        Depends(build_get_personal_calendar_consolidated_view),
+    ],
+) -> ApiSuccessResponse[PersonalCalendarConsolidatedViewSerializer]:
+    consolidated_view = await use_case(account_id)
+    return ApiSuccessResponse(
+        status=RequestProcessStatus.OK,
+        output=PersonalCalendarConsolidatedViewSerializer.from_dto(consolidated_view),
     )

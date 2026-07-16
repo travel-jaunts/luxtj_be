@@ -25,7 +25,10 @@ from luxtj.contexts.action_centre.infrastructure.persistence.sqlalchemy_models i
 )
 from luxtj.contexts.action_centre.presentation.http.router import action_centre_router
 from luxtj.contexts.customer.infrastructure.persistence.sqlalchemy_models import CustomerBase
-from luxtj.contexts.customer.presentation.http.router import customer_bucket_list_router
+from luxtj.contexts.customer.presentation.http.router import (
+    customer_bucket_list_router,
+    customer_personal_calendar_router,
+)
 from luxtj.contexts.marketing.infrastructure.persistence.sqlalchemy_models import MarketingBase
 from luxtj.contexts.marketing.presentation.http.router import marketing_router
 from luxtj.shared_kernel.infrastructure.events.in_process import (
@@ -155,6 +158,7 @@ def server_factory() -> FastAPI:
     public_router.include_router(waitlist_router)
     public_router.include_router(account_auth_router)
     public_router.include_router(customer_bucket_list_router)
+    public_router.include_router(customer_personal_calendar_router)
     # public_router.include_router(idam_router)
     api_application.include_router(public_router)
 
