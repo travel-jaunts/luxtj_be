@@ -106,6 +106,10 @@ class SqlAlchemyPersonalCalendarRepository:
             )
 
     async def save(self, calendar: PersonalCalendar) -> None:
+        # Production sessions use autoflush=False. Flush a calendar previously staged
+        # through add() so the lookup below sees it instead of inserting it twice.
+        await self._session.flush()
+
         row = await self._session.scalar(
             select(CustomerPersonalCalendarRow).where(
                 CustomerPersonalCalendarRow.id == str(calendar.id)
@@ -113,6 +117,7 @@ class SqlAlchemyPersonalCalendarRepository:
         )
         if row is None:
             await self.add(calendar)
+            await self._session.flush()
             return
 
         row.update_from_domain(calendar)
@@ -148,3 +153,6 @@ class SqlAlchemyPersonalCalendarRepository:
                 )
             else:
                 found.update_from_domain(item)
+
+        # Surface database constraint failures before the HTTP response is built.
+        await self._session.flush()

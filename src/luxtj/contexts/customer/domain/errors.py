@@ -36,3 +36,11 @@ class InvalidHolidayTypesError(CustomerPersonalCalendarError):
 
 class InvalidPeriodDateRangeError(CustomerPersonalCalendarError):
     pass
+
+
+class PersonalCalendarRecommendationError(CustomerPersonalCalendarError):
+    pass
+
+
+class PersonalCalendarRecommendationItemNotFoundError(PersonalCalendarRecommendationError):
+    pass

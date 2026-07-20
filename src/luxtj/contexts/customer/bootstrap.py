@@ -9,6 +9,9 @@ from luxtj.contexts.customer.application.bucket_list_recommendation_engine.provi
     FlightInventoryProvider,
     HotelInventoryProvider,
 )
+from luxtj.contexts.customer.application.personal_calendar_recommendation_engine.providers.interfaces import (
+    DealInventoryProvider,
+)
 from luxtj.contexts.customer.application.ports import (
     BucketListRepository,
     DestinationSuggestionProvider,
@@ -23,12 +26,16 @@ from luxtj.contexts.customer.application.use_cases import (
     GetPersonalCalendarConsolidatedView,
     GetPersonalCalendarHolidayTypes,
     RecommendBucketListDeals,
+    RecommendPersonalCalendarDeals,
     SuggestDestinations,
     UpdateBucketListItem,
 )
 from luxtj.contexts.customer.infrastructure.persistence.sqlalchemy_repository import (
     SqlAlchemyBucketListRepository,
     SqlAlchemyPersonalCalendarRepository,
+)
+from luxtj.contexts.customer.infrastructure.personal_calendar_recommendations.deal_inventory_provider import (
+    PendingPersonalCalendarDealInventoryProvider,
 )
 from luxtj.contexts.customer.infrastructure.recommendations.flight_inventory_provider import (
     PendingFlightInventoryProvider,
@@ -81,6 +88,10 @@ def build_flight_inventory_provider() -> FlightInventoryProvider:
 
 def build_hotel_inventory_provider() -> HotelInventoryProvider:
     return PendingHotelInventoryProvider()
+
+
+def build_personal_calendar_deal_inventory_provider() -> DealInventoryProvider:
+    return PendingPersonalCalendarDealInventoryProvider()
 
 
 def build_add_bucket_list_item(
@@ -158,3 +169,16 @@ def build_get_personal_calendar_consolidated_view(
     repository: Annotated[PersonalCalendarRepository, Depends(build_personal_calendar_repository)],
 ) -> GetPersonalCalendarConsolidatedView:
     return GetPersonalCalendarConsolidatedView(repository=repository)
+
+
+def build_recommend_personal_calendar_deals(
+    repository: Annotated[PersonalCalendarRepository, Depends(build_personal_calendar_repository)],
+    inventory_provider: Annotated[
+        DealInventoryProvider,
+        Depends(build_personal_calendar_deal_inventory_provider),
+    ],
+) -> RecommendPersonalCalendarDeals:
+    return RecommendPersonalCalendarDeals(
+        repository=repository,
+        inventory_provider=inventory_provider,
+    )

@@ -26,6 +26,31 @@ from luxtj.contexts.customer.application.commands import (
     SuggestDestinationsCommand,
     UpdateBucketListItemCommand,
 )
+from luxtj.contexts.customer.application.personal_calendar_recommendation_engine.engine import (
+    recommend_best_deal,
+)
+from luxtj.contexts.customer.application.personal_calendar_recommendation_engine.enums import (
+    AnniversaryFor,
+    BirthdayFor,
+    CalendarEventType,
+    CalendarSourceType,
+    HolidayType,
+)
+from luxtj.contexts.customer.application.personal_calendar_recommendation_engine.exceptions import (
+    PersonalCalendarRecommendationEngineError,
+)
+from luxtj.contexts.customer.application.personal_calendar_recommendation_engine.models import (
+    BudgetProfile,
+    CalendarEventInput,
+    CalendarPeriodInput,
+    PersonalCalendarRecommendationInput,
+    PersonalCalendarRecommendationResult,
+    RecommendationPreferences,
+    TravelParty,
+)
+from luxtj.contexts.customer.application.personal_calendar_recommendation_engine.providers.interfaces import (
+    DealInventoryProvider,
+)
 from luxtj.contexts.customer.application.ports import (
     BucketListRepository,
     DestinationSuggestion,
@@ -35,12 +60,15 @@ from luxtj.contexts.customer.application.ports import (
 from luxtj.contexts.customer.application.queries import (
     GetBucketListQuery,
     RecommendBucketListDealsQuery,
+    RecommendPersonalCalendarDealsQuery,
 )
 from luxtj.contexts.customer.domain.bucket_list import BucketList, BucketListItem
 from luxtj.contexts.customer.domain.enums import HOLIDAY_TYPE_LIST, PersonalCalendarEventTypeEnum
 from luxtj.contexts.customer.domain.errors import (
     BucketListRecommendationError,
     InvalidPersonalCalendarEventError,
+    PersonalCalendarRecommendationError,
+    PersonalCalendarRecommendationItemNotFoundError,
 )
 from luxtj.contexts.customer.domain.events import DestinationSuggestionResolved
 from luxtj.contexts.customer.domain.personal_calendar import (
@@ -524,3 +552,135 @@ class GetPersonalCalendarConsolidatedView:
 
         sorted_items = sorted(items, key=lambda value: (value.start_date, value.created_at))
         return PersonalCalendarConsolidatedViewDTO(account_id=account_id, items=sorted_items)
+
+
+class RecommendPersonalCalendarDeals:
+    def __init__(
+        self,
+        repository: PersonalCalendarRepository,
+        inventory_provider: DealInventoryProvider,
+    ) -> None:
+        self._repository = repository
+        self._inventory_provider = inventory_provider
+
+    async def __call__(
+        self,
+        query: RecommendPersonalCalendarDealsQuery,
+    ) -> PersonalCalendarRecommendationResult:
+        calendar = await self._repository.get_by_account_id(query.account_id)
+        if calendar is None:
+            raise PersonalCalendarRecommendationError(
+                f"Personal calendar for account {query.account_id} was not found"
+            )
+
+        events, periods = self._select_calendar_items(calendar, query)
+        if not events and not periods:
+            raise PersonalCalendarRecommendationError(
+                "At least one personal-calendar event or period is required"
+            )
+
+        try:
+            budget = None
+            if query.target_budget is not None or query.maximum_budget is not None:
+                budget = BudgetProfile(
+                    currency=query.pricing_currency,
+                    target_total=query.target_budget,
+                    maximum_total=query.maximum_budget,
+                )
+
+            context = PersonalCalendarRecommendationInput(
+                account_id=str(query.account_id),
+                origin_city=query.origin_city,
+                origin_country=query.origin_country,
+                reference_date=query.reference_date,
+                pricing_currency=query.pricing_currency,
+                events=tuple(self._map_event(item) for item in events),
+                periods=tuple(self._map_period(item) for item in periods),
+                preferences=RecommendationPreferences(
+                    plan_types=query.plan_types,
+                    tiers=query.tiers,
+                    interests=query.interests,
+                    travel_intent=query.travel_intent,
+                ),
+                travel_party=TravelParty(
+                    adults=query.adults,
+                    children_ages=query.children_ages,
+                    rooms=query.rooms,
+                    traveler_type=query.traveler_type,
+                    mobility_constraints=query.mobility_constraints,
+                    wheelchair_required=query.wheelchair_required,
+                    preferred_travel_pace=query.preferred_travel_pace,
+                ),
+                budget=budget,
+                passport_country=query.passport_country,
+                residency_country=query.residency_country,
+            )
+            return await recommend_best_deal(
+                context=context,
+                inventory_provider=self._inventory_provider,
+            )
+        except PersonalCalendarRecommendationEngineError as exc:
+            raise PersonalCalendarRecommendationError(str(exc)) from exc
+
+    @staticmethod
+    def _select_calendar_items(
+        calendar: PersonalCalendar,
+        query: RecommendPersonalCalendarDealsQuery,
+    ) -> tuple[list[PersonalCalendarEventItem], list[PersonalCalendarPeriodItem]]:
+        has_item_id = query.calendar_item_id is not None
+        has_item_type = query.calendar_item_type is not None
+        if has_item_id != has_item_type:
+            raise PersonalCalendarRecommendationError(
+                "calendar_item_id and calendar_item_type must be supplied together"
+            )
+        if not has_item_id:
+            return list(calendar.events), list(calendar.periods)
+
+        if query.calendar_item_type == CalendarSourceType.EVENT:
+            event = next(
+                (item for item in calendar.events if item.id == query.calendar_item_id),
+                None,
+            )
+            if event is None:
+                raise PersonalCalendarRecommendationItemNotFoundError(
+                    f"Personal-calendar event {query.calendar_item_id} was not found"
+                )
+            return [event], []
+
+        period = next(
+            (item for item in calendar.periods if item.id == query.calendar_item_id),
+            None,
+        )
+        if period is None:
+            raise PersonalCalendarRecommendationItemNotFoundError(
+                f"Personal-calendar period {query.calendar_item_id} was not found"
+            )
+        return [], [period]
+
+    @staticmethod
+    def _map_event(item: PersonalCalendarEventItem) -> CalendarEventInput:
+        return CalendarEventInput(
+            source_item_id=str(item.id),
+            event_type=CalendarEventType(item.event_type.value),
+            event_date=item.event_date,
+            holiday_types=tuple(HolidayType(value.value) for value in item.holiday_types),
+            birthday_for=BirthdayFor(item.birthday_for.value) if item.birthday_for else None,
+            anniversary_for=(
+                AnniversaryFor(item.anniversary_for.value) if item.anniversary_for else None
+            ),
+            person_name=item.person_name,
+            person1_name=item.person1_name,
+            person2_name=item.person2_name,
+            event_name=item.event_name,
+        )
+
+    @staticmethod
+    def _map_period(item: PersonalCalendarPeriodItem) -> CalendarPeriodInput:
+        return CalendarPeriodInput(
+            source_item_id=str(item.id),
+            period_name=item.period_name,
+            period_start=item.period_start,
+            period_end=item.period_end,
+            is_date_flexible=item.is_date_flexible,
+            holiday_types=tuple(HolidayType(value.value) for value in item.holiday_types),
+        )
