@@ -14,6 +14,14 @@ class InvalidIdealDaysError(CustomerBucketListError):
     pass
 
 
+class BucketListRecommendationError(CustomerBucketListError):
+    pass
+
+
+class BucketListRecommendationProviderNotConfiguredError(BucketListRecommendationError):
+    pass
+
+
 class CustomerPersonalCalendarError(Exception):
     pass
 

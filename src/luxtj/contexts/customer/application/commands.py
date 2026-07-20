@@ -39,6 +39,7 @@ class DeleteBucketListItemCommand:
 
 @dataclass(frozen=True)
 class SuggestDestinationsCommand:
+    account_id: UUID
     query: str
     selected_kind: BucketDestinationKindEnum
     selected_name: str | None = None

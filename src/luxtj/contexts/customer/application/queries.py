@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from datetime import date
 from uuid import UUID
 
 
@@ -6,3 +7,10 @@ from uuid import UUID
 class GetBucketListQuery:
     account_id: UUID
     include_deleted: bool = False
+
+
+@dataclass(frozen=True)
+class RecommendBucketListDealsQuery:
+    account_id: UUID
+    origin: str
+    reference_date: date

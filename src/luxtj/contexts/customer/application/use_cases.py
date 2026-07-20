@@ -2,6 +2,22 @@ from dataclasses import dataclass
 from datetime import date, datetime
 from uuid import UUID
 
+from luxtj.contexts.customer.application.bucket_list_recommendation_engine.engine import (
+    recommend_bucket_list_deals,
+)
+from luxtj.contexts.customer.application.bucket_list_recommendation_engine.exceptions import (
+    RecommendationEngineError,
+)
+from luxtj.contexts.customer.application.bucket_list_recommendation_engine.models import (
+    BucketListRecommendationInput,
+    BucketListRecommendationResult,
+    Destination,
+    Itinerary,
+)
+from luxtj.contexts.customer.application.bucket_list_recommendation_engine.providers.interfaces import (
+    FlightInventoryProvider,
+    HotelInventoryProvider,
+)
 from luxtj.contexts.customer.application.commands import (
     AddBucketListItemCommand,
     AddPersonalCalendarEventCommand,
@@ -16,10 +32,16 @@ from luxtj.contexts.customer.application.ports import (
     DestinationSuggestionProvider,
     PersonalCalendarRepository,
 )
-from luxtj.contexts.customer.application.queries import GetBucketListQuery
+from luxtj.contexts.customer.application.queries import (
+    GetBucketListQuery,
+    RecommendBucketListDealsQuery,
+)
 from luxtj.contexts.customer.domain.bucket_list import BucketList, BucketListItem
 from luxtj.contexts.customer.domain.enums import HOLIDAY_TYPE_LIST, PersonalCalendarEventTypeEnum
-from luxtj.contexts.customer.domain.errors import InvalidPersonalCalendarEventError
+from luxtj.contexts.customer.domain.errors import (
+    BucketListRecommendationError,
+    InvalidPersonalCalendarEventError,
+)
 from luxtj.contexts.customer.domain.events import DestinationSuggestionResolved
 from luxtj.contexts.customer.domain.personal_calendar import (
     PersonalCalendar,
@@ -291,6 +313,55 @@ class GetBucketList:
         if bucket_list is None:
             bucket_list = BucketList.create(account_id=query.account_id)
         return BucketListDTO.from_domain(bucket_list, include_deleted=query.include_deleted)
+
+
+class RecommendBucketListDeals:
+    def __init__(
+        self,
+        repository: BucketListRepository,
+        flight_provider: FlightInventoryProvider,
+        hotel_provider: HotelInventoryProvider,
+    ) -> None:
+        self._repository = repository
+        self._flight_provider = flight_provider
+        self._hotel_provider = hotel_provider
+
+    async def __call__(
+        self, query: RecommendBucketListDealsQuery
+    ) -> BucketListRecommendationResult:
+        bucket_list = await self._repository.get_by_account_id(query.account_id)
+        if bucket_list is None:
+            raise BucketListRecommendationError(
+                f"Bucket list for account {query.account_id} was not found"
+            )
+
+        active_items = bucket_list.active_items()
+        if not active_items:
+            raise BucketListRecommendationError(
+                "At least one active bucket-list destination is required"
+            )
+
+        try:
+            itinerary = Itinerary(
+                destinations=[
+                    Destination(name=item.destination_name, days=item.ideal_days)
+                    for item in active_items
+                ]
+            )
+            request = BucketListRecommendationInput(
+                origin=query.origin,
+                reference_date=query.reference_date,
+                itinerary=itinerary,
+            )
+            return recommend_bucket_list_deals(
+                request=request,
+                flight_provider=self._flight_provider,
+                hotel_provider=self._hotel_provider,
+            )
+        except RecommendationEngineError as exc:
+            raise BucketListRecommendationError(str(exc)) from exc
+        except ValueError as exc:
+            raise BucketListRecommendationError(str(exc)) from exc
 
 
 class SuggestDestinations:
