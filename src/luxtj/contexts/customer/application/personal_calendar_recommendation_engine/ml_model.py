@@ -7,8 +7,9 @@ from pathlib import Path
 from types import MappingProxyType
 from typing import Self
 
+from luxtj.contexts.customer.domain.errors import PersonalCalendarRecommendationError
+
 from .config import FEATURE_SCHEMA_VERSION
-from .exceptions import RankingModelError
 from .features import FEATURE_NAMES
 from .models import FeatureVector
 
@@ -37,14 +38,16 @@ class LinearRankingModel:
 
     def __post_init__(self) -> None:
         if not self.model_version.strip():
-            raise RankingModelError("model_version is required")
+            raise PersonalCalendarRecommendationError("model_version is required")
         if self.feature_schema_version != FEATURE_SCHEMA_VERSION:
-            raise RankingModelError(
+            raise PersonalCalendarRecommendationError(
                 f"Feature schema mismatch: expected {FEATURE_SCHEMA_VERSION}, "
                 f"got {self.feature_schema_version}"
             )
         if self.feature_names != FEATURE_NAMES:
-            raise RankingModelError("Model feature names do not match the serving feature schema")
+            raise PersonalCalendarRecommendationError(
+                "Model feature names do not match the serving feature schema"
+            )
         lengths = {
             len(self.feature_names),
             len(self.weights),
@@ -52,16 +55,20 @@ class LinearRankingModel:
             len(self.scales),
         }
         if len(lengths) != 1:
-            raise RankingModelError("Model feature arrays must have equal lengths")
+            raise PersonalCalendarRecommendationError(
+                "Model feature arrays must have equal lengths"
+            )
         if any(scale <= 0.0 for scale in self.scales):
-            raise RankingModelError("Model scales must be positive")
+            raise PersonalCalendarRecommendationError("Model scales must be positive")
         if self.training_examples < 0:
-            raise RankingModelError("training_examples cannot be negative")
+            raise PersonalCalendarRecommendationError("training_examples cannot be negative")
         object.__setattr__(self, "metrics", MappingProxyType(dict(self.metrics)))
 
     def predict(self, features: FeatureVector) -> float:
         if features.names != self.feature_names:
-            raise RankingModelError("Runtime FeatureVector is incompatible with the model")
+            raise PersonalCalendarRecommendationError(
+                "Runtime FeatureVector is incompatible with the model"
+            )
         standardized = tuple(
             (value - mean) / scale
             for value, mean, scale in zip(
@@ -111,7 +118,7 @@ class LinearRankingModel:
                 },
             )
         except (KeyError, TypeError, ValueError) as exc:
-            raise RankingModelError("Invalid ranking-model payload") from exc
+            raise PersonalCalendarRecommendationError("Invalid ranking-model payload") from exc
 
     def write_json(self, path: str | Path) -> None:
         Path(path).write_text(json.dumps(self.to_dict(), indent=2), encoding="utf-8")
@@ -121,7 +128,11 @@ class LinearRankingModel:
         try:
             payload = json.loads(Path(path).read_text(encoding="utf-8"))
         except (OSError, json.JSONDecodeError) as exc:
-            raise RankingModelError("Unable to read ranking-model artifact") from exc
+            raise PersonalCalendarRecommendationError(
+                "Unable to read ranking-model artifact"
+            ) from exc
         if not isinstance(payload, dict):
-            raise RankingModelError("Ranking-model artifact must contain a JSON object")
+            raise PersonalCalendarRecommendationError(
+                "Ranking-model artifact must contain a JSON object"
+            )
         return cls.from_dict(payload)

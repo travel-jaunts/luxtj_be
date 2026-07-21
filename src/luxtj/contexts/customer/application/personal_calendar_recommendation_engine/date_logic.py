@@ -1,8 +1,13 @@
 from datetime import date, timedelta
 
+from luxtj.contexts.customer.domain.enums import HolidayTypeEnum, PersonalCalendarEventTypeEnum
+from luxtj.contexts.customer.domain.personal_calendar import (
+    PersonalCalendarEventItem,
+    PersonalCalendarPeriodItem,
+)
+
 from .config import EngineConfig
-from .enums import CalendarEventType, HolidayType
-from .models import CalendarEventInput, CalendarPeriodInput, TravelWindow
+from .models import TravelWindow
 
 
 def next_annual_occurrence(
@@ -28,13 +33,13 @@ def next_annual_occurrence(
 
 
 def target_date_for_event(
-    event: CalendarEventInput,
+    event: PersonalCalendarEventItem,
     reference_date: date,
     config: EngineConfig,
 ) -> date | None:
     if event.event_type in {
-        CalendarEventType.BIRTHDAY,
-        CalendarEventType.ANNIVERSARY,
+        PersonalCalendarEventTypeEnum.BIRTHDAY,
+        PersonalCalendarEventTypeEnum.ANNIVERSARY,
     }:
         return next_annual_occurrence(
             event.event_date,
@@ -106,8 +111,8 @@ def generate_event_windows(
     return tuple(windows[: config.max_windows_per_opportunity])
 
 
-def is_family_period(period: CalendarPeriodInput) -> bool:
-    if HolidayType.FAMILY_LUXURY_HOLIDAYS in period.holiday_types:
+def is_family_period(period: PersonalCalendarPeriodItem) -> bool:
+    if HolidayTypeEnum.FAMILY_LUXURY_HOLIDAYS in period.holiday_types:
         return True
     normalized_name = period.period_name.casefold()
     family_terms = (
@@ -123,7 +128,7 @@ def is_family_period(period: CalendarPeriodInput) -> bool:
 
 
 def generate_period_windows(
-    period: CalendarPeriodInput,
+    period: PersonalCalendarPeriodItem,
     reference_date: date,
     config: EngineConfig,
 ) -> tuple[TravelWindow, ...]:

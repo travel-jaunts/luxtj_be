@@ -1,5 +1,12 @@
 from datetime import timedelta
 
+from luxtj.contexts.customer.domain.enums import (
+    BirthdayForEnum,
+    HolidayTypeEnum,
+    PersonalCalendarEventTypeEnum,
+)
+from luxtj.contexts.customer.domain.personal_calendar import PersonalCalendarEventItem
+
 from .config import EngineConfig
 from .date_logic import (
     generate_event_windows,
@@ -7,8 +14,16 @@ from .date_logic import (
     is_family_period,
     target_date_for_event,
 )
-from .enums import BirthdayFor, CalendarSourceType, HolidayType
+from .enums import CalendarSourceType
 from .models import PersonalCalendarRecommendationInput, TravelOpportunity
+
+
+def _event_label(event: PersonalCalendarEventItem) -> str:
+    if event.event_type is PersonalCalendarEventTypeEnum.BIRTHDAY:
+        return f"{event.person_name}'s Birthday"
+    if event.event_type is PersonalCalendarEventTypeEnum.ANNIVERSARY:
+        return f"{event.person1_name} & {event.person2_name} Anniversary"
+    return event.event_name or "Special Occasion"
 
 
 def build_travel_opportunities(
@@ -25,15 +40,15 @@ def build_travel_opportunities(
         if not windows:
             continue
         requires_family = (
-            event.birthday_for is BirthdayFor.CHILD_BIRTHDAY
-            or HolidayType.FAMILY_LUXURY_HOLIDAYS in event.holiday_types
+            event.birthday_for is BirthdayForEnum.CHILD_BIRTHDAY
+            or HolidayTypeEnum.FAMILY_LUXURY_HOLIDAYS in event.holiday_types
         )
         opportunities.append(
             TravelOpportunity(
-                source_item_id=event.source_item_id,
+                source_item_id=str(event.id),
                 source_type=CalendarSourceType.EVENT,
-                source_label=event.label,
-                holiday_types=event.holiday_types,
+                source_label=_event_label(event),
+                holiday_types=tuple(event.holiday_types),
                 target_date=target_date,
                 allowed_start=min(window.start_date for window in windows),
                 allowed_end=max(window.end_date for window in windows),
@@ -55,10 +70,10 @@ def build_travel_opportunities(
         allowed_end = period.period_end + timedelta(days=buffer_days)
         opportunities.append(
             TravelOpportunity(
-                source_item_id=period.source_item_id,
+                source_item_id=str(period.id),
                 source_type=CalendarSourceType.PERIOD,
                 source_label=period.period_name,
-                holiday_types=period.holiday_types,
+                holiday_types=tuple(period.holiday_types),
                 target_date=None,
                 allowed_start=allowed_start,
                 allowed_end=allowed_end,

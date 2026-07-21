@@ -128,6 +128,10 @@ async def test_personal_calendar_recommendation_loads_database_calendar_and_maps
     assert result.opportunities[0].source_label == "Alex's Birthday"
     assert provider.requests
     assert all(request.source_item_id == str(event.id) for request in provider.requests)
+    assert all(
+        request.holiday_types == (HolidayTypeEnum.WELLNESS_AND_SPA_RETREATS,)
+        for request in provider.requests
+    )
     assert any(
         option.status is RecommendationStatus.AVAILABLE
         for window in result.opportunities[0].windows
@@ -215,6 +219,26 @@ def test_personal_calendar_integration_preserves_bucket_list_recommendation_rout
 
     assert "post" in paths["/v1/bucket-list/{account_id}/recommendations"]
     assert "post" in paths["/v1/personal-calendar/{account_id}/recommendations"]
+
+
+def test_recommendation_engine_reuses_personal_calendar_domain_entities() -> None:
+    from luxtj.contexts.customer.application.personal_calendar_recommendation_engine import (
+        enums as recommendation_enums,
+    )
+    from luxtj.contexts.customer.application.personal_calendar_recommendation_engine import (
+        models as recommendation_models,
+    )
+
+    for redundant_name in (
+        "CalendarEventType",
+        "BirthdayFor",
+        "AnniversaryFor",
+        "HolidayType",
+    ):
+        assert not hasattr(recommendation_enums, redundant_name)
+
+    assert not hasattr(recommendation_models, "CalendarEventInput")
+    assert not hasattr(recommendation_models, "CalendarPeriodInput")
 
 
 async def test_pending_inventory_provider_returns_structured_unavailable_result(

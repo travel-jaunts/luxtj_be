@@ -4,15 +4,18 @@ from datetime import date, datetime
 from decimal import Decimal
 from types import MappingProxyType
 
+from luxtj.contexts.customer.domain.enums import HolidayTypeEnum
+from luxtj.contexts.customer.domain.errors import PersonalCalendarRecommendationError
+from luxtj.contexts.customer.domain.personal_calendar import (
+    PersonalCalendarEventItem,
+    PersonalCalendarPeriodItem,
+)
+
 from .enums import (
-    AnniversaryFor,
-    BirthdayFor,
-    CalendarEventType,
     CalendarSourceType,
     CancellationPolicy,
     CrowdLevel,
     DealTier,
-    HolidayType,
     LogisticsComplexity,
     NewsRisk,
     PhysicalIntensity,
@@ -25,13 +28,12 @@ from .enums import (
     TravelerType,
     WalkingLevel,
 )
-from .exceptions import InvalidEngineInputError
 
 
 def _clean_required(value: str, field_name: str) -> str:
     cleaned = " ".join(value.split()).strip()
     if not cleaned:
-        raise InvalidEngineInputError(f"{field_name} is required")
+        raise PersonalCalendarRecommendationError(f"{field_name} is required")
     return cleaned
 
 
@@ -45,115 +47,17 @@ def _clean_optional(value: str | None) -> str | None:
 def _currency(value: str) -> str:
     cleaned = value.strip().upper()
     if len(cleaned) != 3 or not cleaned.isalpha():
-        raise InvalidEngineInputError("currency must be a three-letter ISO-style code")
+        raise PersonalCalendarRecommendationError("currency must be a three-letter ISO-style code")
     return cleaned
-
-
-def _validate_holiday_types(values: tuple[HolidayType, ...]) -> None:
-    if len(values) > 3:
-        raise InvalidEngineInputError("A calendar item can contain at most three holiday types")
-    if len(set(values)) != len(values):
-        raise InvalidEngineInputError("holiday_types cannot contain duplicates")
 
 
 def _validate_ratio(value: float | None, field_name: str) -> None:
     if value is not None and not 0.0 <= value <= 1.0:
-        raise InvalidEngineInputError(f"{field_name} must be between 0 and 1")
+        raise PersonalCalendarRecommendationError(f"{field_name} must be between 0 and 1")
 
 
 def _freeze_mapping(value: Mapping[str, object]) -> Mapping[str, object]:
     return MappingProxyType(dict(value))
-
-
-@dataclass(frozen=True, slots=True)
-class CalendarEventInput:
-    source_item_id: str
-    event_type: CalendarEventType
-    event_date: date
-    holiday_types: tuple[HolidayType, ...] = ()
-    birthday_for: BirthdayFor | None = None
-    anniversary_for: AnniversaryFor | None = None
-    person_name: str | None = None
-    person1_name: str | None = None
-    person2_name: str | None = None
-    event_name: str | None = None
-
-    def __post_init__(self) -> None:
-        object.__setattr__(
-            self,
-            "source_item_id",
-            _clean_required(self.source_item_id, "source_item_id"),
-        )
-        _validate_holiday_types(self.holiday_types)
-        if self.event_type is CalendarEventType.BIRTHDAY:
-            if self.birthday_for is None:
-                raise InvalidEngineInputError("birthday_for is required for birthday events")
-            if self.person_name is None:
-                raise InvalidEngineInputError("person_name is required for birthday events")
-            object.__setattr__(
-                self, "person_name", _clean_required(self.person_name, "person_name")
-            )
-        elif self.event_type is CalendarEventType.ANNIVERSARY:
-            if self.anniversary_for is None:
-                raise InvalidEngineInputError("anniversary_for is required for anniversary events")
-            if self.person1_name is None or self.person2_name is None:
-                raise InvalidEngineInputError(
-                    "person1_name and person2_name are required for anniversary events"
-                )
-            object.__setattr__(
-                self,
-                "person1_name",
-                _clean_required(self.person1_name, "person1_name"),
-            )
-            object.__setattr__(
-                self,
-                "person2_name",
-                _clean_required(self.person2_name, "person2_name"),
-            )
-        elif self.event_type is CalendarEventType.SPECIAL_OCCASION:
-            if self.event_name is None:
-                raise InvalidEngineInputError("event_name is required for special occasions")
-            object.__setattr__(self, "event_name", _clean_required(self.event_name, "event_name"))
-
-    @property
-    def label(self) -> str:
-        if self.event_type is CalendarEventType.BIRTHDAY:
-            return f"{self.person_name}'s Birthday"
-        if self.event_type is CalendarEventType.ANNIVERSARY:
-            return f"{self.person1_name} & {self.person2_name} Anniversary"
-        return self.event_name or "Special Occasion"
-
-    @property
-    def is_annual(self) -> bool:
-        return self.event_type in {
-            CalendarEventType.BIRTHDAY,
-            CalendarEventType.ANNIVERSARY,
-        }
-
-    @property
-    def is_child_event(self) -> bool:
-        return self.birthday_for is BirthdayFor.CHILD_BIRTHDAY
-
-
-@dataclass(frozen=True, slots=True)
-class CalendarPeriodInput:
-    source_item_id: str
-    period_name: str
-    period_start: date
-    period_end: date
-    is_date_flexible: bool
-    holiday_types: tuple[HolidayType, ...] = ()
-
-    def __post_init__(self) -> None:
-        object.__setattr__(
-            self,
-            "source_item_id",
-            _clean_required(self.source_item_id, "source_item_id"),
-        )
-        object.__setattr__(self, "period_name", _clean_required(self.period_name, "period_name"))
-        if self.period_end < self.period_start:
-            raise InvalidEngineInputError("period_end must be on or after period_start")
-        _validate_holiday_types(self.holiday_types)
 
 
 @dataclass(frozen=True, slots=True)
@@ -168,13 +72,15 @@ class TravelParty:
 
     def __post_init__(self) -> None:
         if self.adults < 1:
-            raise InvalidEngineInputError("At least one adult traveller is required")
+            raise PersonalCalendarRecommendationError("At least one adult traveller is required")
         if any(age < 0 or age > 17 for age in self.children_ages):
-            raise InvalidEngineInputError("children_ages must contain ages from 0 to 17")
+            raise PersonalCalendarRecommendationError(
+                "children_ages must contain ages from 0 to 17"
+            )
         if self.rooms < 1:
-            raise InvalidEngineInputError("rooms must be positive")
+            raise PersonalCalendarRecommendationError("rooms must be positive")
         if self.rooms > self.total_travelers:
-            raise InvalidEngineInputError("rooms cannot exceed total travellers")
+            raise PersonalCalendarRecommendationError("rooms cannot exceed total travellers")
         if self.children and self.traveler_type not in {
             TravelerType.FAMILY,
             TravelerType.MULTI_GENERATIONAL,
@@ -215,13 +121,13 @@ class BudgetProfile:
         for field_name in ("target_total", "maximum_total"):
             value = getattr(self, field_name)
             if value is not None and value <= Decimal("0"):
-                raise InvalidEngineInputError(f"{field_name} must be positive")
+                raise PersonalCalendarRecommendationError(f"{field_name} must be positive")
         if (
             self.target_total is not None
             and self.maximum_total is not None
             and self.target_total > self.maximum_total
         ):
-            raise InvalidEngineInputError("target_total cannot exceed maximum_total")
+            raise PersonalCalendarRecommendationError("target_total cannot exceed maximum_total")
 
 
 @dataclass(frozen=True, slots=True)
@@ -246,13 +152,13 @@ class RecommendationPreferences:
 
     def __post_init__(self) -> None:
         if not self.plan_types:
-            raise InvalidEngineInputError("At least one plan type is required")
+            raise PersonalCalendarRecommendationError("At least one plan type is required")
         if not self.tiers:
-            raise InvalidEngineInputError("At least one tier is required")
+            raise PersonalCalendarRecommendationError("At least one tier is required")
         if len(set(self.plan_types)) != len(self.plan_types):
-            raise InvalidEngineInputError("plan_types cannot contain duplicates")
+            raise PersonalCalendarRecommendationError("plan_types cannot contain duplicates")
         if len(set(self.tiers)) != len(self.tiers):
-            raise InvalidEngineInputError("tiers cannot contain duplicates")
+            raise PersonalCalendarRecommendationError("tiers cannot contain duplicates")
         object.__setattr__(self, "travel_intent", _clean_optional(self.travel_intent))
 
 
@@ -263,8 +169,8 @@ class PersonalCalendarRecommendationInput:
     origin_country: str
     reference_date: date
     pricing_currency: str
-    events: tuple[CalendarEventInput, ...]
-    periods: tuple[CalendarPeriodInput, ...]
+    events: tuple[PersonalCalendarEventItem, ...]
+    periods: tuple[PersonalCalendarPeriodItem, ...]
     preferences: RecommendationPreferences
     travel_party: TravelParty = field(default_factory=TravelParty)
     history: TravelerHistory = field(default_factory=TravelerHistory)
@@ -284,12 +190,14 @@ class PersonalCalendarRecommendationInput:
         object.__setattr__(self, "passport_country", _clean_optional(self.passport_country))
         object.__setattr__(self, "residency_country", _clean_optional(self.residency_country))
         if not self.events and not self.periods:
-            raise InvalidEngineInputError("At least one calendar event or period is required")
-        ids = [item.source_item_id for item in (*self.events, *self.periods)]
+            raise PersonalCalendarRecommendationError(
+                "At least one calendar event or period is required"
+            )
+        ids = [item.id for item in (*self.events, *self.periods)]
         if len(ids) != len(set(ids)):
-            raise InvalidEngineInputError("Calendar source_item_id values must be unique")
+            raise PersonalCalendarRecommendationError("Calendar item IDs must be unique")
         if self.budget is not None and self.budget.currency != self.pricing_currency:
-            raise InvalidEngineInputError("budget currency must match pricing_currency")
+            raise PersonalCalendarRecommendationError("budget currency must match pricing_currency")
 
 
 @dataclass(frozen=True, slots=True)
@@ -302,9 +210,11 @@ class TravelWindow:
     def __post_init__(self) -> None:
         object.__setattr__(self, "name", _clean_required(self.name, "window name"))
         if self.end_date <= self.start_date:
-            raise InvalidEngineInputError("Travel window end_date must be after start_date")
+            raise PersonalCalendarRecommendationError(
+                "Travel window end_date must be after start_date"
+            )
         if self.target_date is not None and not self.start_date < self.target_date < self.end_date:
-            raise InvalidEngineInputError(
+            raise PersonalCalendarRecommendationError(
                 "An event target_date must be inside the trip, not on a travel boundary"
             )
 
@@ -318,7 +228,7 @@ class TravelOpportunity:
     source_item_id: str
     source_type: CalendarSourceType
     source_label: str
-    holiday_types: tuple[HolidayType, ...]
+    holiday_types: tuple[HolidayTypeEnum, ...]
     target_date: date | None
     allowed_start: date
     allowed_end: date
@@ -337,7 +247,7 @@ class DealSearchRequest:
     source_item_id: str
     source_type: CalendarSourceType
     source_label: str
-    holiday_types: tuple[HolidayType, ...]
+    holiday_types: tuple[HolidayTypeEnum, ...]
     requires_family_suitability: bool
     window: TravelWindow
     allowed_start: date
@@ -431,19 +341,21 @@ class DealCandidate:
         object.__setattr__(self, "travel_pace", _clean_optional(self.travel_pace))
         object.__setattr__(self, "details", _freeze_mapping(self.details))
         if self.end_date < self.start_date:
-            raise InvalidEngineInputError("candidate end_date cannot be before start_date")
+            raise PersonalCalendarRecommendationError(
+                "candidate end_date cannot be before start_date"
+            )
         if self.total_price <= Decimal("0"):
-            raise InvalidEngineInputError("total_price must be positive")
+            raise PersonalCalendarRecommendationError("total_price must be positive")
         if self.market_reference_price is not None and self.market_reference_price <= Decimal("0"):
-            raise InvalidEngineInputError("market_reference_price must be positive")
+            raise PersonalCalendarRecommendationError("market_reference_price must be positive")
         if not 0.0 <= self.quality_rating <= 5.0:
-            raise InvalidEngineInputError("quality_rating must be between 0 and 5")
+            raise PersonalCalendarRecommendationError("quality_rating must be between 0 and 5")
         if self.review_count is not None and self.review_count < 0:
-            raise InvalidEngineInputError("review_count cannot be negative")
+            raise PersonalCalendarRecommendationError("review_count cannot be negative")
         if self.maximum_travelers is not None and self.maximum_travelers < 1:
-            raise InvalidEngineInputError("maximum_travelers must be positive")
+            raise PersonalCalendarRecommendationError("maximum_travelers must be positive")
         if self.rooms_included is not None and self.rooms_included < 1:
-            raise InvalidEngineInputError("rooms_included must be positive")
+            raise PersonalCalendarRecommendationError("rooms_included must be positive")
         for field_name in (
             "supplier_reliability",
             "supplier_complaint_ratio",
@@ -462,17 +374,17 @@ class DealCandidate:
         ):
             _validate_ratio(getattr(self, field_name), field_name)
         if self.review_score is not None and not 0.0 <= self.review_score <= 5.0:
-            raise InvalidEngineInputError("review_score must be between 0 and 5")
+            raise PersonalCalendarRecommendationError("review_score must be between 0 and 5")
         if self.number_of_bookings is not None and self.number_of_bookings < 0:
-            raise InvalidEngineInputError("number_of_bookings cannot be negative")
+            raise PersonalCalendarRecommendationError("number_of_bookings cannot be negative")
         if self.visa_processing_days is not None and self.visa_processing_days < 0:
-            raise InvalidEngineInputError("visa_processing_days cannot be negative")
+            raise PersonalCalendarRecommendationError("visa_processing_days cannot be negative")
         if self.layovers < 0 or self.internal_transfer_count < 0:
-            raise InvalidEngineInputError("layovers and transfers cannot be negative")
+            raise PersonalCalendarRecommendationError("layovers and transfers cannot be negative")
         for field_name in ("flight_duration_hours", "estimated_travel_hours"):
             value = getattr(self, field_name)
             if value is not None and value < 0:
-                raise InvalidEngineInputError(f"{field_name} cannot be negative")
+                raise PersonalCalendarRecommendationError(f"{field_name} cannot be negative")
 
     @property
     def duration_nights(self) -> int:
@@ -502,13 +414,17 @@ class FeatureVector:
 
     def __post_init__(self) -> None:
         if not self.names:
-            raise InvalidEngineInputError("FeatureVector must contain features")
+            raise PersonalCalendarRecommendationError("FeatureVector must contain features")
         if len(self.names) != len(self.values):
-            raise InvalidEngineInputError("FeatureVector names and values must have equal length")
+            raise PersonalCalendarRecommendationError(
+                "FeatureVector names and values must have equal length"
+            )
         if len(set(self.names)) != len(self.names):
-            raise InvalidEngineInputError("FeatureVector names must be unique")
+            raise PersonalCalendarRecommendationError("FeatureVector names must be unique")
         if any(not 0.0 <= value <= 1.0 for value in self.values):
-            raise InvalidEngineInputError("FeatureVector values must be between 0 and 1")
+            raise PersonalCalendarRecommendationError(
+                "FeatureVector values must be between 0 and 1"
+            )
 
     def as_dict(self) -> dict[str, float]:
         return dict(zip(self.names, self.values, strict=True))
@@ -619,7 +535,7 @@ class OpportunityRecommendationResult:
     source_type: CalendarSourceType
     source_label: str
     target_date: date | None
-    holiday_types: tuple[HolidayType, ...]
+    holiday_types: tuple[HolidayTypeEnum, ...]
     windows: tuple[WindowRecommendationResult, ...]
 
 

@@ -1,7 +1,8 @@
 from dataclasses import dataclass, field
 
+from luxtj.contexts.customer.domain.errors import PersonalCalendarRecommendationError
+
 from .enums import DealTier, UnknownReviewPolicy
-from .exceptions import InvalidEngineInputError
 
 
 @dataclass(frozen=True, slots=True)
@@ -18,9 +19,9 @@ class BusinessScoringWeights:
     def __post_init__(self) -> None:
         values = tuple(self.as_dict().values())
         if any(value < 0.0 for value in values):
-            raise InvalidEngineInputError("Business scoring weights cannot be negative")
+            raise PersonalCalendarRecommendationError("Business scoring weights cannot be negative")
         if abs(sum(values) - 1.0) > 1e-9:
-            raise InvalidEngineInputError("Business scoring weights must sum to 1.0")
+            raise PersonalCalendarRecommendationError("Business scoring weights must sum to 1.0")
 
     def as_dict(self) -> dict[str, float]:
         return {
@@ -66,24 +67,32 @@ class EngineConfig:
             "duration_tolerance_nights": self.duration_tolerance_nights,
         }
         if any(value < 0 for value in integer_fields.values()):
-            raise InvalidEngineInputError("Configured day and duration values cannot be negative")
+            raise PersonalCalendarRecommendationError(
+                "Configured day and duration values cannot be negative"
+            )
         if self.max_windows_per_opportunity < 1:
-            raise InvalidEngineInputError("max_windows_per_opportunity must be positive")
+            raise PersonalCalendarRecommendationError(
+                "max_windows_per_opportunity must be positive"
+            )
         if self.max_concurrent_searches < 1:
-            raise InvalidEngineInputError("max_concurrent_searches must be positive")
+            raise PersonalCalendarRecommendationError("max_concurrent_searches must be positive")
         if self.max_recommendations_per_option != 1:
-            raise InvalidEngineInputError(
+            raise PersonalCalendarRecommendationError(
                 "The current LuxTJ business contract returns exactly one best deal per option"
             )
         if self.leap_day_fallback_day not in {28, 29}:
-            raise InvalidEngineInputError("leap_day_fallback_day must be 28 or 29")
+            raise PersonalCalendarRecommendationError("leap_day_fallback_day must be 28 or 29")
         if not 0.0 <= self.unknown_review_confidence <= 1.0:
-            raise InvalidEngineInputError("unknown_review_confidence must be between 0 and 1")
+            raise PersonalCalendarRecommendationError(
+                "unknown_review_confidence must be between 0 and 1"
+            )
         if not 0.0 <= self.ml_blend_weight <= 1.0:
-            raise InvalidEngineInputError("ml_blend_weight must be between 0 and 1")
+            raise PersonalCalendarRecommendationError("ml_blend_weight must be between 0 and 1")
         for collection in (self.standard_period_nights, self.family_period_nights):
             if not collection or any(nights < 1 for nights in collection):
-                raise InvalidEngineInputError("Configured period nights must be positive")
+                raise PersonalCalendarRecommendationError(
+                    "Configured period nights must be positive"
+                )
 
     def quality_threshold(self, tier: DealTier) -> float:
         return dict(self.tier_quality_thresholds)[tier]

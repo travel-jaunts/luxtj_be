@@ -30,19 +30,10 @@ from luxtj.contexts.customer.application.personal_calendar_recommendation_engine
     recommend_best_deal,
 )
 from luxtj.contexts.customer.application.personal_calendar_recommendation_engine.enums import (
-    AnniversaryFor,
-    BirthdayFor,
-    CalendarEventType,
     CalendarSourceType,
-    HolidayType,
-)
-from luxtj.contexts.customer.application.personal_calendar_recommendation_engine.exceptions import (
-    PersonalCalendarRecommendationEngineError,
 )
 from luxtj.contexts.customer.application.personal_calendar_recommendation_engine.models import (
     BudgetProfile,
-    CalendarEventInput,
-    CalendarPeriodInput,
     PersonalCalendarRecommendationInput,
     PersonalCalendarRecommendationResult,
     RecommendationPreferences,
@@ -579,48 +570,45 @@ class RecommendPersonalCalendarDeals:
                 "At least one personal-calendar event or period is required"
             )
 
-        try:
-            budget = None
-            if query.target_budget is not None or query.maximum_budget is not None:
-                budget = BudgetProfile(
-                    currency=query.pricing_currency,
-                    target_total=query.target_budget,
-                    maximum_total=query.maximum_budget,
-                )
+        budget = None
+        if query.target_budget is not None or query.maximum_budget is not None:
+            budget = BudgetProfile(
+                currency=query.pricing_currency,
+                target_total=query.target_budget,
+                maximum_total=query.maximum_budget,
+            )
 
-            context = PersonalCalendarRecommendationInput(
-                account_id=str(query.account_id),
-                origin_city=query.origin_city,
-                origin_country=query.origin_country,
-                reference_date=query.reference_date,
-                pricing_currency=query.pricing_currency,
-                events=tuple(self._map_event(item) for item in events),
-                periods=tuple(self._map_period(item) for item in periods),
-                preferences=RecommendationPreferences(
-                    plan_types=query.plan_types,
-                    tiers=query.tiers,
-                    interests=query.interests,
-                    travel_intent=query.travel_intent,
-                ),
-                travel_party=TravelParty(
-                    adults=query.adults,
-                    children_ages=query.children_ages,
-                    rooms=query.rooms,
-                    traveler_type=query.traveler_type,
-                    mobility_constraints=query.mobility_constraints,
-                    wheelchair_required=query.wheelchair_required,
-                    preferred_travel_pace=query.preferred_travel_pace,
-                ),
-                budget=budget,
-                passport_country=query.passport_country,
-                residency_country=query.residency_country,
-            )
-            return await recommend_best_deal(
-                context=context,
-                inventory_provider=self._inventory_provider,
-            )
-        except PersonalCalendarRecommendationEngineError as exc:
-            raise PersonalCalendarRecommendationError(str(exc)) from exc
+        context = PersonalCalendarRecommendationInput(
+            account_id=str(query.account_id),
+            origin_city=query.origin_city,
+            origin_country=query.origin_country,
+            reference_date=query.reference_date,
+            pricing_currency=query.pricing_currency,
+            events=tuple(events),
+            periods=tuple(periods),
+            preferences=RecommendationPreferences(
+                plan_types=query.plan_types,
+                tiers=query.tiers,
+                interests=query.interests,
+                travel_intent=query.travel_intent,
+            ),
+            travel_party=TravelParty(
+                adults=query.adults,
+                children_ages=query.children_ages,
+                rooms=query.rooms,
+                traveler_type=query.traveler_type,
+                mobility_constraints=query.mobility_constraints,
+                wheelchair_required=query.wheelchair_required,
+                preferred_travel_pace=query.preferred_travel_pace,
+            ),
+            budget=budget,
+            passport_country=query.passport_country,
+            residency_country=query.residency_country,
+        )
+        return await recommend_best_deal(
+            context=context,
+            inventory_provider=self._inventory_provider,
+        )
 
     @staticmethod
     def _select_calendar_items(
@@ -656,31 +644,3 @@ class RecommendPersonalCalendarDeals:
                 f"Personal-calendar period {query.calendar_item_id} was not found"
             )
         return [], [period]
-
-    @staticmethod
-    def _map_event(item: PersonalCalendarEventItem) -> CalendarEventInput:
-        return CalendarEventInput(
-            source_item_id=str(item.id),
-            event_type=CalendarEventType(item.event_type.value),
-            event_date=item.event_date,
-            holiday_types=tuple(HolidayType(value.value) for value in item.holiday_types),
-            birthday_for=BirthdayFor(item.birthday_for.value) if item.birthday_for else None,
-            anniversary_for=(
-                AnniversaryFor(item.anniversary_for.value) if item.anniversary_for else None
-            ),
-            person_name=item.person_name,
-            person1_name=item.person1_name,
-            person2_name=item.person2_name,
-            event_name=item.event_name,
-        )
-
-    @staticmethod
-    def _map_period(item: PersonalCalendarPeriodItem) -> CalendarPeriodInput:
-        return CalendarPeriodInput(
-            source_item_id=str(item.id),
-            period_name=item.period_name,
-            period_start=item.period_start,
-            period_end=item.period_end,
-            is_date_flexible=item.is_date_flexible,
-            holiday_types=tuple(HolidayType(value.value) for value in item.holiday_types),
-        )

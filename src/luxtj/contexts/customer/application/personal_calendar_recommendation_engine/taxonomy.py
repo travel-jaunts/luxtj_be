@@ -1,39 +1,39 @@
 from collections.abc import Iterable
 
-from .enums import HolidayType
+from luxtj.contexts.customer.domain.enums import HolidayTypeEnum
 
-HOLIDAY_TYPE_SYNONYMS: dict[HolidayType, frozenset[str]] = {
-    HolidayType.AFRICAN_SAFARIS_AND_WILDLIFE_TOURS: frozenset(
+HOLIDAY_TYPE_SYNONYMS: dict[HolidayTypeEnum, frozenset[str]] = {
+    HolidayTypeEnum.AFRICAN_SAFARIS_AND_WILDLIFE_TOURS: frozenset(
         {"safari", "wildlife", "game drive", "nature reserve", "big five"}
     ),
-    HolidayType.LUXURY_STAYS_HOTELS_VILLAS: frozenset(
+    HolidayTypeEnum.LUXURY_STAYS_HOTELS_VILLAS: frozenset(
         {"luxury hotel", "luxury stay", "villa", "resort", "suite", "private villa"}
     ),
-    HolidayType.WELLNESS_AND_SPA_RETREATS: frozenset(
+    HolidayTypeEnum.WELLNESS_AND_SPA_RETREATS: frozenset(
         {"wellness", "spa", "retreat", "yoga", "mindfulness", "detox"}
     ),
-    HolidayType.HONEYMOONS_AND_ROMANTIC_HOLIDAYS: frozenset(
+    HolidayTypeEnum.HONEYMOONS_AND_ROMANTIC_HOLIDAYS: frozenset(
         {"honeymoon", "romantic", "romance", "couples", "anniversary", "private dining"}
     ),
-    HolidayType.FAMILY_LUXURY_HOLIDAYS: frozenset(
+    HolidayTypeEnum.FAMILY_LUXURY_HOLIDAYS: frozenset(
         {"family", "children", "kids", "child friendly", "family resort", "school holiday"}
     ),
-    HolidayType.SKI_GOLF_AND_CASINO_TRIPS: frozenset(
+    HolidayTypeEnum.SKI_GOLF_AND_CASINO_TRIPS: frozenset(
         {"ski", "skiing", "golf", "casino", "winter sport", "golf resort"}
     ),
-    HolidayType.CULTURE_FOOD_AND_SHOPPING_TOURS: frozenset(
+    HolidayTypeEnum.CULTURE_FOOD_AND_SHOPPING_TOURS: frozenset(
         {"culture", "cultural", "food", "culinary", "shopping", "heritage", "museum"}
     ),
-    HolidayType.ALL_INCLUSIVE_LUXURY_DEALS: frozenset(
+    HolidayTypeEnum.ALL_INCLUSIVE_LUXURY_DEALS: frozenset(
         {"all inclusive", "full board", "inclusive package", "luxury package"}
     ),
-    HolidayType.ONCE_IN_A_LIFE_TIME_TRIPS: frozenset(
+    HolidayTypeEnum.ONCE_IN_A_LIFE_TIME_TRIPS: frozenset(
         {"once in a lifetime", "bucket list", "expedition", "iconic", "rare experience"}
     ),
-    HolidayType.DISNEY_AND_EURAIL_TICKETS: frozenset(
+    HolidayTypeEnum.DISNEY_AND_EURAIL_TICKETS: frozenset(
         {"disney", "theme park", "eurail", "rail pass", "europe rail", "family attraction"}
     ),
-    HolidayType.SIGNATURE_EXPERIENCES: frozenset(
+    HolidayTypeEnum.SIGNATURE_EXPERIENCES: frozenset(
         {"signature experience", "exclusive", "private experience", "vip", "bespoke"}
     ),
 }
@@ -47,7 +47,7 @@ def normalized_set(values: Iterable[object]) -> set[str]:
     return {normalized for value in values if (normalized := normalize_text(value))}
 
 
-def holiday_terms(holiday_types: Iterable[HolidayType]) -> set[str]:
+def holiday_terms(holiday_types: Iterable[HolidayTypeEnum]) -> set[str]:
     terms: set[str] = set()
     for holiday_type in holiday_types:
         terms.add(normalize_text(holiday_type.value))
@@ -56,7 +56,7 @@ def holiday_terms(holiday_types: Iterable[HolidayType]) -> set[str]:
 
 
 def holiday_type_match_score(
-    holiday_types: Iterable[HolidayType],
+    holiday_types: Iterable[HolidayTypeEnum],
     candidate_terms: Iterable[str],
 ) -> float:
     selected = tuple(holiday_types)

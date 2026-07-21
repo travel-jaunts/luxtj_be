@@ -238,10 +238,10 @@ async def recommend_best_deal(
 ) -> PersonalCalendarRecommendationResult:
     """Recommend deals for mapped personal-calendar events and periods.
 
-    The caller must load the personal calendar from its database and map the domain
-    object into ``PersonalCalendarRecommendationInput``. This engine performs no
-    database, SQLAlchemy, FastAPI, HTTP, environment-variable, or personal-calendar
-    API access.
+    The caller must load the personal calendar from its repository and supply its
+    existing domain event and period entities in ``PersonalCalendarRecommendationInput``.
+    This engine performs no database, SQLAlchemy, FastAPI, HTTP, environment-variable,
+    or personal-calendar API access.
     """
 
     opportunities = build_travel_opportunities(context, config)
