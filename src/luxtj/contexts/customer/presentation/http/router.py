@@ -11,7 +11,11 @@ from luxtj.contexts.customer.application.commands import (
     SuggestDestinationsCommand,
     UpdateBucketListItemCommand,
 )
-from luxtj.contexts.customer.application.queries import GetBucketListQuery
+from luxtj.contexts.customer.application.queries import (
+    GetBucketListQuery,
+    RecommendBucketListDealsQuery,
+    RecommendPersonalCalendarDealsQuery,
+)
 from luxtj.contexts.customer.application.use_cases import (
     AddBucketListItem,
     AddPersonalCalendarEvent,
@@ -20,6 +24,8 @@ from luxtj.contexts.customer.application.use_cases import (
     GetBucketList,
     GetPersonalCalendarConsolidatedView,
     GetPersonalCalendarHolidayTypes,
+    RecommendBucketListDeals,
+    RecommendPersonalCalendarDeals,
     SuggestDestinations,
     UpdateBucketListItem,
 )
@@ -31,6 +37,8 @@ from luxtj.contexts.customer.bootstrap import (
     build_get_bucket_list,
     build_get_personal_calendar_consolidated_view,
     build_get_personal_calendar_holiday_types,
+    build_recommend_bucket_list_deals,
+    build_recommend_personal_calendar_deals,
     build_suggest_destinations,
     build_update_bucket_list_item,
 )
@@ -38,17 +46,23 @@ from luxtj.contexts.customer.domain.errors import (
     CustomerBucketListError,
     CustomerPersonalCalendarError,
 )
+from luxtj.contexts.customer.presentation.http.personal_calendar_recommendation_schemas import (
+    PersonalCalendarRecommendationResultSerializer,
+    RecommendPersonalCalendarDealsBody,
+)
 from luxtj.contexts.customer.presentation.http.schemas import (
     AddBucketListItemBody,
     AddPersonalCalendarEventBody,
     AddPersonalCalendarPeriodBody,
     BucketListItemSerializer,
+    BucketListRecommendationResultSerializer,
     BucketListSerializer,
     DestinationSuggestionResultSerializer,
     HolidayTypeListSerializer,
     PersonalCalendarConsolidatedViewSerializer,
     PersonalCalendarEventItemSerializer,
     PersonalCalendarPeriodItemSerializer,
+    RecommendBucketListDealsBody,
     SuggestDestinationsBody,
     UpdateBucketListItemBody,
     ViewBucketListBody,
@@ -67,17 +81,19 @@ customer_personal_calendar_router = APIRouter(
 
 
 @customer_bucket_list_router.post(
-    "/suggestions",
+    "/{account_id}/suggestions",
     response_model=ApiSuccessResponse[DestinationSuggestionResultSerializer] | ApiErrorResponse,
     status_code=200,
 )
 async def suggest_destinations(
+    account_id: UUID,
     use_case: Annotated[SuggestDestinations, Depends(build_suggest_destinations)],
     body: Annotated[SuggestDestinationsBody, Body(...)],
 ) -> ApiSuccessResponse[DestinationSuggestionResultSerializer] | ApiErrorResponse:
     try:
         result = await use_case(
             SuggestDestinationsCommand(
+                account_id=account_id,
                 query=body.query,
                 selected_kind=body.selected_kind,
                 selected_name=body.selected_name,
@@ -198,6 +214,38 @@ async def view_bucket_list(
     )
 
 
+@customer_bucket_list_router.post(
+    "/{account_id}/recommendations",
+    response_model=(
+        ApiSuccessResponse[BucketListRecommendationResultSerializer] | ApiErrorResponse
+    ),
+    status_code=200,
+)
+async def recommend_bucket_list_deals(
+    account_id: UUID,
+    use_case: Annotated[
+        RecommendBucketListDeals,
+        Depends(build_recommend_bucket_list_deals),
+    ],
+    body: Annotated[RecommendBucketListDealsBody, Body(...)],
+) -> ApiSuccessResponse[BucketListRecommendationResultSerializer] | ApiErrorResponse:
+    try:
+        result = await use_case(
+            RecommendBucketListDealsQuery(
+                account_id=account_id,
+                origin=body.origin,
+                reference_date=body.reference_date,
+            )
+        )
+    except CustomerBucketListError as exc:
+        return ApiErrorResponse(error_message=str(exc))
+
+    return ApiSuccessResponse(
+        status=RequestProcessStatus.OK,
+        output=BucketListRecommendationResultSerializer.from_engine(result),
+    )
+
+
 @customer_personal_calendar_router.post(
     "/{account_id}/events/add",
     response_model=ApiSuccessResponse[PersonalCalendarEventItemSerializer] | ApiErrorResponse,
@@ -277,6 +325,57 @@ async def view_personal_calendar_holiday_types(
     return ApiSuccessResponse(
         status=RequestProcessStatus.OK,
         output=HolidayTypeListSerializer.from_dto(holiday_types),
+    )
+
+
+@customer_personal_calendar_router.post(
+    "/{account_id}/recommendations",
+    response_model=(
+        ApiSuccessResponse[PersonalCalendarRecommendationResultSerializer] | ApiErrorResponse
+    ),
+    status_code=200,
+)
+async def recommend_personal_calendar_deals(
+    account_id: UUID,
+    use_case: Annotated[
+        RecommendPersonalCalendarDeals,
+        Depends(build_recommend_personal_calendar_deals),
+    ],
+    body: Annotated[RecommendPersonalCalendarDealsBody, Body(...)],
+) -> ApiSuccessResponse[PersonalCalendarRecommendationResultSerializer] | ApiErrorResponse:
+    try:
+        result = await use_case(
+            RecommendPersonalCalendarDealsQuery(
+                account_id=account_id,
+                origin_city=body.origin_city,
+                origin_country=body.origin_country,
+                reference_date=body.reference_date,
+                pricing_currency=body.pricing_currency,
+                calendar_item_id=body.calendar_item_id,
+                calendar_item_type=body.calendar_item_type,
+                plan_types=tuple(body.plan_types),
+                tiers=tuple(body.tiers),
+                adults=body.adults,
+                children_ages=tuple(body.children_ages),
+                rooms=body.rooms,
+                traveler_type=body.traveler_type,
+                mobility_constraints=tuple(body.mobility_constraints),
+                wheelchair_required=body.wheelchair_required,
+                preferred_travel_pace=body.preferred_travel_pace,
+                target_budget=body.target_budget,
+                maximum_budget=body.maximum_budget,
+                passport_country=body.passport_country,
+                residency_country=body.residency_country,
+                interests=tuple(body.interests),
+                travel_intent=body.travel_intent,
+            )
+        )
+    except CustomerPersonalCalendarError as exc:
+        return ApiErrorResponse(error_message=str(exc))
+
+    return ApiSuccessResponse(
+        status=RequestProcessStatus.OK,
+        output=PersonalCalendarRecommendationResultSerializer.from_engine(result),
     )
 
 
