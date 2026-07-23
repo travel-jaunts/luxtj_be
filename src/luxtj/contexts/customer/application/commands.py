@@ -66,3 +66,15 @@ class AddPersonalCalendarPeriodCommand:
     period_end: date
     is_date_flexible: bool
     holiday_types: list[HolidayTypeEnum]
+
+
+@dataclass(frozen=True)
+class DeletePersonalCalendarEventCommand:
+    account_id: UUID
+    item_id: UUID
+
+
+@dataclass(frozen=True)
+class DeletePersonalCalendarPeriodCommand:
+    account_id: UUID
+    item_id: UUID

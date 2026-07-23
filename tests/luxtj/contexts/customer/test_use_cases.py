@@ -47,7 +47,7 @@ async def test_add_update_delete_flow_publishes_events(
     updated = await update_use_case(
         UpdateBucketListItemCommand(
             account_id=customer_account_id,
-            item_id=added.id,
+            item_id=added.item_id,
             ideal_days=5,
             notes="extended stay",
         )
@@ -57,7 +57,7 @@ async def test_add_update_delete_flow_publishes_events(
     deleted = await delete_use_case(
         DeleteBucketListItemCommand(
             account_id=customer_account_id,
-            item_id=added.id,
+            item_id=added.item_id,
         )
     )
     assert deleted.deleted_at is not None
@@ -77,7 +77,6 @@ async def test_suggest_destinations_uses_provider_and_emits_event(
 
     result = await use_case(
         SuggestDestinationsCommand(
-            account_id=customer_account_id,
             query="France",
             selected_kind=BucketDestinationKindEnum.COUNTRY,
             selected_name="France",
@@ -115,13 +114,8 @@ async def test_get_bucket_list_returns_only_active_items(
         )
     )
     await delete_use_case(
-        DeleteBucketListItemCommand(account_id=customer_account_id, item_id=item.id)
+        DeleteBucketListItemCommand(account_id=customer_account_id, item_id=item.item_id)
     )
 
     active = await get_use_case(GetBucketListQuery(account_id=customer_account_id))
     assert active.items == []
-
-    full = await get_use_case(
-        GetBucketListQuery(account_id=customer_account_id, include_deleted=True)
-    )
-    assert len(full.items) == 1

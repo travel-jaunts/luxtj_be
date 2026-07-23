@@ -131,11 +131,11 @@ class PersonalCalendarEventTypeEnum(StrEnum):
 
 
 class BirthdayForEnum(StrEnum):
-    MY_BIRTHDAY = "my_birthday"
-    SPOUSE_BIRTHDAY = "spouse_birthday"
-    FATHER_BIRTHDAY = "father_birthday"
-    MOTHER_BIRTHDAY = "mother_birthday"
-    CHILD_BIRTHDAY = "child_birthday"
+    MYSELF = "myself"
+    PARTNER = "partner"
+    PARENT = "parent"
+    CHILD = "child"
+    FRIEND = "friend"
 
 
 class AnniversaryForEnum(StrEnum):
@@ -157,6 +157,3 @@ class HolidayTypeEnum(StrEnum):
     ONCE_IN_A_LIFE_TIME_TRIPS = "Once In a Life Time trips"
     DISNEY_AND_EURAIL_TICKETS = "Disney & Eurail Tickets"
     SIGNATURE_EXPERIENCES = "Signature Experiences"
-
-
-HOLIDAY_TYPE_LIST: tuple[str, ...] = tuple(item.value for item in HolidayTypeEnum)

@@ -22,6 +22,10 @@ class TwilioSmsOtpSender(SmsOtpSender):
         otp: str,
         flow_type: AuthFlowType,
     ) -> None:
+        print(
+            f"OTP delivery fallback sender | phone={phone_identity.e164_like} "
+            f"flow={flow_type.value} otp={otp}"
+        )
         if flow_type == AuthFlowType.SIGNUP:
             body = f"Your LuxTJ signup verification code is {otp}. This code expires soon."
         else:

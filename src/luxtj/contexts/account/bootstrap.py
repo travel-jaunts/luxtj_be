@@ -10,6 +10,7 @@ from luxtj.bootstrap import config
 from luxtj.contexts.account.application.ports import (
     AccountRepository,
     Clock,
+    CustomerProfileInitializer,
     OtpChallengeRepository,
     SmsOtpSender,
     TokenIssuer,
@@ -27,6 +28,7 @@ from luxtj.contexts.account.infrastructure.persistence.sqlalchemy_repository imp
 )
 from luxtj.contexts.account.infrastructure.sms.null_sender import NullSmsOtpSender
 from luxtj.contexts.account.infrastructure.sms.twilio_sender import TwilioSmsOtpSender
+from luxtj.contexts.customer.bootstrap import build_initialize_customer_profile
 from luxtj.shared_kernel.presentation.http.dependencies import (
     database_session_handle,
     twilio_client_handle,
@@ -123,6 +125,10 @@ def build_request_login_otp(
 
 def build_verify_otp(
     account_repository: Annotated[AccountRepository, Depends(build_account_repository)],
+    customer_profile_initializer: Annotated[
+        CustomerProfileInitializer,
+        Depends(build_initialize_customer_profile),
+    ],
     challenge_repository: Annotated[
         OtpChallengeRepository,
         Depends(build_otp_challenge_repository),
@@ -133,6 +139,7 @@ def build_verify_otp(
 ) -> VerifyOtp:
     return VerifyOtp(
         account_repository=account_repository,
+        customer_profile_initializer=customer_profile_initializer,
         challenge_repository=challenge_repository,
         token_issuer=token_issuer,
         clock=clock,

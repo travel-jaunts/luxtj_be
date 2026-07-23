@@ -34,5 +34,9 @@ class TokenIssuer(Protocol):
     ) -> tuple[str, str]: ...
 
 
+class CustomerProfileInitializer(Protocol):
+    async def __call__(self, account_id: UUID) -> None: ...
+
+
 class Clock(Protocol):
     def utcnow(self) -> datetime: ...

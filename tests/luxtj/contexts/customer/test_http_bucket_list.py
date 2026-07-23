@@ -52,7 +52,7 @@ def test_bucket_list_http_flow(
     account_id = str(customer_account_id)
 
     suggest_response = client.post(
-        f"/v1/bucket-list/{account_id}/suggestions",
+        "/v1/bucket-list/suggestions",
         json={
             "query": "France",
             "selectedKind": "country",
@@ -73,7 +73,7 @@ def test_bucket_list_http_flow(
         },
     )
     assert add_response.status_code == 200
-    item_id = add_response.json()["output"]["id"]
+    item_id = add_response.json()["output"]["itemId"]
 
     update_response = client.post(
         f"/v1/bucket-list/{account_id}/items/{item_id}/update",
@@ -91,7 +91,9 @@ def test_bucket_list_http_flow(
         json={},
     )
     assert view_response.status_code == 200
+    assert view_response.json()["output"]["bucketListId"] is not None
     assert len(view_response.json()["output"]["items"]) == 1
+    assert view_response.json()["output"]["items"][0]["itemId"] == item_id
 
     delete_response = client.post(
         f"/v1/bucket-list/{account_id}/items/{item_id}/delete",
@@ -101,9 +103,10 @@ def test_bucket_list_http_flow(
 
     active_view = client.post(
         f"/v1/bucket-list/{account_id}/view",
-        json={"includeDeleted": False},
+        json={},
     )
     assert active_view.status_code == 200
+    assert active_view.json()["output"]["bucketListId"] is not None
     assert active_view.json()["output"]["items"] == []
 
 

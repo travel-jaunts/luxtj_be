@@ -1,4 +1,4 @@
-from luxtj.contexts.customer.domain.enums import HOLIDAY_TYPE_LIST, HolidayTypeEnum
+from luxtj.contexts.customer.domain.enums import HolidayTypeEnum
 from luxtj.contexts.customer.domain.errors import InvalidHolidayTypesError
 
 MAX_HOLIDAY_TYPES_SELECTION = 3
@@ -23,4 +23,4 @@ def normalize_holiday_types(values: list[HolidayTypeEnum]) -> list[HolidayTypeEn
 
 
 def supported_holiday_types() -> list[str]:
-    return list(HOLIDAY_TYPE_LIST)
+    return [item.value for item in HolidayTypeEnum]

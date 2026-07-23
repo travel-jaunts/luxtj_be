@@ -7,6 +7,8 @@ from luxtj.contexts.customer.application.commands import (
     AddPersonalCalendarEventCommand,
     AddPersonalCalendarPeriodCommand,
     DeleteBucketListItemCommand,
+    DeletePersonalCalendarEventCommand,
+    DeletePersonalCalendarPeriodCommand,
     SuggestDestinationsCommand,
     UpdateBucketListItemCommand,
 )
@@ -18,7 +20,7 @@ from luxtj.contexts.customer.application.ports import (
 )
 from luxtj.contexts.customer.application.queries import GetBucketListQuery
 from luxtj.contexts.customer.domain.bucket_list import BucketList, BucketListItem
-from luxtj.contexts.customer.domain.enums import HOLIDAY_TYPE_LIST, PersonalCalendarEventTypeEnum
+from luxtj.contexts.customer.domain.enums import PersonalCalendarEventTypeEnum
 from luxtj.contexts.customer.domain.errors import InvalidPersonalCalendarEventError
 from luxtj.contexts.customer.domain.events import DestinationSuggestionResolved
 from luxtj.contexts.customer.domain.personal_calendar import (
@@ -31,7 +33,7 @@ from luxtj.shared_kernel.application.event_bus import DomainEventPublisher
 
 @dataclass(frozen=True)
 class BucketListItemDTO:
-    id: UUID
+    item_id: UUID
     destination_kind: str
     destination_name: str
     parent_country: str | None
@@ -45,7 +47,7 @@ class BucketListItemDTO:
     @classmethod
     def from_domain(cls, item: BucketListItem) -> BucketListItemDTO:
         return cls(
-            id=item.id,
+            item_id=item.id,
             destination_kind=item.destination_kind.value,
             destination_name=item.destination_name,
             parent_country=item.parent_country,
@@ -60,22 +62,17 @@ class BucketListItemDTO:
 
 @dataclass(frozen=True)
 class BucketListDTO:
-    id: UUID
+    bucket_list_id: UUID
     account_id: UUID
     created_at: datetime
     updated_at: datetime
     items: list[BucketListItemDTO]
 
     @classmethod
-    def from_domain(cls, bucket_list: BucketList, *, include_deleted: bool) -> BucketListDTO:
-        if include_deleted:
-            items = sorted(
-                bucket_list.items, key=lambda value: (value.display_order, value.created_at)
-            )
-        else:
-            items = bucket_list.active_items()
+    def from_domain(cls, bucket_list: BucketList) -> BucketListDTO:
+        items = bucket_list.active_items()
         return cls(
-            id=bucket_list.id,
+            bucket_list_id=bucket_list.id,
             account_id=bucket_list.account_id,
             created_at=bucket_list.created_at,
             updated_at=bucket_list.updated_at,
@@ -108,7 +105,7 @@ class DestinationSuggestionResultDTO:
 
 @dataclass(frozen=True)
 class PersonalCalendarEventItemDTO:
-    id: UUID
+    item_id: UUID
     event_type: str
     event_date: date
     holiday_types: list[str]
@@ -120,11 +117,12 @@ class PersonalCalendarEventItemDTO:
     event_name: str | None
     created_at: datetime
     updated_at: datetime
+    deleted_at: datetime | None
 
     @classmethod
     def from_domain(cls, item: PersonalCalendarEventItem) -> PersonalCalendarEventItemDTO:
         return cls(
-            id=item.id,
+            item_id=item.id,
             event_type=item.event_type.value,
             event_date=item.event_date,
             holiday_types=[value.value for value in item.holiday_types],
@@ -136,12 +134,13 @@ class PersonalCalendarEventItemDTO:
             event_name=item.event_name,
             created_at=item.created_at,
             updated_at=item.updated_at,
+            deleted_at=item.deleted_at,
         )
 
 
 @dataclass(frozen=True)
 class PersonalCalendarPeriodItemDTO:
-    id: UUID
+    item_id: UUID
     period_name: str
     period_start: date
     period_end: date
@@ -149,11 +148,12 @@ class PersonalCalendarPeriodItemDTO:
     holiday_types: list[str]
     created_at: datetime
     updated_at: datetime
+    deleted_at: datetime | None
 
     @classmethod
     def from_domain(cls, item: PersonalCalendarPeriodItem) -> PersonalCalendarPeriodItemDTO:
         return cls(
-            id=item.id,
+            item_id=item.id,
             period_name=item.period_name,
             period_start=item.period_start,
             period_end=item.period_end,
@@ -161,6 +161,7 @@ class PersonalCalendarPeriodItemDTO:
             holiday_types=[value.value for value in item.holiday_types],
             created_at=item.created_at,
             updated_at=item.updated_at,
+            deleted_at=item.deleted_at,
         )
 
 
@@ -171,6 +172,7 @@ class HolidayTypeListDTO:
 
 @dataclass(frozen=True)
 class PersonalCalendarConsolidatedItemDTO:
+    item_id: UUID
     item_type: str
     start_date: date
     end_date: date | None
@@ -184,8 +186,30 @@ class PersonalCalendarConsolidatedItemDTO:
 
 @dataclass(frozen=True)
 class PersonalCalendarConsolidatedViewDTO:
+    personal_calendar_id: UUID
     account_id: UUID
     items: list[PersonalCalendarConsolidatedItemDTO]
+
+
+class InitializeCustomerProfile:
+    def __init__(
+        self,
+        bucket_list_repository: BucketListRepository,
+        personal_calendar_repository: PersonalCalendarRepository,
+    ) -> None:
+        self._bucket_list_repository = bucket_list_repository
+        self._personal_calendar_repository = personal_calendar_repository
+
+    async def __call__(self, account_id: UUID) -> None:
+        bucket_list = await self._bucket_list_repository.get_by_account_id(account_id)
+        if bucket_list is None:
+            await self._bucket_list_repository.add(BucketList.create(account_id=account_id))
+
+        calendar = await self._personal_calendar_repository.get_by_account_id(account_id)
+        if calendar is None:
+            await self._personal_calendar_repository.add(
+                PersonalCalendar.create(account_id=account_id)
+            )
 
 
 class AddBucketListItem:
@@ -290,7 +314,7 @@ class GetBucketList:
         bucket_list = await self._repository.get_by_account_id(query.account_id)
         if bucket_list is None:
             bucket_list = BucketList.create(account_id=query.account_id)
-        return BucketListDTO.from_domain(bucket_list, include_deleted=query.include_deleted)
+        return BucketListDTO.from_domain(bucket_list)
 
 
 class SuggestDestinations:
@@ -400,9 +424,47 @@ class AddPersonalCalendarPeriod:
         return calendar
 
 
+class DeletePersonalCalendarEvent:
+    def __init__(self, repository: PersonalCalendarRepository) -> None:
+        self._repository = repository
+
+    async def __call__(
+        self, command: DeletePersonalCalendarEventCommand
+    ) -> PersonalCalendarEventItemDTO:
+        calendar = await self._must_get(command.account_id)
+        item = calendar.delete_event(item_id=command.item_id)
+        await self._repository.save(calendar)
+        return PersonalCalendarEventItemDTO.from_domain(item)
+
+    async def _must_get(self, account_id: UUID) -> PersonalCalendar:
+        calendar = await self._repository.get_by_account_id(account_id)
+        if calendar is None:
+            raise KeyError(str(account_id))
+        return calendar
+
+
+class DeletePersonalCalendarPeriod:
+    def __init__(self, repository: PersonalCalendarRepository) -> None:
+        self._repository = repository
+
+    async def __call__(
+        self, command: DeletePersonalCalendarPeriodCommand
+    ) -> PersonalCalendarPeriodItemDTO:
+        calendar = await self._must_get(command.account_id)
+        item = calendar.delete_period(item_id=command.item_id)
+        await self._repository.save(calendar)
+        return PersonalCalendarPeriodItemDTO.from_domain(item)
+
+    async def _must_get(self, account_id: UUID) -> PersonalCalendar:
+        calendar = await self._repository.get_by_account_id(account_id)
+        if calendar is None:
+            raise KeyError(str(account_id))
+        return calendar
+
+
 class GetPersonalCalendarHolidayTypes:
     async def __call__(self) -> HolidayTypeListDTO:
-        return HolidayTypeListDTO(holiday_types=list(HOLIDAY_TYPE_LIST))
+        return HolidayTypeListDTO(holiday_types=[item.value for item in PersonalCalendarEventTypeEnum])
 
 
 class GetPersonalCalendarConsolidatedView:
@@ -415,9 +477,10 @@ class GetPersonalCalendarConsolidatedView:
             calendar = PersonalCalendar.create(account_id=account_id)
 
         items: list[PersonalCalendarConsolidatedItemDTO] = []
-        for event in calendar.events:
+        for event in calendar.active_events():
             items.append(
                 PersonalCalendarConsolidatedItemDTO(
+                    item_id=event.id,
                     item_type="event",
                     start_date=event.event_date,
                     end_date=None,
@@ -436,9 +499,10 @@ class GetPersonalCalendarConsolidatedView:
                 )
             )
 
-        for period in calendar.periods:
+        for period in calendar.active_periods():
             items.append(
                 PersonalCalendarConsolidatedItemDTO(
+                    item_id=period.id,
                     item_type="period",
                     start_date=period.period_start,
                     end_date=period.period_end,
@@ -452,4 +516,8 @@ class GetPersonalCalendarConsolidatedView:
             )
 
         sorted_items = sorted(items, key=lambda value: (value.start_date, value.created_at))
-        return PersonalCalendarConsolidatedViewDTO(account_id=account_id, items=sorted_items)
+        return PersonalCalendarConsolidatedViewDTO(
+            personal_calendar_id=calendar.id,
+            account_id=account_id,
+            items=sorted_items,
+        )

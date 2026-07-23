@@ -5,10 +5,14 @@ import pytest
 from luxtj.contexts.customer.application.commands import (
     AddPersonalCalendarEventCommand,
     AddPersonalCalendarPeriodCommand,
+    DeletePersonalCalendarEventCommand,
+    DeletePersonalCalendarPeriodCommand,
 )
 from luxtj.contexts.customer.application.use_cases import (
     AddPersonalCalendarEvent,
     AddPersonalCalendarPeriod,
+    DeletePersonalCalendarEvent,
+    DeletePersonalCalendarPeriod,
     GetPersonalCalendarConsolidatedView,
     GetPersonalCalendarHolidayTypes,
 )
@@ -30,7 +34,7 @@ async def test_add_personal_calendar_event_loads_or_creates(
         AddPersonalCalendarEventCommand(
             account_id=customer_account_id,
             event_type=PersonalCalendarEventTypeEnum.BIRTHDAY,
-            birthday_for=BirthdayForEnum.MY_BIRTHDAY,
+            birthday_for=BirthdayForEnum.MYSELF,
             person_name="Me",
             event_date=date(2026, 1, 1),
             holiday_types=[HolidayTypeEnum.SIGNATURE_EXPERIENCES],
@@ -85,19 +89,21 @@ async def test_get_personal_calendar_consolidated_view_returns_events_and_period
 ) -> None:
     add_event = AddPersonalCalendarEvent(repository=personal_calendar_repository)
     add_period = AddPersonalCalendarPeriod(repository=personal_calendar_repository)
+    delete_event = DeletePersonalCalendarEvent(repository=personal_calendar_repository)
+    delete_period = DeletePersonalCalendarPeriod(repository=personal_calendar_repository)
     get_view = GetPersonalCalendarConsolidatedView(repository=personal_calendar_repository)
 
-    await add_event(
+    event = await add_event(
         AddPersonalCalendarEventCommand(
             account_id=customer_account_id,
             event_type=PersonalCalendarEventTypeEnum.BIRTHDAY,
-            birthday_for=BirthdayForEnum.MY_BIRTHDAY,
+            birthday_for=BirthdayForEnum.MYSELF,
             person_name="Me",
             event_date=date(2026, 1, 2),
             holiday_types=[HolidayTypeEnum.SIGNATURE_EXPERIENCES],
         )
     )
-    await add_period(
+    period = await add_period(
         AddPersonalCalendarPeriodCommand(
             account_id=customer_account_id,
             period_name="Spring Vacation",
@@ -112,3 +118,19 @@ async def test_get_personal_calendar_consolidated_view_returns_events_and_period
     assert response.account_id == customer_account_id
     assert len(response.items) == 2
     assert {item.item_type for item in response.items} == {"event", "period"}
+
+    deleted_event = await delete_event(
+        DeletePersonalCalendarEventCommand(account_id=customer_account_id, item_id=event.item_id)
+    )
+    assert deleted_event.deleted_at is not None
+
+    deleted_period = await delete_period(
+        DeletePersonalCalendarPeriodCommand(
+            account_id=customer_account_id,
+            item_id=period.item_id,
+        )
+    )
+    assert deleted_period.deleted_at is not None
+
+    empty_response = await get_view(customer_account_id)
+    assert empty_response.items == []

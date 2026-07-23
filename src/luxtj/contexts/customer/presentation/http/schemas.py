@@ -50,10 +50,6 @@ class UpdateBucketListItemBody(ApiSerializerBaseModel):
     notes: str | None = None
 
 
-class ViewBucketListBody(ApiSerializerBaseModel):
-    include_deleted: bool = False
-
-
 class DestinationSuggestionSerializer(ApiSerializerBaseModel):
     destination_kind: str
     destination_name: str
@@ -88,7 +84,7 @@ class DestinationSuggestionResultSerializer(ApiSerializerBaseModel):
 
 
 class BucketListItemSerializer(ApiSerializerBaseModel):
-    id: UUID
+    item_id: UUID
     destination_kind: str
     destination_name: str
     parent_country: str | None
@@ -102,7 +98,7 @@ class BucketListItemSerializer(ApiSerializerBaseModel):
     @classmethod
     def from_dto(cls, dto: BucketListItemDTO) -> BucketListItemSerializer:
         return cls(
-            id=dto.id,
+            item_id=dto.item_id,
             destination_kind=dto.destination_kind,
             destination_name=dto.destination_name,
             parent_country=dto.parent_country,
@@ -116,7 +112,7 @@ class BucketListItemSerializer(ApiSerializerBaseModel):
 
 
 class BucketListSerializer(ApiSerializerBaseModel):
-    id: UUID
+    bucket_list_id: UUID
     account_id: UUID
     created_at: datetime
     updated_at: datetime
@@ -125,7 +121,7 @@ class BucketListSerializer(ApiSerializerBaseModel):
     @classmethod
     def from_dto(cls, dto: BucketListDTO) -> BucketListSerializer:
         return cls(
-            id=dto.id,
+            bucket_list_id=dto.bucket_list_id,
             account_id=dto.account_id,
             created_at=dto.created_at,
             updated_at=dto.updated_at,
@@ -154,7 +150,7 @@ class AddPersonalCalendarPeriodBody(ApiSerializerBaseModel):
 
 
 class PersonalCalendarEventItemSerializer(ApiSerializerBaseModel):
-    id: UUID
+    item_id: UUID
     event_type: str
     event_date: date
     holiday_types: list[str]
@@ -166,11 +162,12 @@ class PersonalCalendarEventItemSerializer(ApiSerializerBaseModel):
     event_name: str | None
     created_at: datetime
     updated_at: datetime
+    deleted_at: datetime | None
 
     @classmethod
     def from_dto(cls, dto: PersonalCalendarEventItemDTO) -> PersonalCalendarEventItemSerializer:
         return cls(
-            id=dto.id,
+            item_id=dto.item_id,
             event_type=dto.event_type,
             event_date=dto.event_date,
             holiday_types=dto.holiday_types,
@@ -182,11 +179,12 @@ class PersonalCalendarEventItemSerializer(ApiSerializerBaseModel):
             event_name=dto.event_name,
             created_at=dto.created_at,
             updated_at=dto.updated_at,
+            deleted_at=dto.deleted_at,
         )
 
 
 class PersonalCalendarPeriodItemSerializer(ApiSerializerBaseModel):
-    id: UUID
+    item_id: UUID
     period_name: str
     period_start: date
     period_end: date
@@ -194,11 +192,12 @@ class PersonalCalendarPeriodItemSerializer(ApiSerializerBaseModel):
     holiday_types: list[str]
     created_at: datetime
     updated_at: datetime
+    deleted_at: datetime | None
 
     @classmethod
     def from_dto(cls, dto: PersonalCalendarPeriodItemDTO) -> PersonalCalendarPeriodItemSerializer:
         return cls(
-            id=dto.id,
+            item_id=dto.item_id,
             period_name=dto.period_name,
             period_start=dto.period_start,
             period_end=dto.period_end,
@@ -206,6 +205,7 @@ class PersonalCalendarPeriodItemSerializer(ApiSerializerBaseModel):
             holiday_types=dto.holiday_types,
             created_at=dto.created_at,
             updated_at=dto.updated_at,
+            deleted_at=dto.deleted_at,
         )
 
 
@@ -218,6 +218,7 @@ class HolidayTypeListSerializer(ApiSerializerBaseModel):
 
 
 class PersonalCalendarConsolidatedItemSerializer(ApiSerializerBaseModel):
+    item_id: UUID
     item_type: str
     start_date: date
     end_date: date | None
@@ -233,6 +234,7 @@ class PersonalCalendarConsolidatedItemSerializer(ApiSerializerBaseModel):
         cls, dto: PersonalCalendarConsolidatedItemDTO
     ) -> PersonalCalendarConsolidatedItemSerializer:
         return cls(
+            item_id=dto.item_id,
             item_type=dto.item_type,
             start_date=dto.start_date,
             end_date=dto.end_date,
@@ -246,6 +248,7 @@ class PersonalCalendarConsolidatedItemSerializer(ApiSerializerBaseModel):
 
 
 class PersonalCalendarConsolidatedViewSerializer(ApiSerializerBaseModel):
+    personal_calendar_id: UUID
     account_id: UUID
     items: list[PersonalCalendarConsolidatedItemSerializer]
 
@@ -254,6 +257,7 @@ class PersonalCalendarConsolidatedViewSerializer(ApiSerializerBaseModel):
         cls, dto: PersonalCalendarConsolidatedViewDTO
     ) -> PersonalCalendarConsolidatedViewSerializer:
         return cls(
+            personal_calendar_id=dto.personal_calendar_id,
             account_id=dto.account_id,
             items=[PersonalCalendarConsolidatedItemSerializer.from_dto(item) for item in dto.items],
         )

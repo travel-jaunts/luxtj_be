@@ -12,9 +12,12 @@ from luxtj.contexts.customer.application.ports import (
 )
 from luxtj.contexts.customer.application.use_cases import (
     AddBucketListItem,
+    InitializeCustomerProfile,
     AddPersonalCalendarEvent,
     AddPersonalCalendarPeriod,
     DeleteBucketListItem,
+    DeletePersonalCalendarEvent,
+    DeletePersonalCalendarPeriod,
     GetBucketList,
     GetPersonalCalendarConsolidatedView,
     GetPersonalCalendarHolidayTypes,
@@ -71,6 +74,22 @@ def build_add_bucket_list_item(
     return AddBucketListItem(repository=repository, event_publisher=event_publisher)
 
 
+def build_initialize_customer_profile(
+    bucket_list_repository: Annotated[
+        BucketListRepository,
+        Depends(build_bucket_list_repository),
+    ],
+    personal_calendar_repository: Annotated[
+        PersonalCalendarRepository,
+        Depends(build_personal_calendar_repository),
+    ],
+) -> InitializeCustomerProfile:
+    return InitializeCustomerProfile(
+        bucket_list_repository=bucket_list_repository,
+        personal_calendar_repository=personal_calendar_repository,
+    )
+
+
 def build_update_bucket_list_item(
     repository: Annotated[BucketListRepository, Depends(build_bucket_list_repository)],
     event_publisher: Annotated[DomainEventPublisher, Depends(build_outbox_event_publisher)],
@@ -111,6 +130,18 @@ def build_add_personal_calendar_period(
     repository: Annotated[PersonalCalendarRepository, Depends(build_personal_calendar_repository)],
 ) -> AddPersonalCalendarPeriod:
     return AddPersonalCalendarPeriod(repository=repository)
+
+
+def build_delete_personal_calendar_event(
+    repository: Annotated[PersonalCalendarRepository, Depends(build_personal_calendar_repository)],
+) -> DeletePersonalCalendarEvent:
+    return DeletePersonalCalendarEvent(repository=repository)
+
+
+def build_delete_personal_calendar_period(
+    repository: Annotated[PersonalCalendarRepository, Depends(build_personal_calendar_repository)],
+) -> DeletePersonalCalendarPeriod:
+    return DeletePersonalCalendarPeriod(repository=repository)
 
 
 def build_get_personal_calendar_holiday_types() -> GetPersonalCalendarHolidayTypes:

@@ -8,6 +8,8 @@ from luxtj.contexts.customer.application.commands import (
     AddPersonalCalendarEventCommand,
     AddPersonalCalendarPeriodCommand,
     DeleteBucketListItemCommand,
+    DeletePersonalCalendarEventCommand,
+    DeletePersonalCalendarPeriodCommand,
     SuggestDestinationsCommand,
     UpdateBucketListItemCommand,
 )
@@ -17,6 +19,8 @@ from luxtj.contexts.customer.application.use_cases import (
     AddPersonalCalendarEvent,
     AddPersonalCalendarPeriod,
     DeleteBucketListItem,
+    DeletePersonalCalendarEvent,
+    DeletePersonalCalendarPeriod,
     GetBucketList,
     GetPersonalCalendarConsolidatedView,
     GetPersonalCalendarHolidayTypes,
@@ -28,6 +32,8 @@ from luxtj.contexts.customer.bootstrap import (
     build_add_personal_calendar_event,
     build_add_personal_calendar_period,
     build_delete_bucket_list_item,
+    build_delete_personal_calendar_event,
+    build_delete_personal_calendar_period,
     build_get_bucket_list,
     build_get_personal_calendar_consolidated_view,
     build_get_personal_calendar_holiday_types,
@@ -51,7 +57,6 @@ from luxtj.contexts.customer.presentation.http.schemas import (
     PersonalCalendarPeriodItemSerializer,
     SuggestDestinationsBody,
     UpdateBucketListItemBody,
-    ViewBucketListBody,
 )
 from luxtj.shared_kernel.presentation.http.schemas import (
     ApiErrorResponse,
@@ -187,11 +192,8 @@ async def delete_bucket_list_item(
 async def view_bucket_list(
     account_id: UUID,
     use_case: Annotated[GetBucketList, Depends(build_get_bucket_list)],
-    body: Annotated[ViewBucketListBody, Body(...)],
 ) -> ApiSuccessResponse[BucketListSerializer]:
-    bucket_list = await use_case(
-        GetBucketListQuery(account_id=account_id, include_deleted=body.include_deleted)
-    )
+    bucket_list = await use_case(GetBucketListQuery(account_id=account_id))
     return ApiSuccessResponse(
         status=RequestProcessStatus.OK,
         output=BucketListSerializer.from_dto(bucket_list),
@@ -254,6 +256,64 @@ async def add_personal_calendar_period(
             )
         )
     except CustomerPersonalCalendarError as exc:
+        return ApiErrorResponse(error_message=str(exc))
+
+    return ApiSuccessResponse(
+        status=RequestProcessStatus.OK,
+        output=PersonalCalendarPeriodItemSerializer.from_dto(item),
+    )
+
+
+@customer_personal_calendar_router.post(
+    "/{account_id}/events/{item_id}/delete",
+    response_model=ApiSuccessResponse[PersonalCalendarEventItemSerializer] | ApiErrorResponse,
+    status_code=200,
+)
+async def delete_personal_calendar_event(
+    account_id: UUID,
+    item_id: UUID,
+    use_case: Annotated[
+        DeletePersonalCalendarEvent,
+        Depends(build_delete_personal_calendar_event),
+    ],
+) -> ApiSuccessResponse[PersonalCalendarEventItemSerializer] | ApiErrorResponse:
+    try:
+        item = await use_case(
+            DeletePersonalCalendarEventCommand(
+                account_id=account_id,
+                item_id=item_id,
+            )
+        )
+    except (CustomerPersonalCalendarError, KeyError) as exc:
+        return ApiErrorResponse(error_message=str(exc))
+
+    return ApiSuccessResponse(
+        status=RequestProcessStatus.OK,
+        output=PersonalCalendarEventItemSerializer.from_dto(item),
+    )
+
+
+@customer_personal_calendar_router.post(
+    "/{account_id}/periods/{item_id}/delete",
+    response_model=ApiSuccessResponse[PersonalCalendarPeriodItemSerializer] | ApiErrorResponse,
+    status_code=200,
+)
+async def delete_personal_calendar_period(
+    account_id: UUID,
+    item_id: UUID,
+    use_case: Annotated[
+        DeletePersonalCalendarPeriod,
+        Depends(build_delete_personal_calendar_period),
+    ],
+) -> ApiSuccessResponse[PersonalCalendarPeriodItemSerializer] | ApiErrorResponse:
+    try:
+        item = await use_case(
+            DeletePersonalCalendarPeriodCommand(
+                account_id=account_id,
+                item_id=item_id,
+            )
+        )
+    except (CustomerPersonalCalendarError, KeyError) as exc:
         return ApiErrorResponse(error_message=str(exc))
 
     return ApiSuccessResponse(

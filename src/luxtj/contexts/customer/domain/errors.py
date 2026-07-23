@@ -28,3 +28,11 @@ class InvalidHolidayTypesError(CustomerPersonalCalendarError):
 
 class InvalidPeriodDateRangeError(CustomerPersonalCalendarError):
     pass
+
+
+class PersonalCalendarEventItemNotFoundError(CustomerPersonalCalendarError):
+    pass
+
+
+class PersonalCalendarPeriodItemNotFoundError(CustomerPersonalCalendarError):
+    pass

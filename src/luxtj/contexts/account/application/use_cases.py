@@ -5,6 +5,7 @@ from luxtj.contexts.account.application.commands import RequestOtpCommand, Verif
 from luxtj.contexts.account.application.ports import (
     AccountRepository,
     Clock,
+    CustomerProfileInitializer,
     OtpChallengeRepository,
     SmsOtpSender,
     TokenIssuer,
@@ -123,12 +124,14 @@ class VerifyOtp:
         self,
         *,
         account_repository: AccountRepository,
+        customer_profile_initializer: CustomerProfileInitializer,
         challenge_repository: OtpChallengeRepository,
         token_issuer: TokenIssuer,
         clock: Clock,
         otp_security: OtpSecurityService,
     ) -> None:
         self._account_repository = account_repository
+        self._customer_profile_initializer = customer_profile_initializer
         self._challenge_repository = challenge_repository
         self._token_issuer = token_issuer
         self._clock = clock
@@ -167,6 +170,7 @@ class VerifyOtp:
                 email=command.email,
             )
             await self._account_repository.add(account)
+            await self._customer_profile_initializer(account.id)
         elif account.backfill_email_if_empty(command.email, now=now):
             await self._account_repository.save(account)
 

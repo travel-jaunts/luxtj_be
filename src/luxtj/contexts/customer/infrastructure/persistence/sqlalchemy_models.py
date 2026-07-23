@@ -208,6 +208,7 @@ class CustomerPersonalCalendarEventRow(CustomerBase):
     holiday_types: Mapped[str] = mapped_column(Text, nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    deleted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
     @classmethod
     def from_domain(
@@ -230,6 +231,7 @@ class CustomerPersonalCalendarEventRow(CustomerBase):
             holiday_types=json.dumps([value.value for value in item.holiday_types]),
             created_at=item.created_at,
             updated_at=item.updated_at,
+            deleted_at=item.deleted_at,
         )
 
     def update_from_domain(self, item: PersonalCalendarEventItem) -> None:
@@ -243,6 +245,7 @@ class CustomerPersonalCalendarEventRow(CustomerBase):
         self.event_date = item.event_date
         self.holiday_types = json.dumps([value.value for value in item.holiday_types])
         self.updated_at = item.updated_at
+        self.deleted_at = item.deleted_at
 
     def to_domain(self) -> PersonalCalendarEventItem:
         holiday_types = [HolidayTypeEnum(value) for value in json.loads(self.holiday_types)]
@@ -261,6 +264,7 @@ class CustomerPersonalCalendarEventRow(CustomerBase):
             event_name=self.event_name,
             created_at=self.created_at,
             updated_at=self.updated_at,
+            deleted_at=self.deleted_at,
         )
 
 
@@ -287,6 +291,7 @@ class CustomerPersonalCalendarPeriodRow(CustomerBase):
     holiday_types: Mapped[str] = mapped_column(Text, nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    deleted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
     @classmethod
     def from_domain(
@@ -305,6 +310,7 @@ class CustomerPersonalCalendarPeriodRow(CustomerBase):
             holiday_types=json.dumps([value.value for value in item.holiday_types]),
             created_at=item.created_at,
             updated_at=item.updated_at,
+            deleted_at=item.deleted_at,
         )
 
     def update_from_domain(self, item: PersonalCalendarPeriodItem) -> None:
@@ -314,6 +320,7 @@ class CustomerPersonalCalendarPeriodRow(CustomerBase):
         self.is_date_flexible = item.is_date_flexible
         self.holiday_types = json.dumps([value.value for value in item.holiday_types])
         self.updated_at = item.updated_at
+        self.deleted_at = item.deleted_at
 
     def to_domain(self) -> PersonalCalendarPeriodItem:
         holiday_types = [HolidayTypeEnum(value) for value in json.loads(self.holiday_types)]
@@ -326,4 +333,5 @@ class CustomerPersonalCalendarPeriodRow(CustomerBase):
             holiday_types=holiday_types,
             created_at=self.created_at,
             updated_at=self.updated_at,
+            deleted_at=self.deleted_at,
         )

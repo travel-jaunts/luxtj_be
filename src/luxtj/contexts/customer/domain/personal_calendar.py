@@ -11,6 +11,8 @@ from luxtj.contexts.customer.domain.enums import (
 from luxtj.contexts.customer.domain.errors import (
     InvalidPeriodDateRangeError,
     InvalidPersonalCalendarEventError,
+    PersonalCalendarEventItemNotFoundError,
+    PersonalCalendarPeriodItemNotFoundError,
 )
 from luxtj.contexts.customer.domain.holiday_types import normalize_holiday_types
 from luxtj.utils import timeutils
@@ -37,6 +39,11 @@ class PersonalCalendarEventItem:
     event_name: str | None
     created_at: datetime
     updated_at: datetime
+    deleted_at: datetime | None = None
+
+    @property
+    def is_active(self) -> bool:
+        return self.deleted_at is None
 
 
 @dataclass
@@ -49,6 +56,11 @@ class PersonalCalendarPeriodItem:
     holiday_types: list[HolidayTypeEnum]
     created_at: datetime
     updated_at: datetime
+    deleted_at: datetime | None = None
+
+    @property
+    def is_active(self) -> bool:
+        return self.deleted_at is None
 
 
 @dataclass
@@ -69,6 +81,12 @@ class PersonalCalendar:
             created_at=now,
             updated_at=now,
         )
+
+    def active_events(self) -> list[PersonalCalendarEventItem]:
+        return [item for item in self.events if item.is_active]
+
+    def active_periods(self) -> list[PersonalCalendarPeriodItem]:
+        return [item for item in self.periods if item.is_active]
 
     def add_birthday_event(
         self,
@@ -176,3 +194,35 @@ class PersonalCalendar:
         self.periods.append(item)
         self.updated_at = now
         return item
+
+    def delete_event(self, *, item_id: UUID) -> PersonalCalendarEventItem:
+        item = self._find_active_event(item_id)
+        now = timeutils.datetime_now()
+        item.deleted_at = now
+        item.updated_at = now
+        self.updated_at = now
+        return item
+
+    def delete_period(self, *, item_id: UUID) -> PersonalCalendarPeriodItem:
+        item = self._find_active_period(item_id)
+        now = timeutils.datetime_now()
+        item.deleted_at = now
+        item.updated_at = now
+        self.updated_at = now
+        return item
+
+    def _find_active_event(self, item_id: UUID) -> PersonalCalendarEventItem:
+        for item in self.events:
+            if item.id == item_id and item.is_active:
+                return item
+        raise PersonalCalendarEventItemNotFoundError(
+            f"Personal calendar event item {item_id} not found"
+        )
+
+    def _find_active_period(self, item_id: UUID) -> PersonalCalendarPeriodItem:
+        for item in self.periods:
+            if item.id == item_id and item.is_active:
+                return item
+        raise PersonalCalendarPeriodItemNotFoundError(
+            f"Personal calendar period item {item_id} not found"
+        )
