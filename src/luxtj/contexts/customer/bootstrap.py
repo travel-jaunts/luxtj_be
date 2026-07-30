@@ -12,7 +12,6 @@ from luxtj.contexts.customer.application.ports import (
 )
 from luxtj.contexts.customer.application.use_cases import (
     AddBucketListItem,
-    InitializeCustomerProfile,
     AddPersonalCalendarEvent,
     AddPersonalCalendarPeriod,
     DeleteBucketListItem,
@@ -21,6 +20,7 @@ from luxtj.contexts.customer.application.use_cases import (
     GetBucketList,
     GetPersonalCalendarConsolidatedView,
     GetPersonalCalendarHolidayTypes,
+    InitializeCustomerProfile,
     SuggestDestinations,
     UpdateBucketListItem,
 )

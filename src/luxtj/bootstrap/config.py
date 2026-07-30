@@ -23,6 +23,10 @@ AUTH_OTP_MAX_ATTEMPTS: int = int(os.getenv("LTJBE_AUTH_OTP_MAX_ATTEMPTS", "5"))
 TWILIO_ACCOUNT_SID: str | None = os.getenv("LTJBE_TWILIO_ACCOUNT_SID")
 TWILIO_AUTH_TOKEN: str | None = os.getenv("LTJBE_TWILIO_AUTH_TOKEN")
 TWILIO_FROM_PHONE: str | None = os.getenv("LTJBE_TWILIO_FROM_PHONE")
+
+TELEGRAM_BOT_TOKEN: str | None = os.getenv("LTJBE_TELEGRAM_BOT_TOKEN")
+TELEGRAM_CHAT_ID: str | None = os.getenv("LTJBE_TELEGRAM_CHAT_ID")
+
 ENABLE_OUTBOX_PROJECTOR: bool = (
     os.getenv("LTJBE_ENABLE_OUTBOX_PROJECTOR", "false").lower() == "true"
 )

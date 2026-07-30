@@ -464,7 +464,9 @@ class DeletePersonalCalendarPeriod:
 
 class GetPersonalCalendarHolidayTypes:
     async def __call__(self) -> HolidayTypeListDTO:
-        return HolidayTypeListDTO(holiday_types=[item.value for item in PersonalCalendarEventTypeEnum])
+        return HolidayTypeListDTO(
+            holiday_types=[item.value for item in PersonalCalendarEventTypeEnum]
+        )
 
 
 class GetPersonalCalendarConsolidatedView:

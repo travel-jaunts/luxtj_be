@@ -2,6 +2,7 @@ from datetime import datetime
 from typing import Annotated
 
 from fastapi import Depends
+from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 from twilio.http.async_http_client import AsyncTwilioHttpClient
 from twilio.rest import Client
@@ -27,10 +28,14 @@ from luxtj.contexts.account.infrastructure.persistence.sqlalchemy_repository imp
     SqlAlchemyOtpChallengeRepository,
 )
 from luxtj.contexts.account.infrastructure.sms.null_sender import NullSmsOtpSender
+from luxtj.contexts.account.infrastructure.sms.test_sender import (
+    TelegramSmsOtpSender,
+)
 from luxtj.contexts.account.infrastructure.sms.twilio_sender import TwilioSmsOtpSender
 from luxtj.contexts.customer.bootstrap import build_initialize_customer_profile
 from luxtj.shared_kernel.presentation.http.dependencies import (
     database_session_handle,
+    http_client_handle,
     twilio_client_handle,
 )
 from luxtj.utils import timeutils
@@ -63,16 +68,25 @@ def build_otp_security() -> OtpSecurityService:
 
 def build_sms_sender(
     twilio_client: Annotated[AsyncTwilioHttpClient, Depends(twilio_client_handle)],
+    http_client: Annotated[AsyncClient, Depends(http_client_handle)],
 ) -> SmsOtpSender:
-    if config.TWILIO_ACCOUNT_SID and config.TWILIO_AUTH_TOKEN and config.TWILIO_FROM_PHONE:
-        return TwilioSmsOtpSender(
-            client=Client(
-                config.TWILIO_ACCOUNT_SID,
-                config.TWILIO_AUTH_TOKEN,
-                http_client=twilio_client,
-            ),
-            from_phone=config.TWILIO_FROM_PHONE,
-        )
+    if config.ENVIRONMENT == "production":
+        if config.TWILIO_ACCOUNT_SID and config.TWILIO_AUTH_TOKEN and config.TWILIO_FROM_PHONE:
+            return TwilioSmsOtpSender(
+                client=Client(
+                    config.TWILIO_ACCOUNT_SID,
+                    config.TWILIO_AUTH_TOKEN,
+                    http_client=twilio_client,
+                ),
+                from_phone=config.TWILIO_FROM_PHONE,
+            )
+    else:
+        if config.TELEGRAM_BOT_TOKEN and config.TELEGRAM_CHAT_ID:
+            return TelegramSmsOtpSender(
+                http_client=http_client,
+                bot_token=config.TELEGRAM_BOT_TOKEN,
+                chat_id=config.TELEGRAM_CHAT_ID,
+            )
     return NullSmsOtpSender()
 
 

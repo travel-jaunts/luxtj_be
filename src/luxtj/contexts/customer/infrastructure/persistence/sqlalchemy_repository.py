@@ -117,7 +117,9 @@ class SqlAlchemyPersonalCalendarRepository:
                 await self._upsert_event_row(calendar_id=calendar.id, item=item)
             for item in calendar.periods:
                 self._session.add(
-                    CustomerPersonalCalendarPeriodRow.from_domain(calendar_id=calendar.id, item=item)
+                    CustomerPersonalCalendarPeriodRow.from_domain(
+                        calendar_id=calendar.id, item=item
+                    )
                 )
             return
 
@@ -174,7 +176,9 @@ class SqlAlchemyPersonalCalendarRepository:
             else:
                 found.update_from_domain(item)
 
-    async def _upsert_event_row(self, *, calendar_id: UUID, item: PersonalCalendarEventItem) -> None:
+    async def _upsert_event_row(
+        self, *, calendar_id: UUID, item: PersonalCalendarEventItem
+    ) -> None:
         found = await self._session.scalar(
             select(CustomerPersonalCalendarEventRow).where(
                 CustomerPersonalCalendarEventRow.id == str(item.id)
