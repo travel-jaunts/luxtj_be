@@ -10,7 +10,13 @@ from luxtj.shared_kernel.presentation.http.schemas import (
     SearchFilterParams,
 )
 
-audit_logs_router = APIRouter()
+from luxtj.contexts.identity.presentation.http.dependencies import require_permission
+
+audit_logs_router = APIRouter(
+    prefix="/audit-logs",
+    tags=["admin_audit_logs"],
+    dependencies=[Depends(require_permission("audit_logs.view"))],
+)
 
 
 @audit_logs_router.post(
@@ -27,7 +33,6 @@ async def list_audit_logs(
     """
     List audit logs for a given date range.
     """
-    # TODO: access control: restrict this endpoint to admin users only
     if (
         search_filter_query.from_date is not None
         and search_filter_query.to_date is not None

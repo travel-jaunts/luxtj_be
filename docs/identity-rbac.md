@@ -1,68 +1,49 @@
 # Identity & RBAC
 
-Direct authentication/authorization for LuxTJ (Keycloak removed).
+Direct authentication/authorization for LuxTJ admin.
 
-## User types
+## Seeded superadmin (local)
 
-| Type | Auth APIs | RBAC |
-|------|-----------|------|
-| `superadmin` | admin login + me | All permissions (bypass) |
-| `admin` | admin login + me | Permissions via assigned role |
-| `partner` | register / login / forgot / reset / me | No roles |
-| `b2c` | register / login / forgot / reset / me | No roles |
+| Email | Password |
+|-------|----------|
+| `superadmin@luxtj.local` | `SuperAdmin@123` |
 
-Permissions are assigned **only to roles**. Roles are assigned **only to admin users**.
+## Permission catalog (menu / route aligned)
 
-## Token usage
+Source of truth: `luxtj.contexts.identity.application.permissions_catalog`  
+Frontend mirror: `luxtj_admin_app/src/lib/permissions.ts`
 
-1. Login → receive `accessToken` + `refreshToken`
-2. Call protected APIs with header: `Authorization: Bearer <accessToken>`
-3. JWT claims include `user_type`, `role_id`, and `permissions`
+| Area | Codes |
+|------|-------|
+| Core | `dashboard.view`, `action_centre.view` |
+| Access | `roles.*`, `admin_users.*` |
+| Bookings | `bookings.modifications.view`, `bookings.cancellations.view` |
+| Inventory | `inventory.villas.view`, `inventory.activities.view` |
+| Customers | `customers.view`, `customers.bookings.view`, `customers.payments.view`, `customers.pricing.view`, `customers.support.view` |
+| Partners | `partners.property/activity/b2b/affiliates.view`, `partners.approvals(.kyc\|.content).view`, `partners.pricing.view`, `partners.payments.view` |
+| Pricing | `pricing.base/promotions/commissions/coupons.view` |
+| Payments hub | `payments.customer/refunds/payouts/commissions.view` |
+| Marketing | `marketing.view`, `marketing.campaigns/promos/leads.view` |
+| CMS | `cms.pages/blogs/seo.view` |
+| Reports | `reports.sales/finance/customer/operations/booking/partner/marketing.view` |
+| Approvals hub | `approvals.content/discounts/refunds.view` |
+| Support | `support.tickets/complaints.view` |
+| Audit | `audit_logs.view` |
 
-## Public auth (`/v1/auth`)
+## Binding
 
-| Method | Path | Notes |
-|--------|------|-------|
-| POST | `/v1/auth/register/partner` | Partner signup |
-| POST | `/v1/auth/register/b2c` | B2C signup |
-| POST | `/v1/auth/login` | Any user type |
-| POST | `/v1/auth/forgot-password` | Issues reset token (returned in `development`) |
-| POST | `/v1/auth/reset-password` | Body: token + newPassword |
-| POST | `/v1/auth/me` | Requires Bearer token |
+- **Frontend**: `ROUTE_PERMISSIONS` + `AuthGuard` + sidebar filter by permission; superadmin bypasses.
+- **Backend**: router-level `Depends(require_permission(...))` / `require_any_permission(...)` on admin mounts (customers, partners, reports, marketing, action-centre, audit-logs). Identity role/admin-user routes already use fine-grained codes.
+- New codes are upserted on API startup via `seed_permissions`.
 
-## Admin identity (`/v1/admin`)
+## Admin UI modules
 
-| Method | Path | Permission |
-|--------|------|------------|
-| POST | `/v1/admin/auth/login` | superadmin/admin only |
-| POST | `/v1/admin/auth/me` | admin portal |
-| POST | `/v1/admin/permissions/list` | admin portal |
-| POST | `/v1/admin/roles/list` | `roles.list` |
-| POST | `/v1/admin/roles/{id}/view` | `roles.view` |
-| POST | `/v1/admin/roles/create` | `roles.create` |
-| POST | `/v1/admin/roles/{id}/edit` | `roles.edit` |
-| POST | `/v1/admin/admin-users/list` | `admin_users.list` |
-| POST | `/v1/admin/admin-users/{id}/view` | `admin_users.view` |
-| POST | `/v1/admin/admin-users/create` | `admin_users.create` |
-| POST | `/v1/admin/admin-users/{id}/edit` | `admin_users.edit` |
+- **Login** → `POST /v1/admin/auth/login` then `POST /v1/admin/auth/me`
+- **Roles** → `/settings/roles` (permission picker)
+- **Admin users** → `/settings/admin-users` (assign role)
 
-## Middleware
+## Token header
 
-- `get_current_principal` — validates Bearer JWT
-- `require_user_types(...)` — user-type gate
-- `require_permission("code")` — permission gate (superadmin bypasses)
-
-## Seeded superadmin
-
-Configured via env and created on startup if missing:
-
-```env
-LTJBE_SUPERADMIN_EMAIL=superadmin@luxtj.local
-LTJBE_SUPERADMIN_PASSWORD=SuperAdmin@123
-LTJBE_SUPERADMIN_FULL_NAME=Super Admin
+```http
+Authorization: Bearer <accessToken>
 ```
-
-## Permission catalog
-
-Fixed list in `luxtj.contexts.identity.application.permissions_catalog`.
-Add new codes there when new admin routes need RBAC, then seed on next startup.

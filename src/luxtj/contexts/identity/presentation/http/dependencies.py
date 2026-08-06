@@ -113,3 +113,21 @@ def require_permission(permission_code: str):
 
 
 RequireAdminPortal = require_user_types(UserTypeEnum.SUPERADMIN, UserTypeEnum.ADMIN)
+
+
+def require_any_permission(*permission_codes: str):
+    codes = tuple(permission_codes)
+
+    async def _dependency(
+        principal: AuthenticatedPrincipal = Depends(
+            require_user_types(UserTypeEnum.SUPERADMIN, UserTypeEnum.ADMIN)
+        ),
+    ) -> AuthenticatedPrincipal:
+        if any(principal.has_permission(code) for code in codes):
+            return principal
+        raise HTTPException(
+            status_code=403,
+            detail=f"Missing one of permissions: {', '.join(codes)}",
+        )
+
+    return _dependency
