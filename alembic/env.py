@@ -19,6 +19,7 @@ from luxtj.contexts.action_centre.infrastructure.persistence.sqlalchemy_models i
     ActionCentreBase,
 )
 from luxtj.contexts.customer.infrastructure.persistence.sqlalchemy_models import CustomerBase
+from luxtj.contexts.identity.infrastructure.persistence.sqlalchemy_models import IdentityBase
 from luxtj.contexts.marketing.infrastructure.persistence.sqlalchemy_models import (
     MarketingBase,
 )
@@ -37,6 +38,7 @@ target_metadata = [
     AcquisitionBase.metadata,
     ActionCentreBase.metadata,
     CustomerBase.metadata,
+    IdentityBase.metadata,
 ]
 
 

@@ -29,6 +29,12 @@ from luxtj.contexts.customer.presentation.http.router import (
     customer_bucket_list_router,
     customer_personal_calendar_router,
 )
+from luxtj.contexts.identity.bootstrap import build_identity_bootstrap_service
+from luxtj.contexts.identity.infrastructure.persistence.sqlalchemy_models import IdentityBase
+from luxtj.contexts.identity.presentation.http.router import (
+    admin_identity_router,
+    public_auth_router,
+)
 from luxtj.contexts.marketing.infrastructure.persistence.sqlalchemy_models import MarketingBase
 from luxtj.contexts.marketing.presentation.http.router import marketing_router
 from luxtj.shared_kernel.infrastructure.events.in_process import (
@@ -41,6 +47,7 @@ from luxtj.shared_kernel.infrastructure.persistence.sqlalchemy import (
     build_async_engine,
     build_async_session_factory,
     dispose_async_engine,
+    session_scope,
 )
 from luxtj.shared_kernel.presentation.http.dependencies import fastapi_app_handle
 from luxtj.shared_kernel.presentation.http.middleware import (
@@ -54,7 +61,6 @@ logger = get_logger_handle(__name__)
 
 
 def get_registered_metadata() -> tuple[MetaData, ...]:
-    # Register context metadata here so startup table creation can cover all contexts.
     return (
         SharedKernelBase.metadata,
         AccountAuthBase.metadata,
@@ -62,6 +68,7 @@ def get_registered_metadata() -> tuple[MetaData, ...]:
         ActionCentreBase.metadata,
         AcquisitionBase.metadata,
         CustomerBase.metadata,
+        IdentityBase.metadata,
     )
 
 
@@ -73,6 +80,17 @@ def _create_all_tables(connection: Connection) -> None:
 async def create_required_tables(database_engine: AsyncEngine) -> None:
     async with database_engine.begin() as connection:
         await connection.run_sync(_create_all_tables)
+
+
+async def seed_identity(session_factory) -> None:
+    async with session_scope(session_factory) as session:
+        bootstrap = build_identity_bootstrap_service(session)
+        await bootstrap.seed_permissions()
+        await bootstrap.ensure_superadmin(
+            email=config.SUPERADMIN_EMAIL,
+            password=config.SUPERADMIN_PASSWORD,
+            full_name=config.SUPERADMIN_FULL_NAME,
+        )
 
 
 @asynccontextmanager
@@ -99,6 +117,7 @@ async def init_app_state(fastapi_app: FastAPI):
             await create_required_tables(database_engine)
         session_factory = build_async_session_factory(database_engine)
         fastapi_app.state.database_session_factory = session_factory
+        await seed_identity(session_factory)
 
         async with AsyncClient() as client, AsyncTwilioHttpClient() as async_http_client:
             fastapi_app.state.http_client = client
@@ -145,6 +164,7 @@ def server_factory() -> FastAPI:
     )
 
     admin_router = APIRouter(prefix="/v1/admin")
+    admin_router.include_router(admin_identity_router)
     admin_router.include_router(customer_router)
     admin_router.include_router(partner_router)
     admin_router.include_router(reports_router)
@@ -152,14 +172,13 @@ def server_factory() -> FastAPI:
     admin_router.include_router(action_centre_router)
     admin_router.include_router(admin_audit_logs_router)
     api_application.include_router(admin_router)
-    # CAUTION: in case admin apis need to be removed, comment above lines
 
     public_router = APIRouter(prefix="/v1")
+    public_router.include_router(public_auth_router)
     public_router.include_router(waitlist_router)
     public_router.include_router(account_auth_router)
     public_router.include_router(customer_bucket_list_router)
     public_router.include_router(customer_personal_calendar_router)
-    # public_router.include_router(idam_router)
     api_application.include_router(public_router)
 
     @api_application.post("/ping", tags=["ops"])
@@ -175,7 +194,7 @@ def server_factory() -> FastAPI:
         )
 
     api_application.add_middleware(EndpointExceptionHandler)
-    api_application.add_middleware(EnforcePostMethodOnly)  # outermost
+    api_application.add_middleware(EnforcePostMethodOnly)
 
     if config.ENVIRONMENT == "development":
         api_application.add_middleware(
@@ -187,6 +206,3 @@ def server_factory() -> FastAPI:
         )
 
     return api_application
-
-
-# uv run --env-file .dev.env uvicorn luxtj.bootstrap.api:server_factory --factory
