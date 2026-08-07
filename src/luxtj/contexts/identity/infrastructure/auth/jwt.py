@@ -1,7 +1,7 @@
 from datetime import UTC, datetime, timedelta
 from uuid import UUID
 
-from jose import jwt
+from jose import JWTError, jwt
 
 from luxtj.contexts.identity.application.ports import IdentityTokenIssuer
 from luxtj.contexts.identity.domain.enums import UserTypeEnum
@@ -64,9 +64,23 @@ class JoseIdentityTokenIssuer(IdentityTokenIssuer):
         )
 
     def decode_access_token(self, token: str) -> dict:
-        return jwt.decode(
+        payload = jwt.decode(
             token,
             self._secret,
             algorithms=[self._algorithm],
             audience="luxtj",
         )
+        if payload.get("type") != "access":
+            raise JWTError("Not an access token")
+        return payload
+
+    def decode_refresh_token(self, token: str) -> dict:
+        payload = jwt.decode(
+            token,
+            self._secret,
+            algorithms=[self._algorithm],
+            audience="luxtj",
+        )
+        if payload.get("type") != "refresh":
+            raise JWTError("Not a refresh token")
+        return payload

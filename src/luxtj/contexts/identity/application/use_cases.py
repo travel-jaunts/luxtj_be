@@ -2,11 +2,14 @@ from dataclasses import dataclass
 from datetime import timedelta
 from uuid import UUID, uuid4
 
+from jose import JWTError
+
 from luxtj.contexts.identity.application.commands import (
     CreateAdminUserCommand,
     CreateRoleCommand,
     ForgotPasswordCommand,
     LoginCommand,
+    RefreshCommand,
     RegisterB2CCommand,
     RegisterPartnerCommand,
     ResetPasswordCommand,
@@ -107,6 +110,24 @@ class IdentityAuthService:
             raise AuthenticationError("Invalid email or password")
         if not user.is_active():
             raise AuthenticationError("User account is not active")
+        if command.allowed_user_types and user.user_type not in command.allowed_user_types:
+            raise AuthenticationError("User type is not allowed for this login endpoint")
+        return await self._issue_for_user(user)
+
+    async def refresh(self, command: RefreshCommand) -> AuthTokenResult:
+        try:
+            payload = self._tokens.decode_refresh_token(command.refresh_token)
+        except JWTError as exc:
+            raise AuthenticationError("Invalid or expired refresh token") from exc
+
+        try:
+            user_id = UUID(str(payload.get("sub")))
+        except (TypeError, ValueError) as exc:
+            raise AuthenticationError("Invalid or expired refresh token") from exc
+
+        user = await self._users.get_by_id(user_id)
+        if user is None or not user.is_active():
+            raise AuthenticationError("Invalid or expired refresh token")
         if command.allowed_user_types and user.user_type not in command.allowed_user_types:
             raise AuthenticationError("User type is not allowed for this login endpoint")
         return await self._issue_for_user(user)
@@ -306,10 +327,7 @@ class AdminUserService:
 
     async def get_user(self, user_id: UUID) -> User:
         user = await self._users.get_by_id(user_id)
-        if user is None or user.user_type not in {
-            UserTypeEnum.ADMIN,
-            UserTypeEnum.SUPERADMIN,
-        }:
+        if user is None or user.user_type != UserTypeEnum.ADMIN:
             raise NotFoundError("Admin user not found")
         return user
 
@@ -319,34 +337,30 @@ class AdminUserService:
         *,
         actor_is_superadmin: bool,
     ) -> User:
-        if command.as_superadmin and not actor_is_superadmin:
-            raise ValidationError("Only a superadmin can create another superadmin")
+        if command.as_superadmin:
+            raise ValidationError("Superadmin accounts cannot be created from staff users")
         if len(command.password) < 8:
             raise ValidationError("Password must be at least 8 characters")
+        if command.role_id is None:
+            raise ValidationError("role_id is required for staff users")
 
         email = command.email.strip().lower()
         if await self._users.get_by_email(email) is not None:
             raise ConflictError("Email is already registered")
 
-        role_id: UUID | None = None
-        user_type = UserTypeEnum.SUPERADMIN if command.as_superadmin else UserTypeEnum.ADMIN
-        if not command.as_superadmin:
-            if command.role_id is None:
-                raise ValidationError("role_id is required for admin users")
-            role = await self._roles.get_by_id(command.role_id)
-            if role is None:
-                raise NotFoundError("Role not found")
-            if not role.is_active:
-                raise ValidationError("Cannot assign an inactive role")
-            role_id = role.id
+        role = await self._roles.get_by_id(command.role_id)
+        if role is None:
+            raise NotFoundError("Role not found")
+        if not role.is_active:
+            raise ValidationError("Cannot assign an inactive role")
 
         user = User.create(
             email=email,
             password_hash=self._passwords.hash(command.password),
-            user_type=user_type,
+            user_type=UserTypeEnum.ADMIN,
             full_name=command.full_name,
             phone=command.phone,
-            role_id=role_id,
+            role_id=role.id,
             now=self._clock.utcnow(),
         )
         await self._users.add(user)

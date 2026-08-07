@@ -56,9 +56,6 @@ async def get_current_principal(request: Request) -> AuthenticatedPrincipal:
     except JWTError as exc:
         raise HTTPException(status_code=401, detail="Invalid or expired token") from exc
 
-    if payload.get("type") != "access":
-        raise HTTPException(status_code=401, detail="Invalid access token")
-
     try:
         user_type = UserTypeEnum(str(payload.get("user_type")))
         user_id = UUID(str(payload.get("sub")))

@@ -32,7 +32,7 @@ approvals_router = APIRouter()
 async def approvals_summary(
     approvals_service: Annotated[PartnerApprovalsService, Depends(PartnerApprovalsService)],
 ) -> ApiSuccessResponse[ApprovalSummary]:
-    # TODO: access control: restrict this endpoint to admin users only
+    # TODO: access control: restrict this endpoint to satff usersonly
     summary = await approvals_service.get_summary()
     return ApiSuccessResponse(
         status=RequestProcessStatus.OK,
@@ -50,7 +50,7 @@ async def approvals_summary(
 async def approvals_lifetime_summary(
     approvals_service: Annotated[PartnerApprovalsService, Depends(PartnerApprovalsService)],
 ) -> ApiSuccessResponse[LifetimeApprovalSummary]:
-    # TODO: access control: restrict this endpoint to admin users only
+    # TODO: access control: restrict this endpoint to satff usersonly
     summary = await approvals_service.get_lifetime_summary()
     return ApiSuccessResponse(
         status=RequestProcessStatus.OK,
@@ -70,7 +70,7 @@ async def approvals_list(
     page_query: Annotated[PaginationParams, Depends()],
     search_filter_query: Annotated[SearchFilterParams, Depends()],
 ) -> ApiSuccessResponse[PaginatedResult[ApprovalLineItem]]:
-    # TODO: access control: restrict this endpoint to admin users only
+    # TODO: access control: restrict this endpoint to satff usersonly
     approvals_list_items, pagination_meta = await approvals_service.get_list(
         page=page_query.page,
         page_size=page_query.size,
@@ -100,7 +100,7 @@ async def approval_status_control(
     updated_status: Annotated[ApprovalControlActionEnum, Query(..., alias="to")],
     approval_id: str,
 ) -> ApiSuccessResponse[str]:
-    # TODO: access control: restrict this endpoint to admin users only
+    # TODO: access control: restrict this endpoint to satff usersonly
     await approvals_service.update_status(approval_id=approval_id, action=updated_status)
     return ApiSuccessResponse(
         status=RequestProcessStatus.OK,
@@ -119,7 +119,7 @@ async def approval_kyc_details(
     approvals_service: Annotated[PartnerApprovalsService, Depends(PartnerApprovalsService)],
     approval_id: str,
 ) -> ApiSuccessResponse[ApprovalKycDetails]:
-    # TODO: access control: restrict this endpoint to admin users only
+    # TODO: access control: restrict this endpoint to satff usersonly
     details = await approvals_service.get_kyc_details(approval_id=approval_id)
     return ApiSuccessResponse(
         status=RequestProcessStatus.OK,
@@ -138,7 +138,7 @@ async def approval_content_details(
     approvals_service: Annotated[PartnerApprovalsService, Depends(PartnerApprovalsService)],
     approval_id: str,
 ) -> ApiSuccessResponse[ApprovalContentDetails]:
-    # TODO: access control: restrict this endpoint to admin users only
+    # TODO: access control: restrict this endpoint to satff usersonly
     content_details = await approvals_service.get_content_details(approval_id=approval_id)
     return ApiSuccessResponse(
         status=RequestProcessStatus.OK,

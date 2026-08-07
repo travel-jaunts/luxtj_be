@@ -39,6 +39,12 @@ class ResetPasswordCommand:
 
 
 @dataclass(frozen=True)
+class RefreshCommand:
+    refresh_token: str
+    allowed_user_types: frozenset[UserTypeEnum] | None = None
+
+
+@dataclass(frozen=True)
 class CreateRoleCommand:
     name: str
     description: str

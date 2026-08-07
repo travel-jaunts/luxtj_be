@@ -18,11 +18,15 @@ from luxtj.contexts.acquisition.infrastructure.persistence.sqlalchemy_models imp
 from luxtj.contexts.action_centre.infrastructure.persistence.sqlalchemy_models import (
     ActionCentreBase,
 )
+from luxtj.contexts.currency.infrastructure.persistence.sqlalchemy_models import CurrencyBase
 from luxtj.contexts.customer.infrastructure.persistence.sqlalchemy_models import CustomerBase
+from luxtj.contexts.hotel.infrastructure.persistence.sqlalchemy_models import HotelBase
 from luxtj.contexts.identity.infrastructure.persistence.sqlalchemy_models import IdentityBase
+from luxtj.contexts.integration.infrastructure.persistence.sqlalchemy_models import IntegrationBase
 from luxtj.contexts.marketing.infrastructure.persistence.sqlalchemy_models import (
     MarketingBase,
 )
+from luxtj.contexts.payment.infrastructure.persistence.sqlalchemy_models import PaymentBase
 from luxtj.shared_kernel.infrastructure.persistence.outbox_model import (
     SharedKernelBase,
 )
@@ -32,6 +36,7 @@ config = context.config
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
+# CRS / region tables live in LTJBE_CRS_DATABASE_URL (see alembic_crs.ini)
 target_metadata = [
     SharedKernelBase.metadata,
     MarketingBase.metadata,
@@ -39,6 +44,10 @@ target_metadata = [
     ActionCentreBase.metadata,
     CustomerBase.metadata,
     IdentityBase.metadata,
+    IntegrationBase.metadata,
+    CurrencyBase.metadata,
+    HotelBase.metadata,
+    PaymentBase.metadata,
 ]
 
 

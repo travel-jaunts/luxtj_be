@@ -40,7 +40,7 @@ async def booking_report_data(
     """
     Get booking dashboard data using one common response shape for all booking report tabs.
     """
-    # TODO: access control: restrict this endpoint to admin users only
+    # TODO: access control: restrict this endpoint to satff usersonly
     report = await booking_report_service.get_report(
         report_type=report_query.report_type,
         group_by=report_query.group_by,
@@ -71,7 +71,7 @@ async def search_report_customers(
     """
     Search customer options for booking report filters.
     """
-    # TODO: access control: restrict this endpoint to admin users only
+    # TODO: access control: restrict this endpoint to satff usersonly
     customers = await booking_report_service.search_customers(
         search_query=customer_query.search_query,
     )

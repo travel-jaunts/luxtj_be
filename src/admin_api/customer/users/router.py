@@ -36,7 +36,7 @@ async def customer_kpi_summary(
     """
     Get customer KPI summary
     """
-    # TODO: access control: restrict this endpoint to admin users only
+    # TODO: access control: restrict this endpoint to satff usersonly
     kpi_summary = await customer_service.get_biz_kpi_summary(iso_currency_str=iso_currency_str)
 
     return ApiSuccessResponse(
@@ -61,7 +61,7 @@ async def list_customers(
     """
     List customers with pagination
     """
-    # TODO: access control: restrict this endpoint to admin users only
+    # TODO: access control: restrict this endpoint to satff usersonly
     person_list, pagination_meta = await customer_service.get_list(
         page=page_query.page,
         page_size=page_query.size,
@@ -96,7 +96,7 @@ async def create_new_customer_user(
     """
     Create a new customer user
     """
-    # TODO: access control: restrict this endpoint to admin users only
+    # TODO: access control: restrict this endpoint to satff usersonly
     new_customer = await customer_service.create_new_user(
         new_user_details.first_name,
         new_user_details.last_name,
@@ -125,7 +125,7 @@ async def update_customer_user(
     """
     Update an existing customer user
     """
-    # TODO: access control: restrict this endpoint to admin users only
+    # TODO: access control: restrict this endpoint to satff usersonly
     updated_customer = await customer_service.update_user(
         customer_id=customer_id, update_user_dto=update_details.to_dto()
     )
@@ -149,7 +149,7 @@ async def delete_customer_user(
     """
     Delete a customer user
     """
-    # TODO: access control: restrict this endpoint to admin users only
+    # TODO: access control: restrict this endpoint to satff usersonly
     await customer_service.delete_user(customer_id=customer_id)
     return ApiSuccessResponse(
         status=RequestProcessStatus.OK,

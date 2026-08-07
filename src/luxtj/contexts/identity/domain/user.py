@@ -38,7 +38,7 @@ class User:
         if not normalized_email:
             raise ValidationError("Email is required")
         if user_type == UserTypeEnum.ADMIN and role_id is None:
-            raise ValidationError("Admin users must be assigned a role")
+            raise ValidationError("Satff users must be assigned a role")
         if user_type == UserTypeEnum.SUPERADMIN and role_id is not None:
             raise ValidationError("Superadmin must not have a role")
         if user_type in {UserTypeEnum.PARTNER, UserTypeEnum.B2C} and role_id is not None:
@@ -64,7 +64,7 @@ class User:
 
     def assign_role(self, role_id: UUID, *, now: datetime) -> None:
         if self.user_type != UserTypeEnum.ADMIN:
-            raise ValidationError("Only admin users can be assigned a role")
+            raise ValidationError("Only satff userscan be assigned a role")
         self.role_id = role_id
         self.updated_at = now
 

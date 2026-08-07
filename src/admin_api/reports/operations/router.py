@@ -23,7 +23,7 @@ async def operations_report_data(
     """
     Get operations dashboard data for the overview page.
     """
-    # TODO: access control: restrict this endpoint to admin users only
+    # TODO: access control: restrict this endpoint to satff usersonly
     report = await operations_report_service.get_report(
         from_date=report_query.from_date,
         to_date=report_query.to_date,

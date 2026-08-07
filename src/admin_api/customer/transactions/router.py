@@ -34,7 +34,7 @@ async def payments_kpi_summary(
     """
     Get customer KPI summary
     """
-    # TODO: access control: restrict this endpoint to admin users only
+    # TODO: access control: restrict this endpoint to satff usersonly
     kpi_summary = await payments_service.get_biz_kpi_summary(iso_currency_str=iso_currency_str)
 
     return ApiSuccessResponse(
@@ -59,7 +59,7 @@ async def list_customer_payments(
     """
     List payments and refunds for all customers with pagination
     """
-    # TODO: access control: restrict this endpoint to admin users only
+    # TODO: access control: restrict this endpoint to satff usersonly
     payments_list, pagination_meta = await payments_service.get_list(
         page=page_query.page,
         page_size=page_query.size,
@@ -94,7 +94,7 @@ async def get_transaction_details(
     """
     Get details of a specific transaction
     """
-    # TODO: access control: restrict this endpoint to admin users only
+    # TODO: access control: restrict this endpoint to satff usersonly
     transaction_details = await payments_service.get_payment_details(
         payment_id=transaction_id, iso_currency_str=iso_currency_str
     )
@@ -120,7 +120,7 @@ async def refund_transaction(
     """
     Refund a specific transaction
     """
-    # TODO: access control: restrict this endpoint to admin users only
+    # TODO: access control: restrict this endpoint to satff usersonly
     await payments_service.refund_payment(
         payment_id=transaction_id, amount=refund_body.amount, reason=refund_body.reason
     )

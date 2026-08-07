@@ -30,7 +30,7 @@ async def bookings_kpi_summary(
     """
     Get customer KPI summary
     """
-    # TODO: access control: restrict this endpoint to admin users only
+    # TODO: access control: restrict this endpoint to satff usersonly
     kpi_summary = await booking_service.get_biz_kpi_summary(iso_currency_str=iso_currency_str)
 
     return ApiSuccessResponse(
@@ -55,7 +55,7 @@ async def list_customer_bookings(
     """
     List bookings for all customers with pagination
     """
-    # TODO: access control: restrict this endpoint to admin users only
+    # TODO: access control: restrict this endpoint to satff usersonly
     customer_bookings_list, pagination_meta = await booking_service.get_list(
         page=page_query.page,
         page_size=page_query.size,

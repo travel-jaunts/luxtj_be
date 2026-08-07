@@ -8,6 +8,7 @@ from luxtj.contexts.identity.application.commands import (
     CreateRoleCommand,
     ForgotPasswordCommand,
     LoginCommand,
+    RefreshCommand,
     RegisterB2CCommand,
     RegisterPartnerCommand,
     ResetPasswordCommand,
@@ -36,6 +37,7 @@ from luxtj.contexts.identity.presentation.http.dependencies import (
     AuthenticatedPrincipal,
     RequireAdminPortal,
     get_current_principal,
+    require_any_permission,
     require_permission,
 )
 from luxtj.contexts.identity.presentation.http.schemas import (
@@ -46,6 +48,7 @@ from luxtj.contexts.identity.presentation.http.schemas import (
     LoginBody,
     MeResponse,
     PermissionSerializer,
+    RefreshBody,
     RegisterBody,
     ResetPasswordBody,
     RoleSummarySerializer,
@@ -129,6 +132,18 @@ async def login(
     return ApiSuccessResponse(output=TokenResponse.from_result(result))
 
 
+@public_auth_router.post("/refresh", response_model=ApiSuccessResponse[TokenResponse])
+async def refresh(
+    body: Annotated[RefreshBody, Body(...)],
+    service: Annotated[IdentityAuthService, Depends(build_identity_auth_service)],
+) -> ApiSuccessResponse[TokenResponse]:
+    try:
+        result = await service.refresh(RefreshCommand(refresh_token=body.refresh_token))
+    except IdentityError as exc:
+        raise _http_error(exc) from exc
+    return ApiSuccessResponse(output=TokenResponse.from_result(result))
+
+
 @public_auth_router.post(
     "/forgot-password",
     response_model=ApiSuccessResponse[ForgotPasswordResponse],
@@ -185,6 +200,25 @@ async def admin_login(
             LoginCommand(
                 email=body.email,
                 password=body.password,
+                allowed_user_types=frozenset(
+                    {UserTypeEnum.SUPERADMIN, UserTypeEnum.ADMIN}
+                ),
+            )
+        )
+    except IdentityError as exc:
+        raise _http_error(exc) from exc
+    return ApiSuccessResponse(output=TokenResponse.from_result(result))
+
+
+@admin_identity_router.post("/auth/refresh", response_model=ApiSuccessResponse[TokenResponse])
+async def admin_refresh(
+    body: Annotated[RefreshBody, Body(...)],
+    service: Annotated[IdentityAuthService, Depends(build_identity_auth_service)],
+) -> ApiSuccessResponse[TokenResponse]:
+    try:
+        result = await service.refresh(
+            RefreshCommand(
+                refresh_token=body.refresh_token,
                 allowed_user_types=frozenset(
                     {UserTypeEnum.SUPERADMIN, UserTypeEnum.ADMIN}
                 ),
@@ -304,7 +338,17 @@ async def edit_role(
     response_model=ApiSuccessResponse[list[PermissionSerializer]],
 )
 async def list_permissions(
-    _principal: Annotated[AuthenticatedPrincipal, Depends(RequireAdminPortal)],
+    _principal: Annotated[
+        AuthenticatedPrincipal,
+        Depends(
+            require_any_permission(
+                "roles.list",
+                "roles.view",
+                "roles.create",
+                "roles.edit",
+            )
+        ),
+    ],
     service: Annotated[RoleService, Depends(build_role_service)],
 ) -> ApiSuccessResponse[list[PermissionSerializer]]:
     items = await service.list_permissions()
@@ -313,7 +357,7 @@ async def list_permissions(
     )
 
 
-# ── Admin users ───────────────────────────────────────────────────────────────
+# ── Staff users ───────────────────────────────────────────────────────────────
 
 
 @admin_identity_router.post(
@@ -368,8 +412,13 @@ async def create_admin_user(
     ],
     service: Annotated[AdminUserService, Depends(build_admin_user_service)],
 ) -> ApiSuccessResponse[UserSerializer]:
-    if not body.as_superadmin and body.role_id is None:
-        raise HTTPException(status_code=422, detail="role_id is required for admin users")
+    if body.as_superadmin:
+        raise HTTPException(
+            status_code=422,
+            detail="Superadmin accounts cannot be created from staff users",
+        )
+    if body.role_id is None:
+        raise HTTPException(status_code=422, detail="role_id is required for staff users")
     try:
         user = await service.create_user(
             CreateAdminUserCommand(
@@ -378,7 +427,7 @@ async def create_admin_user(
                 full_name=body.full_name,
                 role_id=body.role_id,
                 phone=body.phone,
-                as_superadmin=body.as_superadmin,
+                as_superadmin=False,
             ),
             actor_is_superadmin=principal.is_superadmin,
         )

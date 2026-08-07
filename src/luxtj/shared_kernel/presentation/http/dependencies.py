@@ -34,6 +34,15 @@ async def database_session_handle(request: Request) -> AsyncIterator[AsyncSessio
         yield session
 
 
+def crs_database_session_factory_handle(request: Request) -> AsyncSessionFactory:
+    return request.app.state.crs_database_session_factory
+
+
+async def crs_database_session_handle(request: Request) -> AsyncIterator[AsyncSession]:
+    async with session_scope(request.app.state.crs_database_session_factory) as session:
+        yield session
+
+
 def outbox_event_publisher_handle(session: AsyncSession) -> OutboxEventPublisher:
     return OutboxEventPublisher(session)
 

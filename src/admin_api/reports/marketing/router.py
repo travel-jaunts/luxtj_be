@@ -31,7 +31,7 @@ marketing_router = APIRouter(prefix="/marketing")
 #     """
 #     Get campaign performance metrics with optional name text filtering.
 #     """
-#     # TODO: access control: restrict this endpoint to admin users only
+#     # TODO: access control: restrict this endpoint to satff usersonly
 #     report = await marketing_report_service.get_campaign_performance(
 #         name=search_query.name,
 #         iso_currency_str=iso_currency_str,
@@ -58,7 +58,7 @@ async def offer_performance_data(
     """
     Get offer performance metrics with optional offer title text filtering.
     """
-    # TODO: access control: restrict this endpoint to admin users only
+    # TODO: access control: restrict this endpoint to satff usersonly
     report = await marketing_report_service.get_offer_performance(
         name=search_query.name,
         iso_currency_str=iso_currency_str,

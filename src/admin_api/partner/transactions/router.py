@@ -37,7 +37,7 @@ async def partner_transactions_summary(
     ],
     iso_currency_str: CurrencyQuery = "INR",
 ) -> ApiSuccessResponse[PartnerTransactionsSummary]:
-    # TODO: access control: restrict this endpoint to admin users only
+    # TODO: access control: restrict this endpoint to satff usersonly
     summary = await transactions_service.get_summary(iso_currency_str=iso_currency_str)
     return ApiSuccessResponse(
         status=RequestProcessStatus.OK,
@@ -60,7 +60,7 @@ async def partner_payments_list(
     search_filter_query: Annotated[SearchFilterParams, Depends()],
     iso_currency_str: CurrencyQuery = "INR",
 ) -> ApiSuccessResponse[PaginatedResult[PartnerPaymentsLineItem]]:
-    # TODO: access control: restrict this endpoint to admin users only
+    # TODO: access control: restrict this endpoint to satff usersonly
     payments_list, pagination_meta = await transactions_service.get_payments_list(
         page=page_query.page,
         page_size=page_query.size,
@@ -93,7 +93,7 @@ async def partner_payment_status_control(
     payment_id: str,
     target_status: Annotated[PartnerPaymentStatusEnum, Query(..., alias="to")],
 ) -> ApiSuccessResponse[str]:
-    # TODO: access control: restrict this endpoint to admin users only
+    # TODO: access control: restrict this endpoint to satff usersonly
     await transactions_service.update_payment_status(
         payment_id=payment_id, target_status=target_status
     )
@@ -118,7 +118,7 @@ async def partner_refunds_list(
     search_filter_query: Annotated[SearchFilterParams, Depends()],
     iso_currency_str: CurrencyQuery = "INR",
 ) -> ApiSuccessResponse[PaginatedResult[PartnerRefundsLineItem]]:
-    # TODO: access control: restrict this endpoint to admin users only
+    # TODO: access control: restrict this endpoint to satff usersonly
     refunds_list, pagination_meta = await transactions_service.get_refunds_list(
         page=page_query.page,
         page_size=page_query.size,
@@ -151,7 +151,7 @@ async def partner_refund_status_control(
     refund_id: str,
     target_status: Annotated[PartnerRefundStatusEnum, Query(..., alias="to")],
 ) -> ApiSuccessResponse[str]:
-    # TODO: access control: restrict this endpoint to admin users only
+    # TODO: access control: restrict this endpoint to satff usersonly
     await transactions_service.update_refund_status(
         refund_id=refund_id, target_status=target_status
     )

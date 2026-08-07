@@ -54,7 +54,7 @@ async def partner_report_data(
     """
     Get partner dashboard data using one common response shape for all partner report tabs.
     """
-    # TODO: access control: restrict this endpoint to admin users only
+    # TODO: access control: restrict this endpoint to satff usersonly
     report = await partner_report_service.get_report(
         report_type=report_query.report_type,
         partner_ids=partner_ids,
@@ -83,7 +83,7 @@ async def search_report_partners(
     """
     Search partner, B2B, or affiliate options for report filters.
     """
-    # TODO: access control: restrict this endpoint to admin users only
+    # TODO: access control: restrict this endpoint to satff usersonly
     partners = await partner_report_service.search_partners(
         partner_type=partner_query.partner_type,
         search_query=partner_query.search_query,

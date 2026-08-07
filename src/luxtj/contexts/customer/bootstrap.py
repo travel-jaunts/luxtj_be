@@ -4,7 +4,6 @@ from fastapi import Depends
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from luxtj.bootstrap import config
 from luxtj.contexts.customer.application.ports import (
     BucketListRepository,
     DestinationSuggestionProvider,
@@ -60,11 +59,7 @@ def build_outbox_event_publisher(
 def build_destination_suggestion_provider(
     http_client: Annotated[AsyncClient, Depends(http_client_handle)],
 ) -> DestinationSuggestionProvider:
-    return ThirdPartyDestinationSuggestionProvider(
-        http_client=http_client,
-        base_url=config.BUCKET_LIST_SUGGESTIONS_BASE_URL,
-        api_key=config.BUCKET_LIST_SUGGESTIONS_API_KEY,
-    )
+    return ThirdPartyDestinationSuggestionProvider(http_client=http_client)
 
 
 def build_add_bucket_list_item(

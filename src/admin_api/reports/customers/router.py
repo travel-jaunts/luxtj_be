@@ -33,7 +33,7 @@ async def customer_overview_data(
     """
     Get aggregate customer overview metrics for the dashboard.
     """
-    # TODO: access control: restrict this endpoint to admin users only
+    # TODO: access control: restrict this endpoint to satff usersonly
     overview = await customer_report_service.get_overview(
         from_date=overview_query.from_date,
         to_date=overview_query.to_date,
@@ -67,7 +67,7 @@ async def customer_value_data(
     """
     Get customer value metrics by customer.
     """
-    # TODO: access control: restrict this endpoint to admin users only
+    # TODO: access control: restrict this endpoint to satff usersonly
     customer_value = await customer_report_service.get_customer_value(
         customer_ids=customer_ids,
         iso_currency_str=iso_currency_str,
@@ -93,7 +93,7 @@ async def customer_satisfaction_data(
     """
     Get numeric customer satisfaction metrics for one customer.
     """
-    # TODO: access control: restrict this endpoint to admin users only
+    # TODO: access control: restrict this endpoint to satff usersonly
     satisfaction = await customer_report_service.get_satisfaction(customer_id=customer_id)
 
     return ApiSuccessResponse(

@@ -162,3 +162,7 @@ cython_debug/
 
 # AI tools
 .codex/
+
+# RateHawk dump / worker artifacts
+storage/ratehawk/
+data/ratehawk/

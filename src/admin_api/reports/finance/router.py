@@ -28,7 +28,7 @@ async def finance_report_data(
     """
     Get finance dashboard data for the overview page.
     """
-    # TODO: access control: restrict this endpoint to admin users only
+    # TODO: access control: restrict this endpoint to satff usersonly
     report = await finance_report_service.get_report(
         from_date=report_query.from_date,
         to_date=report_query.to_date,

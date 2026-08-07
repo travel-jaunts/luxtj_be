@@ -16,10 +16,13 @@ class EnforcePostMethodOnly(BaseHTTPMiddleware):
     async def dispatch(
         self, request: Request, call_next: RequestResponseEndpoint
     ) -> Response | JSONResponse:
+        path = request.url.path
         if (
-            "/docs" in request.url.path
-            or "/redoc" in request.url.path
-            or "/openapi.json" in request.url.path
+            "/docs" in path
+            or "/redoc" in path
+            or "/openapi.json" in path
+            # Browser popup + Razorpay return URLs require GET
+            or path.startswith("/v1/payment-gateway/")
         ):
             return await call_next(request)
         if request.method != "POST":

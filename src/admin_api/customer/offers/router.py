@@ -92,7 +92,7 @@ async def create_offer(
     """
     Create a new offer
     """
-    # TODO: access control: restrict this endpoint to admin users only
+    # TODO: access control: restrict this endpoint to satff usersonly
     new_offer = await offers_service.create_offer(create_offer_details.to_dto())
     return ApiSuccessResponse(
         status=RequestProcessStatus.OK,
@@ -115,7 +115,7 @@ async def update_offer(
     """
     Update an existing offer
     """
-    # TODO: access control: restrict this endpoint to admin users only
+    # TODO: access control: restrict this endpoint to satff usersonly
     updated_offer = await offers_service.update_offer(
         offer_id=offer_id, update_offer_dto=update_offer_details.to_dto()
     )
@@ -139,7 +139,7 @@ async def delete_offer(
     """
     Delete an offer
     """
-    # TODO: access control: restrict this endpoint to admin users only
+    # TODO: access control: restrict this endpoint to satff usersonly
     await offers_service.delete_offer(offer_id=offer_id)
     return ApiSuccessResponse(
         status=RequestProcessStatus.OK,

@@ -67,9 +67,7 @@ class SqlAlchemyUserRepository:
     async def list_admin_users(
         self, *, page: int, page_size: int
     ) -> tuple[list[User], PaginationMeta]:
-        filters = UserRow.user_type.in_(
-            [UserTypeEnum.ADMIN.value, UserTypeEnum.SUPERADMIN.value]
-        )
+        filters = UserRow.user_type == UserTypeEnum.ADMIN.value
         total = await self._session.scalar(
             select(func.count()).select_from(UserRow).where(filters)
         )

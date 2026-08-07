@@ -40,7 +40,7 @@ Frontend mirror: `luxtj_admin_app/src/lib/permissions.ts`
 
 - **Login** → `POST /v1/admin/auth/login` then `POST /v1/admin/auth/me`
 - **Roles** → `/settings/roles` (permission picker)
-- **Admin users** → `/settings/admin-users` (assign role)
+- **Satff users** → `/settings/admin-users` (assign role)
 
 ## Token header
 

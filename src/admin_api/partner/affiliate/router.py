@@ -34,7 +34,7 @@ async def affiliate_partner_kpi_summary(
     """
     Get affiliate partner KPI summary
     """
-    # TODO: access control: restrict this endpoint to admin users only
+    # TODO: access control: restrict this endpoint to satff usersonly
     kpi_summary = await partner_service.get_biz_kpi_summary()
     return ApiSuccessResponse(
         status=RequestProcessStatus.OK,
@@ -57,7 +57,7 @@ async def list_affiliate_partners(
     """
     Get list of affiliate partners
     """
-    # TODO: access control: restrict this endpoint to admin users only
+    # TODO: access control: restrict this endpoint to satff usersonly
 
     affiliate_partners_list, pagination_meta = await partner_service.get_list(
         page=page_query.page,
@@ -93,7 +93,7 @@ async def affiliate_partner_details(
     """
     Get detailed information about a specific affiliate partner
     """
-    # TODO: access control: restrict this endpoint to admin users only
+    # TODO: access control: restrict this endpoint to satff usersonly
     partner_details = await partner_service.get_details(partner_id)
     return ApiSuccessResponse(
         status=RequestProcessStatus.OK,
@@ -113,7 +113,7 @@ async def affiliate_partner_details_update(
     partner_id: str,
     update_details: Annotated[UpdateAffiliatePartnerDetailsBody, Body(...)],
 ) -> ApiSuccessResponse[AffiliatePartnerDetails]:
-    # TODO: access control: restrict this endpoint to admin users only
+    # TODO: access control: restrict this endpoint to satff usersonly
     updated_partner = await partner_service.update_details(
         partner_id=partner_id, update_dto=update_details.to_dto()
     )
@@ -135,7 +135,7 @@ async def affiliate_partner_status_control(
     updated_status: Annotated[PartnerStatusControlActionEnum, Query(..., alias="to")],
     partner_id: str,
 ) -> ApiSuccessResponse[str]:
-    # TODO: access control: restrict this endpoint to admin users only
+    # TODO: access control: restrict this endpoint to satff usersonly
     await partner_service.update_status(partner_id=partner_id, action=updated_status)
     return ApiSuccessResponse(
         status=RequestProcessStatus.OK,

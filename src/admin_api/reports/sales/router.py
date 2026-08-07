@@ -47,7 +47,7 @@ async def sales_report_data(
     """
     Get sales dashboard data using one common response shape for all sales report tabs.
     """
-    # TODO: access control: restrict this endpoint to admin users only
+    # TODO: access control: restrict this endpoint to satff usersonly
     report = await sales_report_service.get_report(
         report_type=report_query.report_type,
         from_date=report_query.from_date,
@@ -78,7 +78,7 @@ async def search_sales_report_dimensions(
     """
     Search destination or property options for report filters.
     """
-    # TODO: access control: restrict this endpoint to admin users only
+    # TODO: access control: restrict this endpoint to satff usersonly
     dimensions = await sales_report_service.search_dimensions(
         dimension_type=dimension_query.dimension_type,
         search_query=dimension_query.search_query,

@@ -29,7 +29,7 @@ PERMISSION_DEFINITIONS: tuple[PermissionDefinition, ...] = (
     _p("roles.view", "View role", "View a single role and its permissions"),
     _p("roles.create", "Create role", "Create a role and assign permissions"),
     _p("roles.edit", "Edit role", "Update role details and permissions"),
-    _p("admin_users.list", "List admin users", "List admin users"),
+    _p("admin_users.list", "List staff users", "List staff users"),
     _p("admin_users.view", "View admin user", "View a single admin user"),
     _p("admin_users.create", "Create admin user", "Create an admin user and assign a role"),
     _p("admin_users.edit", "Edit admin user", "Update an admin user"),
@@ -39,6 +39,7 @@ PERMISSION_DEFINITIONS: tuple[PermissionDefinition, ...] = (
     # Inventory
     _p("inventory.villas.view", "View villa inventory", "Access villa inventory"),
     _p("inventory.activities.view", "View activity inventory", "Access activity inventory"),
+    _p("inventory.hotels.view", "View hotel inventory", "Browse CRS hotel catalogue and rooms"),
     # Customers
     _p("customers.view", "View customers", "Access customer list"),
     _p("customers.bookings.view", "View customer bookings", "Access customer bookings"),
@@ -91,6 +92,18 @@ PERMISSION_DEFINITIONS: tuple[PermissionDefinition, ...] = (
     _p("support.complaints.view", "View complaints", "Access complaints"),
     # Audit
     _p("audit_logs.view", "View audit logs", "Access audit logs"),
+    # Integrations / settings
+    _p("integrations.view", "View integrations", "View integration registry settings"),
+    _p("integrations.edit", "Edit integrations", "Activate integrations and save credentials"),
+    # Currency
+    _p("currencies.view", "View currencies", "View active currencies"),
+    _p("currencies.edit", "Edit currencies", "Activate or deactivate currencies"),
+    # CRS mapping
+    _p("crs.mapping.view", "View CRS mapping", "View hotel CRS supplier mapping"),
+    _p("crs.mapping.edit", "Edit CRS mapping", "Run CRS city/hotel mapping jobs"),
+    # Hotel markup
+    _p("hotel_markup.view", "View hotel markup", "View hotel markup rules"),
+    _p("hotel_markup.edit", "Edit hotel markup", "Create and edit hotel markup rules"),
 )
 
 

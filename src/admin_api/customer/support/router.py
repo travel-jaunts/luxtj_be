@@ -33,7 +33,7 @@ async def customer_support_kpi_summary(
     """
     Get customer KPI summary
     """
-    # TODO: access control: restrict this endpoint to admin users only
+    # TODO: access control: restrict this endpoint to satff usersonly
     support_kpi_summary = await support_service.get_kpi_summary()
 
     return ApiSuccessResponse(

@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends
 
 from luxtj.contexts.identity.presentation.http.dependencies import (
     require_any_permission,
+    require_permission,
 )
 from luxtj.contexts.marketing.presentation.http.routes import (
     campaign_commands,
@@ -38,6 +39,12 @@ offers_router = APIRouter(
 offers_router.include_router(offer_queries.router)
 offers_router.include_router(offer_commands.router)
 
+leads_router = APIRouter(
+    prefix="/leads",
+    dependencies=[Depends(require_permission("marketing.leads.view"))],
+)
+
 marketing_router = APIRouter(prefix="/marketing", tags=["admin_marketing"])
 marketing_router.include_router(campaigns_router)
 marketing_router.include_router(offers_router)
+marketing_router.include_router(leads_router)

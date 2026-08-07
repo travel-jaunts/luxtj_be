@@ -5,19 +5,33 @@ from luxtj.contexts.customer.application.ports import (
     DestinationSuggestionResult,
 )
 from luxtj.contexts.customer.domain.enums import BucketDestinationKindEnum
+from luxtj.contexts.integration.domain.catalog import credential_value
+from luxtj.contexts.integration.infrastructure.registry_cache import get_integration_registry
 
 
 class ThirdPartyDestinationSuggestionProvider:
-    def __init__(
-        self,
-        http_client: AsyncClient,
-        *,
-        base_url: str,
-        api_key: str | None,
-    ) -> None:
+    """Bucket-list suggestions; Base URL + API Key from other_apis registry."""
+
+    CODE = "bucketlistsuggestions"
+
+    def __init__(self, http_client: AsyncClient) -> None:
         self._http_client = http_client
-        self._base_url = base_url.rstrip("/")
-        self._api_key = api_key
+
+    def _credentials(self) -> tuple[str, str | None]:
+        other = get_integration_registry().resolve_other_api(self.CODE)
+        if other is None:
+            raise RuntimeError(
+                "Bucket List Suggestions API is inactive. "
+                "Activate it under Admin → Integrations → Other APIs."
+            )
+        configs = other.credential_configs()
+        base_url = credential_value(configs, "Base URL")
+        api_key = credential_value(configs, "API Key") or None
+        if not base_url:
+            raise RuntimeError(
+                "Bucket List Suggestions Base URL is missing in integration credentials."
+            )
+        return base_url.rstrip("/"), api_key
 
     async def suggest(
         self,
@@ -26,12 +40,13 @@ class ThirdPartyDestinationSuggestionProvider:
         selected_kind: BucketDestinationKindEnum,
         selected_name: str | None,
     ) -> DestinationSuggestionResult:
+        base_url, api_key = self._credentials()
         headers: dict[str, str] = {}
-        if self._api_key:
-            headers["x-api-key"] = self._api_key
+        if api_key:
+            headers["x-api-key"] = api_key
 
         response = await self._http_client.post(
-            f"{self._base_url}/bucket-list/suggestions",
+            f"{base_url}/bucket-list/suggestions",
             json={
                 "query": query,
                 "selectedKind": selected_kind.value,
