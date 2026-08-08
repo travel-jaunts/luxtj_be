@@ -11,6 +11,10 @@ Blenders (hotel, flight, …) and providers should import from this package only
 product contexts.
 """
 
+from luxtj.shared_kernel.infrastructure.http.audit_body import (
+    compress_audit_body,
+    prettify_audit_body,
+)
 from luxtj.shared_kernel.infrastructure.http.audit_models import BookingApiRequestResponseRow
 from luxtj.shared_kernel.infrastructure.http.audit_repository import (
     RequestResponseAuditRepository,
@@ -37,6 +41,7 @@ __all__ = [
     "MultiHttpClient",
     "RequestResponseAuditRepository",
     "SqlAlchemyRequestResponseAuditRepository",
+    "compress_audit_body",
     "decode_basic_auth_header",
     "detect_response_format",
     "dict_handle_to_descriptor",
@@ -44,5 +49,6 @@ __all__ = [
     "normalize_request_format",
     "normalize_response_text",
     "parse_response_body",
+    "prettify_audit_body",
     "serialize_request_body",
 ]

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import base64
+import hashlib
 import json
 import logging
 import os
@@ -29,7 +30,10 @@ from luxtj.contexts.hotel.infrastructure.persistence.sqlalchemy_models import (
     HotelBookingTransactionDetailsRow,
 )
 from luxtj.contexts.integration.domain.catalog import credential_value
-from luxtj.shared_kernel.infrastructure.http import BookingApiRequestResponseRow
+from luxtj.shared_kernel.infrastructure.http import (
+    BookingApiRequestResponseRow,
+    compress_audit_body,
+)
 from luxtj.utils import timeutils
 
 logger = logging.getLogger(__name__)
@@ -171,6 +175,12 @@ class RateHawkHotelProvider(HotelCommon):
         if self._session is not None and self.booking_api_id:
             try:
                 now = timeutils.datetime_now()
+                stored_req = compress_audit_body(body, request_format="json") if body else None
+                stored_res = (
+                    compress_audit_body(response_str, request_format="json")
+                    if response_str
+                    else None
+                )
                 self._session.add(
                     BookingApiRequestResponseRow(
                         id=str(uuid.uuid4()),
@@ -181,8 +191,8 @@ class RateHawkHotelProvider(HotelCommon):
                         request_headers=json.dumps(
                             ["Authorization: Basic ***", "Content-Type: application/json"]
                         ),
-                        request_body=body[:65535] if body else None,
-                        response=response_str[:65535] if response_str else None,
+                        request_body=stored_req[:65535] if stored_req else None,
+                        response=stored_res[:65535] if stored_res else None,
                         response_status_code=http_status or None,
                         created_at=now,
                         updated_at=now,
@@ -248,6 +258,21 @@ class RateHawkHotelProvider(HotelCommon):
             guests.append({"adults": adults, "children": child_ages})
         return guests or [{"adults": 1, "children": []}]
 
+    def _build_serp_search_api_cache_key(self, payload: dict[str, Any], *, url: str) -> str:
+        """Stable HTTP cache key from SERP payload (not raw body string order quirks).
+
+        Same idea as Mystifly / City Travel: hash logical search params + booking API + URL.
+        """
+        encoded = json.dumps(payload, sort_keys=True, separators=(",", ":"), default=str)
+        material = "|".join(
+            [
+                encoded,
+                str(self.booking_api_id or "0"),
+                url,
+            ]
+        )
+        return hashlib.sha256(material.encode()).hexdigest()
+
     def get_search_request(self, search_data: dict[str, Any]) -> list[dict[str, Any]]:
         if not self.credentials_ready():
             logger.warning(
@@ -281,6 +306,7 @@ class RateHawkHotelProvider(HotelCommon):
         )
         handle["cacheTtl"] = self.cache_ttl_search
         handle["setCache"] = True
+        handle["cacheKey"] = self._build_serp_search_api_cache_key(payload, url=url)
         return [handle]
 
     async def prepare_search_request(self, search_data: dict[str, Any]) -> list[dict[str, Any]]:

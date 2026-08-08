@@ -196,16 +196,9 @@ async def _pre_search(
     rooms_raw = body.get("rooms") or []
     if not isinstance(rooms_raw, list):
         rooms_raw = []
-    for i, room in enumerate(rooms_raw):
-        if not isinstance(room, dict):
-            continue
-        cc = int(room.get("childCount") or room.get("child_count") or 0)
-        ages = room.get("childAges") or room.get("child_ages")
-        if cc > 0 and (not isinstance(ages, list) or len(ages) != cc):
-            return _err(
-                "Child age is required",
-                {"rooms": f"Room {i + 1}: child ages are required (0–17) for each child."},
-            )
+    rooms_err = HotelCommon.validate_rooms_for_search(rooms_raw)
+    if rooms_err:
+        return _err(rooms_err, {"rooms": rooms_err})
     rooms = HotelCommon.normalize_rooms_for_search(rooms_raw)
     nationality = str(body.get("nationality") or "US").upper()
     currency = str(body.get("currency") or AdminCurrency.code() or "USD").upper()

@@ -176,3 +176,66 @@ class FlightCommon:
                 return None, "Segments are required for multi-city"
 
         return clean, None
+
+    @staticmethod
+    def allowed_titles_for_booking_pax(pax_type: str) -> list[str]:
+        key = (pax_type or "").strip().lower()
+        if key in {"adult", "adt"}:
+            return ["Mr", "Mrs", "Ms", "Miss"]
+        if key in {"child", "chd", "cnn", "infant", "inf"}:
+            return ["Mstr", "Miss"]
+        return ["Mr", "Mrs", "Ms", "Miss", "Mstr"]
+
+    @classmethod
+    def validate_passenger_titles_for_booking(cls, passengers: list[Any]) -> str:
+        for idx, pax in enumerate(passengers):
+            if not isinstance(pax, dict):
+                return f"Invalid passenger at position {idx + 1}"
+            pax_type = str(
+                pax.get("PaxType") or pax.get("PassengerType") or pax.get("passenger_type") or ""
+            ).strip()
+            if not pax_type:
+                return f"Passenger type is required for passenger {idx + 1}"
+            title = str(pax.get("Title") or pax.get("title") or "").strip()
+            if not title:
+                return "Title is required for all passengers"
+            allowed = cls.allowed_titles_for_booking_pax(pax_type)
+            if not any(a.lower() == title.lower() for a in allowed):
+                return (
+                    f'Invalid title "{title}" for {pax_type} at position {idx + 1}. '
+                    f"Allowed: {', '.join(allowed)}"
+                )
+        return ""
+
+    @staticmethod
+    def validate_passenger_names_for_booking(passengers: list[Any]) -> str:
+        for idx, pax in enumerate(passengers):
+            if not isinstance(pax, dict):
+                return f"Invalid passenger at position {idx + 1}"
+            pos = idx + 1
+            for key, label, alt in (
+                ("FirstName", "First name", "first_name"),
+                ("LastName", "Last name", "last_name"),
+            ):
+                name = str(pax.get(key) or pax.get(alt) or "").strip()
+                if not name:
+                    return f"{label} is required for passenger {pos}"
+                if len(name) > 22:
+                    return f"{label} must not exceed 22 characters for passenger {pos}"
+                if not re.fullmatch(r"[A-Za-z]+(?: [A-Za-z]+)*", name):
+                    return (
+                        f"{label} must contain only letters and spaces "
+                        f"(no special characters) for passenger {pos}"
+                    )
+        return ""
+
+    @staticmethod
+    def gender_code_from_title(pax_or_title: Any) -> str:
+        if isinstance(pax_or_title, dict):
+            title = str(pax_or_title.get("Title") or pax_or_title.get("title") or "").strip()
+        else:
+            title = str(pax_or_title or "").strip()
+        for female in ("Mrs", "Ms", "Miss"):
+            if title.lower() == female.lower():
+                return "F"
+        return "M"

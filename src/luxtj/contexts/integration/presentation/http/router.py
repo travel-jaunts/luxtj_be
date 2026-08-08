@@ -7,8 +7,10 @@ from fastapi.responses import Response
 from pydantic import Field
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from luxtj.contexts.identity.domain.enums import UserTypeEnum
 from luxtj.contexts.identity.presentation.http.dependencies import (
     AuthenticatedPrincipal,
+    get_current_principal,
     require_permission,
 )
 from luxtj.contexts.integration.application.booking_api_logs import BookingApiLogsService
@@ -89,10 +91,8 @@ async def list_booking_api_logs(
     principal: Annotated[AuthenticatedPrincipal, Depends(get_current_principal)],
     logs: Annotated[BookingApiLogsService, Depends(_logs_service)],
 ) -> ApiSuccessResponse[dict[str, Any]]:
-    from luxtj.contexts.identity.presentation.http.dependencies import RequireAdminPortal
-
     # Admin portal only (superadmin/admin). Permission scoped per booking API below.
-    if principal.user_type.value not in ("superadmin", "admin"):
+    if principal.user_type not in (UserTypeEnum.SUPERADMIN, UserTypeEnum.ADMIN):
         raise HTTPException(status_code=403, detail="User type is not allowed")
 
     resolved = await logs.resolve_booking_api(
@@ -130,7 +130,7 @@ async def get_booking_api_log(
     principal: Annotated[AuthenticatedPrincipal, Depends(get_current_principal)],
     logs: Annotated[BookingApiLogsService, Depends(_logs_service)],
 ) -> ApiSuccessResponse[dict[str, Any]]:
-    if principal.user_type.value not in ("superadmin", "admin"):
+    if principal.user_type not in (UserTypeEnum.SUPERADMIN, UserTypeEnum.ADMIN):
         raise HTTPException(status_code=403, detail="User type is not allowed")
     detail = await logs.get_log(log_id)
     if detail is None:
@@ -151,7 +151,7 @@ async def download_booking_api_log_part(
     principal: Annotated[AuthenticatedPrincipal, Depends(get_current_principal)],
     logs: Annotated[BookingApiLogsService, Depends(_logs_service)],
 ) -> Response:
-    if principal.user_type.value not in ("superadmin", "admin"):
+    if principal.user_type not in (UserTypeEnum.SUPERADMIN, UserTypeEnum.ADMIN):
         raise HTTPException(status_code=403, detail="User type is not allowed")
     detail = await logs.get_log(log_id)
     if detail is None:
@@ -171,7 +171,8 @@ async def download_booking_api_log_part(
         content=payload["content"],
         media_type=payload["mediaType"],
         headers={
-            "Content-Disposition": f'attachment; filename="{payload["filename"]}"'
+            "Content-Disposition": f'attachment; filename="{payload["filename"]}"',
+            "X-Download-Filename": payload["filename"],
         },
     )
 
@@ -356,65 +357,3 @@ async def update_other_api(
     overview = await service.list_overview()
     item = next(i for i in overview["otherApis"] if i["entity"].id == other.id)
     return ApiSuccessResponse(output=OtherApiSerializer.from_overview(item))
-
-
-@integrations_router.post(
-    "/booking-api-logs/list",
-    response_model=ApiSuccessResponse[dict[str, Any]],
-)
-async def list_booking_api_logs(
-    body: Annotated[BookingApiLogsListBody, Body(...)],
-    _principal: Annotated[
-        AuthenticatedPrincipal, Depends(require_permission("integrations.view"))
-    ],
-    logs: Annotated[BookingApiLogsService, Depends(_logs_service)],
-) -> ApiSuccessResponse[dict[str, Any]]:
-    data = await logs.list_logs(
-        page=body.page,
-        page_size=body.page_size,
-        booking_api_id=body.booking_api_id,
-        request_type=body.request_type,
-        from_date=body.from_date,
-        to_date=body.to_date,
-        q=body.q,
-    )
-    return ApiSuccessResponse(output=data)
-
-
-@integrations_router.post(
-    "/booking-api-logs/{log_id}",
-    response_model=ApiSuccessResponse[dict[str, Any]],
-)
-async def get_booking_api_log(
-    log_id: str,
-    _principal: Annotated[
-        AuthenticatedPrincipal, Depends(require_permission("integrations.view"))
-    ],
-    logs: Annotated[BookingApiLogsService, Depends(_logs_service)],
-) -> ApiSuccessResponse[dict[str, Any]]:
-    detail = await logs.get_log(log_id)
-    if detail is None:
-        raise HTTPException(status_code=404, detail="Log not found")
-    return ApiSuccessResponse(output=detail)
-
-
-@integrations_router.post("/booking-api-logs/{log_id}/download")
-async def download_booking_api_log(
-    log_id: str,
-    _principal: Annotated[
-        AuthenticatedPrincipal, Depends(require_permission("integrations.view"))
-    ],
-    logs: Annotated[BookingApiLogsService, Depends(_logs_service)],
-) -> Response:
-    import json
-
-    payload = await logs.download_payload(log_id)
-    if payload is None:
-        raise HTTPException(status_code=404, detail="Log not found")
-    body = json.dumps(payload, indent=2, ensure_ascii=False)
-    filename = f"booking-api-log-{log_id}.json"
-    return Response(
-        content=body,
-        media_type="application/json",
-        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
-    )

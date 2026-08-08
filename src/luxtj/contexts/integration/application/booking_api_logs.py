@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import re
 from datetime import date, datetime, time, timezone
 from typing import Any, Literal
 
@@ -13,9 +14,15 @@ from luxtj.contexts.integration.infrastructure.persistence.sqlalchemy_models imp
     BookingApiRow,
     SubModuleRow,
 )
-from luxtj.shared_kernel.infrastructure.http import BookingApiRequestResponseRow
+from luxtj.shared_kernel.infrastructure.http import (
+    BookingApiRequestResponseRow,
+    prettify_audit_body,
+)
+from luxtj.utils import timeutils
 
 DownloadPart = Literal["request", "response", "headers"]
+
+_UNSAFE_FILENAME_RE = re.compile(r"[^A-Za-z0-9._-]+")
 
 
 def _day_start(d: date) -> datetime:
@@ -47,19 +54,33 @@ def permission_codes_for_api(*, sub_module: str, api_code: str) -> tuple[str, ..
 
 
 def _sniff_format(body: str | None, fallback: str = "txt") -> str:
+    """Detect json / xml from payload (SOAP envelopes included)."""
     sample = (body or "").lstrip("\ufeff \t\r\n")
     if not sample:
-        return fallback or "txt"
+        fmt = (fallback or "").strip().lower()
+        if fmt in {"json", "xml", "soap"}:
+            return "xml" if fmt == "soap" else fmt
+        return "txt"
+
+    # Prefer explicit stored format when body is ambiguous.
+    stored = (fallback or "").strip().lower()
+    if stored in {"xml", "soap"}:
+        return "xml"
+    if stored == "json" and sample[0] in "{[":
+        return "json"
+
     if sample[0] in "{[":
         return "json"
-    if sample.startswith("<?xml") or sample.startswith("<"):
-        lower = sample[:200].lower()
-        if "soap" in lower or "envelope" in lower:
-            return "xml"
+
+    # Any XML-ish markup (incl. <soap-env:Envelope …>)
+    if sample.startswith("<") or sample.lower().startswith("<?xml"):
         return "xml"
-    fmt = (fallback or "").strip().lower()
-    if fmt in {"json", "xml", "soap"}:
-        return "xml" if fmt == "soap" else fmt
+    lower = sample[:500].lower()
+    if "<soap" in lower or ":envelope" in lower or "xmlns:" in lower:
+        return "xml"
+
+    if stored == "json":
+        return "json"
     return "txt"
 
 
@@ -77,6 +98,38 @@ def _media_type_for_format(fmt: str) -> str:
     if fmt in {"xml", "soap"}:
         return "application/xml"
     return "text/plain"
+
+
+def _safe_filename_part(value: str, *, max_len: int = 80) -> str:
+    cleaned = _UNSAFE_FILENAME_RE.sub("-", (value or "").strip())
+    cleaned = cleaned.strip("-._") or "unknown"
+    return cleaned[:max_len]
+
+
+def _format_timestamp(value: str | None) -> str:
+    if value:
+        try:
+            dt = datetime.fromisoformat(value.replace("Z", "+00:00"))
+            return dt.astimezone(timezone.utc).strftime("%Y%m%d-%H%M%S")
+        except ValueError:
+            pass
+    return timeutils.datetime_now().strftime("%Y%m%d-%H%M%S")
+
+
+def _download_filename(
+    *,
+    api_code: str,
+    request_type: str,
+    created_at: str | None,
+    ext: str,
+    part: DownloadPart,
+) -> str:
+    """``<api-code>-<request-type>-<req|resp|header>-<timestamp>.<format>``."""
+    api = _safe_filename_part(api_code or "api", max_len=40)
+    rtype = _safe_filename_part(request_type or "request", max_len=80)
+    ts = _format_timestamp(created_at)
+    part_label = {"request": "req", "response": "resp", "headers": "header"}[part]
+    return f"{api}-{rtype}-{part_label}-{ts}.{ext}"
 
 
 def _headers_as_text(raw: str | None) -> str:
@@ -273,32 +326,59 @@ class BookingApiLogsService:
             return None
 
         api_code = str(detail.get("bookingApiCode") or "api")
+        request_type = str(detail.get("requestType") or "request")
+        created_at = detail.get("createdAt")
+        created_at_s = created_at if isinstance(created_at, str) else None
         req_fmt = str(detail.get("requestFormat") or "")
 
         if part == "headers":
             content = _headers_as_text(detail.get("requestHeaders"))
+            filename = _download_filename(
+                api_code=api_code,
+                request_type=request_type,
+                created_at=created_at_s,
+                ext="txt",
+                part="headers",
+            )
             return {
                 "content": content,
-                "filename": f"{api_code}-{log_id}-headers.txt",
+                "filename": filename,
                 "mediaType": "text/plain; charset=utf-8",
             }
 
         if part == "request":
             body = detail.get("requestBody") or ""
-            fmt = _sniff_format(body if isinstance(body, str) else str(body), req_fmt or "txt")
+            body_s = body if isinstance(body, str) else str(body)
+            fmt = _sniff_format(body_s, req_fmt or "txt")
+            pretty = prettify_audit_body(body_s, request_format=req_fmt or fmt)
             ext = _extension_for_format(fmt)
+            filename = _download_filename(
+                api_code=api_code,
+                request_type=request_type,
+                created_at=created_at_s,
+                ext=ext,
+                part="request",
+            )
             return {
-                "content": body if isinstance(body, str) else str(body),
-                "filename": f"{api_code}-{log_id}-request.{ext}",
+                "content": pretty,
+                "filename": filename,
                 "mediaType": f"{_media_type_for_format(fmt)}; charset=utf-8",
             }
 
-        # response
         body = detail.get("response") or ""
-        fmt = _sniff_format(body if isinstance(body, str) else str(body), req_fmt or "txt")
+        body_s = body if isinstance(body, str) else str(body)
+        fmt = _sniff_format(body_s, req_fmt or "txt")
+        pretty = prettify_audit_body(body_s, request_format=req_fmt or fmt)
         ext = _extension_for_format(fmt)
+        filename = _download_filename(
+            api_code=api_code,
+            request_type=request_type,
+            created_at=created_at_s,
+            ext=ext,
+            part="response",
+        )
         return {
-            "content": body if isinstance(body, str) else str(body),
-            "filename": f"{api_code}-{log_id}-response.{ext}",
+            "content": pretty,
+            "filename": filename,
             "mediaType": f"{_media_type_for_format(fmt)}; charset=utf-8",
         }

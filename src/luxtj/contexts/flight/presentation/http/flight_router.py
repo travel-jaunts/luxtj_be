@@ -11,6 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from luxtj.contexts.flight.application.blender import FlightBlender
 from luxtj.contexts.flight.domain.common import FlightCommon
+from luxtj.contexts.integration.infrastructure.registry_cache import get_integration_registry
 from luxtj.shared_kernel.presentation.http.dependencies import (
     database_session_handle,
     http_client_handle,
@@ -176,11 +177,22 @@ async def _update_fare_quote(
     if not token:
         return _err("ResultToken is required")
     result = await blender.get_update_fare_quote(token)
-    return (
-        _ok(result.get("data") or [], result.get("message") or "Success")
-        if result.get("status")
-        else _err(result.get("message") or "UpdateFareQuote failed")
-    )
+    if not result.get("status"):
+        return _err(result.get("message") or "UpdateFareQuote failed")
+    data = result.get("data") or {}
+    if isinstance(data, dict):
+        registry = get_integration_registry()
+        data = dict(data)
+        data["payment_gateways"] = [
+            {
+                "code": g.code,
+                "name": g.name,
+                "convenience_type": g.convenience_type,
+                "convenience_value": g.convenience_value,
+            }
+            for g in registry.active_payment_gateways.values()
+        ]
+    return _ok(data, result.get("message") or "Success")
 
 
 async def _extra_services(
@@ -216,8 +228,10 @@ async def _pre_book(
     blender: FlightBlender,
     request: Request,
 ) -> JSONResponse:
-    result = await blender.not_implemented("PreBook")
-    return _err(result["message"], status_code=501)
+    result = await blender.pre_book(body if isinstance(body, dict) else {})
+    if not result.get("status"):
+        return _err(result.get("message") or "PreBook failed")
+    return _ok(result.get("data") or {}, result.get("message") or "Success")
 
 
 async def _process_booking(

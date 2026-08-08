@@ -20,6 +20,7 @@ dependencies = [
     "zstandard>=0.25.0",
     "psycopg[binary]>=3.2",
     "zeep>=4.3.3",
+    "airportsdata>=20260803",
 ]
 
 

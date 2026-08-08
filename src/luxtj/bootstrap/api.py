@@ -51,6 +51,7 @@ from luxtj.contexts.flight.presentation.http.flight_router import flight_router
 from luxtj.contexts.hotel.infrastructure.persistence.sqlalchemy_models import HotelBase
 from luxtj.contexts.hotel.presentation.http.hotel_router import hotel_router
 from luxtj.contexts.hotel.presentation.http.markup_router import hotel_markup_router
+from luxtj.contexts.maps.presentation.http.router import maps_router
 from luxtj.contexts.identity.bootstrap import build_identity_bootstrap_service
 from luxtj.contexts.identity.infrastructure.persistence.sqlalchemy_models import IdentityBase
 from luxtj.contexts.identity.presentation.http.router import (
@@ -290,6 +291,7 @@ def server_factory() -> FastAPI:
     public_router.include_router(payment_gateway_router)
     public_router.include_router(hotel_router)
     public_router.include_router(flight_router)
+    public_router.include_router(maps_router)
     api_application.include_router(public_router)
 
     @api_application.post("/ping", tags=["ops"])
@@ -314,6 +316,10 @@ def server_factory() -> FastAPI:
             allow_credentials=True,
             allow_methods=["*"],
             allow_headers=["*"],
+            expose_headers=[
+                "Content-Disposition",
+                "X-Download-Filename",
+            ],
         )
 
     return api_application

@@ -485,6 +485,59 @@ class HotelCommon:
         }
 
     @staticmethod
+    def validate_rooms_for_search(rooms: list[Any]) -> str | None:
+        """Return a user-facing error, or None if rooms are valid for PreSearch.
+
+        Limits match RateHawk guest payload used in search (1–6 adults, 0–4 children
+        aged 0–17 per room; at least one room; max 9 rooms).
+        """
+        if not isinstance(rooms, list) or not rooms:
+            return "At least one room is required"
+        if len(rooms) > 9:
+            return "Maximum 9 rooms allowed"
+        for i, room in enumerate(rooms):
+            label = f"Room {i + 1}"
+            if not isinstance(room, dict):
+                return f"{label}: invalid room payload"
+            try:
+                adults = int(room.get("adultCount") or room.get("adult_count") or 0)
+            except (TypeError, ValueError):
+                return f"{label}: adultCount must be a number"
+            if adults < 1 or adults > 6:
+                return f"{label}: adultCount must be between 1 and 6"
+
+            ages_raw = room.get("childAges") or room.get("child_ages")
+            if ages_raw is None:
+                ages_raw = []
+            if not isinstance(ages_raw, list):
+                return f"{label}: childAges must be a list"
+
+            child_count_raw = room.get("childCount")
+            if child_count_raw is None:
+                child_count_raw = room.get("child_count")
+            try:
+                child_count = (
+                    int(child_count_raw)
+                    if child_count_raw is not None
+                    else len(ages_raw)
+                )
+            except (TypeError, ValueError):
+                return f"{label}: childCount must be a number"
+
+            if child_count < 0 or child_count > 4:
+                return f"{label}: childCount must be between 0 and 4"
+            if child_count != len(ages_raw):
+                return f"{label}: child ages are required (0–17) for each child"
+            for age in ages_raw:
+                try:
+                    ai = int(age)
+                except (TypeError, ValueError):
+                    return f"{label}: each child age must be a number between 0 and 17"
+                if ai < 0 or ai > 17:
+                    return f"{label}: each child age must be between 0 and 17"
+        return None
+
+    @staticmethod
     def normalize_rooms_for_search(rooms: list[Any]) -> list[dict[str, Any]]:
         out: list[dict[str, Any]] = []
         for room in rooms:
@@ -495,7 +548,10 @@ class HotelCommon:
             child_ages: list[int] = []
             if isinstance(ages_raw, list):
                 for a in ages_raw:
-                    ai = int(a)
+                    try:
+                        ai = int(a)
+                    except (TypeError, ValueError):
+                        continue
                     if 0 <= ai <= 17:
                         child_ages.append(ai)
             if len(child_ages) > 4:
@@ -507,7 +563,7 @@ class HotelCommon:
                     "childCount": len(child_ages),
                 }
             )
-        return out
+        return out[:9]
 
     @staticmethod
     def hotel_stay_nights(checkin_ymd: str, checkout_ymd: str) -> int:
