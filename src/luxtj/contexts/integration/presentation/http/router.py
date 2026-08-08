@@ -48,16 +48,132 @@ class BookingApiLogsListBody(ApiSerializerBaseModel):
     page: int = Field(1, ge=1)
     page_size: int = Field(25, ge=1, le=100, alias="pageSize")
     booking_api_id: str | None = Field(None, alias="bookingApiId")
+    booking_api_code: str | None = Field(None, alias="bookingApiCode")
+    sub_module: str | None = Field(None, alias="subModule")
     request_type: str | None = Field(None, alias="requestType")
     from_date: date | None = Field(None, alias="fromDate")
     to_date: date | None = Field(None, alias="toDate")
-    q: str | None = None
+
+
+class BookingApiLogDownloadBody(ApiSerializerBaseModel):
+    part: str = Field(..., pattern="^(request|response|headers)$")
 
 
 def _logs_service(
     session: Annotated[AsyncSession, Depends(database_session_handle)],
 ) -> BookingApiLogsService:
     return BookingApiLogsService(session)
+
+
+def _principal_can_view_api_logs(
+    principal: AuthenticatedPrincipal, *, sub_module: str, api_code: str
+) -> bool:
+    from luxtj.contexts.integration.application.booking_api_logs import (
+        permission_codes_for_api,
+    )
+
+    if principal.is_superadmin:
+        return True
+    for code in permission_codes_for_api(sub_module=sub_module, api_code=api_code):
+        if principal.has_permission(code):
+            return True
+    return False
+
+
+@integrations_router.post(
+    "/booking-api-logs/list",
+    response_model=ApiSuccessResponse[dict[str, Any]],
+)
+async def list_booking_api_logs(
+    body: Annotated[BookingApiLogsListBody, Body(...)],
+    principal: Annotated[AuthenticatedPrincipal, Depends(get_current_principal)],
+    logs: Annotated[BookingApiLogsService, Depends(_logs_service)],
+) -> ApiSuccessResponse[dict[str, Any]]:
+    from luxtj.contexts.identity.presentation.http.dependencies import RequireAdminPortal
+
+    # Admin portal only (superadmin/admin). Permission scoped per booking API below.
+    if principal.user_type.value not in ("superadmin", "admin"):
+        raise HTTPException(status_code=403, detail="User type is not allowed")
+
+    resolved = await logs.resolve_booking_api(
+        booking_api_id=body.booking_api_id,
+        booking_api_code=body.booking_api_code,
+        sub_module=body.sub_module,
+    )
+    if resolved is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Booking API not found — provide bookingApiId or bookingApiCode + subModule",
+        )
+    if not _principal_can_view_api_logs(
+        principal, sub_module=resolved["subModule"], api_code=resolved["code"]
+    ):
+        raise HTTPException(status_code=403, detail="Missing permission for these API logs")
+
+    data = await logs.list_logs(
+        page=body.page,
+        page_size=body.page_size,
+        booking_api_id=resolved["id"],
+        request_type=body.request_type,
+        from_date=body.from_date,
+        to_date=body.to_date,
+    )
+    return ApiSuccessResponse(output=data)
+
+
+@integrations_router.post(
+    "/booking-api-logs/{log_id}",
+    response_model=ApiSuccessResponse[dict[str, Any]],
+)
+async def get_booking_api_log(
+    log_id: str,
+    principal: Annotated[AuthenticatedPrincipal, Depends(get_current_principal)],
+    logs: Annotated[BookingApiLogsService, Depends(_logs_service)],
+) -> ApiSuccessResponse[dict[str, Any]]:
+    if principal.user_type.value not in ("superadmin", "admin"):
+        raise HTTPException(status_code=403, detail="User type is not allowed")
+    detail = await logs.get_log(log_id)
+    if detail is None:
+        raise HTTPException(status_code=404, detail="Log not found")
+    sub = str(detail.get("subModule") or "")
+    code = str(detail.get("bookingApiCode") or "")
+    if not sub or not code or not _principal_can_view_api_logs(
+        principal, sub_module=sub, api_code=code
+    ):
+        raise HTTPException(status_code=403, detail="Missing permission for these API logs")
+    return ApiSuccessResponse(output=detail)
+
+
+@integrations_router.post("/booking-api-logs/{log_id}/download")
+async def download_booking_api_log_part(
+    log_id: str,
+    body: Annotated[BookingApiLogDownloadBody, Body(...)],
+    principal: Annotated[AuthenticatedPrincipal, Depends(get_current_principal)],
+    logs: Annotated[BookingApiLogsService, Depends(_logs_service)],
+) -> Response:
+    if principal.user_type.value not in ("superadmin", "admin"):
+        raise HTTPException(status_code=403, detail="User type is not allowed")
+    detail = await logs.get_log(log_id)
+    if detail is None:
+        raise HTTPException(status_code=404, detail="Log not found")
+    sub = str(detail.get("subModule") or "")
+    code = str(detail.get("bookingApiCode") or "")
+    if not sub or not code or not _principal_can_view_api_logs(
+        principal, sub_module=sub, api_code=code
+    ):
+        raise HTTPException(status_code=403, detail="Missing permission for these API logs")
+
+    part = body.part  # type: ignore[assignment]
+    payload = await logs.download_part(log_id, part)  # type: ignore[arg-type]
+    if payload is None:
+        raise HTTPException(status_code=404, detail="Log not found")
+    return Response(
+        content=payload["content"],
+        media_type=payload["mediaType"],
+        headers={
+            "Content-Disposition": f'attachment; filename="{payload["filename"]}"'
+        },
+    )
 
 
 @integrations_router.post(
