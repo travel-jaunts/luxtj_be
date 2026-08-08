@@ -27,6 +27,7 @@ from luxtj.contexts.integration.application.use_cases import (
 from luxtj.contexts.integration.bootstrap import build_integration_registry_service
 from luxtj.contexts.integration.presentation.http.schemas import (
     BookingApiSerializer,
+    IntegrationsCurrencyOptionSerializer,
     IntegrationsOverviewSerializer,
     ModuleSerializer,
     OtherApiSerializer,
@@ -81,6 +82,15 @@ async def integrations_overview(
                 PaymentGatewaySerializer.from_overview(item) for item in data["paymentGateways"]
             ],
             other_apis=[OtherApiSerializer.from_overview(item) for item in data["otherApis"]],
+            currencies=[
+                IntegrationsCurrencyOptionSerializer(
+                    code=c["code"],
+                    currency_name=c["currency_name"],
+                    currency_symbol=c["currency_symbol"],
+                    active=bool(c["active"]),
+                )
+                for c in data.get("currencies") or []
+            ],
         )
     )
 

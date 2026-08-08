@@ -1,7 +1,14 @@
-"""Parallel supplier HTTP client (port of TeenvaCurlMultiHandler).
+"""Internal parallel HTTP transport for the shared multi-HTTP facade.
 
-Providers build HandleDescriptor maps; this client owns I/O, optional
-in-memory response cache, and booking_api_request_responses audit writes.
+**Do not import this module from hotel/flight blenders or providers.**
+
+Public API (TeenvaCurlMultiHandler equivalent)::
+
+    from luxtj.shared_kernel.infrastructure.http import MultiHttpClient, HandleDescriptor
+
+This module owns low-level I/O, optional response cache, and
+``booking_api_request_responses`` audit writes. The facade in ``multi_http``
+adds dict-handle conversion and JSON/XML format handling for all sub-modules.
 """
 
 from __future__ import annotations
@@ -125,8 +132,11 @@ class _PreparedCall:
     cached_body: str | None = None
 
 
-class MultiHttpClient:
-    """Async multi-request client with audit + optional response cache."""
+class MultiHttpTransport:
+    """Internal async multi-request transport (audit + optional response cache).
+
+    Used only by :class:`~luxtj.shared_kernel.infrastructure.http.multi_http.MultiHttpClient`.
+    """
 
     def __init__(
         self,
@@ -256,7 +266,11 @@ class MultiHttpClient:
         self, client: httpx.AsyncClient, descriptor: HandleDescriptor
     ) -> tuple[str, int]:
         timeout = descriptor.timeout if descriptor.timeout is not None else self._default_timeout
-        headers = dict(descriptor.headers or {})
+        headers = _ensure_request_format_headers(
+            dict(descriptor.headers or {}),
+            (descriptor.request_format or "").strip().lower(),
+            has_body=bool(descriptor.body),
+        )
         content: bytes | None = None
         if descriptor.body:
             content = descriptor.body.encode("utf-8")
@@ -276,7 +290,7 @@ class MultiHttpClient:
                     await asyncio.sleep(self._retry_backoff_seconds * (attempt + 1))
                     last_status = status
                     continue
-                return response.text, status
+                return _decode_response_text(response), status
             except httpx.HTTPError:
                 last_status = 0
                 if attempt < attempts - 1:
@@ -329,6 +343,53 @@ def _normalize_descriptors(value: ProviderHandles) -> list[HandleDescriptor]:
     if isinstance(value, HandleDescriptor):
         return [value]
     return list(value)
+
+
+def _header_has(headers: Mapping[str, str], name: str) -> bool:
+    target = name.lower()
+    return any(key.lower() == target for key in headers)
+
+
+def _ensure_request_format_headers(
+    headers: dict[str, str],
+    request_format: str,
+    *,
+    has_body: bool,
+) -> dict[str, str]:
+    """Fill Content-Type / Accept for json and xml when the provider omitted them."""
+    fmt = request_format or "json"
+    content_types = {
+        "json": "application/json; charset=utf-8",
+        "xml": "application/xml; charset=utf-8",
+        "soap": "application/soap+xml; charset=utf-8",
+        "html": "text/html; charset=utf-8",
+        "text": "text/plain; charset=utf-8",
+        "form": "application/x-www-form-urlencoded; charset=utf-8",
+    }
+    accepts = {
+        "json": "application/json",
+        "xml": "application/xml, text/xml, */*",
+        "soap": "application/soap+xml, application/xml, text/xml, */*",
+        "html": "text/html, */*",
+        "text": "text/plain, */*",
+        "form": "*/*",
+    }
+    if has_body and fmt in content_types and not _header_has(headers, "Content-Type"):
+        headers["Content-Type"] = content_types[fmt]
+    if fmt in accepts and not _header_has(headers, "Accept"):
+        headers["Accept"] = accepts[fmt]
+    return headers
+
+
+def _decode_response_text(response: httpx.Response) -> str:
+    """Decode JSON or XML response bodies as text (charset-aware, BOM-safe)."""
+    try:
+        text = response.text
+    except Exception:
+        text = response.content.decode("utf-8", errors="replace")
+    if text.startswith("\ufeff"):
+        text = text.lstrip("\ufeff")
+    return text
 
 
 async def _invoke_on_response(on_response: OnResponse, provider: str, body: str) -> None:

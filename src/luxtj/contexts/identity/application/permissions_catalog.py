@@ -95,6 +95,20 @@ PERMISSION_DEFINITIONS: tuple[PermissionDefinition, ...] = (
     # Integrations / settings
     _p("integrations.view", "View integrations", "View integration registry settings"),
     _p("integrations.edit", "Edit integrations", "Activate integrations and save credentials"),
+    # Booking API logs (supplier HTTP audit)
+    _p("booking_api_logs.view", "View booking API logs", "Access booking API request/response logs"),
+    _p("booking_api_logs.hotel.view", "View hotel API logs", "Access hotel booking API logs"),
+    _p(
+        "booking_api_logs.hotel.ratehawk.view",
+        "View Ratehawk API logs",
+        "Access Ratehawk supplier HTTP logs",
+    ),
+    _p("booking_api_logs.flight.view", "View flight API logs", "Access flight booking API logs"),
+    _p(
+        "booking_api_logs.flight.citytravel.view",
+        "View City Travel API logs",
+        "Access City Travel supplier HTTP logs",
+    ),
     # Currency
     _p("currencies.view", "View currencies", "View active currencies"),
     _p("currencies.edit", "Edit currencies", "Activate or deactivate currencies"),

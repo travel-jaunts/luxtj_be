@@ -29,7 +29,7 @@ from luxtj.contexts.hotel.infrastructure.persistence.sqlalchemy_models import (
     HotelBookingTransactionDetailsRow,
 )
 from luxtj.contexts.integration.domain.catalog import credential_value
-from luxtj.shared_kernel.infrastructure.http.audit_models import BookingApiRequestResponseRow
+from luxtj.shared_kernel.infrastructure.http import BookingApiRequestResponseRow
 from luxtj.utils import timeutils
 
 logger = logging.getLogger(__name__)
@@ -259,9 +259,8 @@ class RateHawkHotelProvider(HotelCommon):
         if region_id is None:
             return []
         guests = self._build_guests_payload(search_data.get("rooms") or [])
-        request_currency = str(
-            search_data.get("currency") or AdminCurrency.code() or "USD"
-        ).upper()
+        # Supplier request currency comes only from booking_apis.currency (admin config).
+        request_currency = str(self.currency or AdminCurrency.code() or "USD").upper()[:3]
         payload = {
             "checkin": search_data.get("checkin_date") or timeutils.datetime_now().strftime("%Y-%m-%d"),
             "checkout": search_data.get("checkout_date")
@@ -313,7 +312,7 @@ class RateHawkHotelProvider(HotelCommon):
     async def iter_search_hotel_batches(
         self, raw_response: Any, search_data: dict[str, Any] | None = None
     ):
-        """Yield CRS-windowed hotel card batches (CRS-backed only; prices still supplier currency)."""
+        """Yield CRS-windowed hotel cards with prices already converted to admin currency."""
         search_data = search_data or {}
         hotels, err = self._parse_serp_hotels(raw_response)
         if err is not None:
@@ -326,9 +325,8 @@ class RateHawkHotelProvider(HotelCommon):
         checkin = str(search_data.get("checkin_date") or "")
         checkout = str(search_data.get("checkout_date") or "")
         nights = self.hotel_stay_nights(checkin, checkout)
-        request_currency = str(
-            search_data.get("currency") or AdminCurrency.code() or "USD"
-        ).upper()
+        request_currency = str(self.currency or AdminCurrency.code() or "USD").upper()[:3]
+        admin_code = AdminCurrency.code()
         guests_payload = self._build_guests_payload(search_data.get("rooms") or [])
 
         # Preserve SERP order while windowing unique hids for CRS lookups.
@@ -357,14 +355,17 @@ class RateHawkHotelProvider(HotelCommon):
                 if best_rate is None:
                     continue
                 pt = self.ratehawk_first_payment_type(best_rate)
-                price = float((pt or {}).get("show_amount") or 0)
-                if price <= 0:
+                supplier_price = float((pt or {}).get("show_amount") or 0)
+                if supplier_price <= 0:
                     continue
                 show_currency = str(
                     (pt or {}).get("show_currency_code")
                     or (pt or {}).get("currency_code")
                     or request_currency
                 ).upper()[:3] or request_currency
+                converted = AdminCurrency.convert_amount_to_admin(supplier_price, show_currency)
+                price = float(converted["amount"])
+                conversion_rate = float(converted["rate"])
 
                 free_cancel_before = self._extract_free_cancellation_before(best_rate)
                 rate_norm = self.ratehawk_normalize_hp_rate_row(best_rate)
@@ -435,7 +436,9 @@ class RateHawkHotelProvider(HotelCommon):
                         "refundable": free_cancel_before is not None,
                         "meal_included": meal_included,
                         "show_currency": show_currency,
-                        "currency": show_currency,
+                        "supplier_currency": show_currency,
+                        "currency": admin_code,
+                        "conversion_rate": conversion_rate,
                     }
                 )
             if batch:

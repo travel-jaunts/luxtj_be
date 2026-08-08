@@ -46,6 +46,8 @@ from luxtj.contexts.customer.presentation.http.router import (
     customer_bucket_list_router,
     customer_personal_calendar_router,
 )
+from luxtj.contexts.flight.infrastructure.persistence.sqlalchemy_models import FlightBase
+from luxtj.contexts.flight.presentation.http.flight_router import flight_router
 from luxtj.contexts.hotel.infrastructure.persistence.sqlalchemy_models import HotelBase
 from luxtj.contexts.hotel.presentation.http.hotel_router import hotel_router
 from luxtj.contexts.hotel.presentation.http.markup_router import hotel_markup_router
@@ -101,6 +103,7 @@ def get_registered_metadata() -> tuple[MetaData, ...]:
         IntegrationBase.metadata,
         CurrencyBase.metadata,
         HotelBase.metadata,
+        FlightBase.metadata,
         PaymentBase.metadata,
     )
 
@@ -286,6 +289,7 @@ def server_factory() -> FastAPI:
     public_router.include_router(public_currencies_router)
     public_router.include_router(payment_gateway_router)
     public_router.include_router(hotel_router)
+    public_router.include_router(flight_router)
     api_application.include_router(public_router)
 
     @api_application.post("/ping", tags=["ops"])

@@ -20,6 +20,7 @@ from luxtj.contexts.action_centre.infrastructure.persistence.sqlalchemy_models i
 )
 from luxtj.contexts.currency.infrastructure.persistence.sqlalchemy_models import CurrencyBase
 from luxtj.contexts.customer.infrastructure.persistence.sqlalchemy_models import CustomerBase
+from luxtj.contexts.flight.infrastructure.persistence.sqlalchemy_models import FlightBase
 from luxtj.contexts.hotel.infrastructure.persistence.sqlalchemy_models import HotelBase
 from luxtj.contexts.identity.infrastructure.persistence.sqlalchemy_models import IdentityBase
 from luxtj.contexts.integration.infrastructure.persistence.sqlalchemy_models import IntegrationBase
@@ -47,6 +48,7 @@ target_metadata = [
     IntegrationBase.metadata,
     CurrencyBase.metadata,
     HotelBase.metadata,
+    FlightBase.metadata,
     PaymentBase.metadata,
 ]
 

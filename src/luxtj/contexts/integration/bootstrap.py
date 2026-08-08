@@ -8,6 +8,9 @@ from luxtj.contexts.integration.infrastructure.persistence.sqlalchemy_repository
     SqlAlchemyIntegrationRepository,
 )
 from luxtj.contexts.integration.infrastructure.registry_cache import get_integration_registry
+from luxtj.contexts.currency.infrastructure.persistence.sqlalchemy_repository import (
+    SqlAlchemyActiveCurrencyRepository,
+)
 from luxtj.shared_kernel.presentation.http.dependencies import database_session_handle
 
 
@@ -21,5 +24,10 @@ def build_integration_registry_service(
     repository: Annotated[
         SqlAlchemyIntegrationRepository, Depends(build_integration_repository)
     ],
+    session: Annotated[AsyncSession, Depends(database_session_handle)],
 ) -> IntegrationRegistryService:
-    return IntegrationRegistryService(repository=repository, cache=get_integration_registry())
+    return IntegrationRegistryService(
+        repository=repository,
+        currency_repository=SqlAlchemyActiveCurrencyRepository(session),
+        cache=get_integration_registry(),
+    )

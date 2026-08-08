@@ -35,7 +35,21 @@ MODULES_AND_THEMES: dict[str, tuple[int, ...]] = {
 }
 
 SUB_MODULES_AND_BOOKING_APIS: dict[str, dict[str, BookingApiCatalogEntry]] = {
-    "FLIGHT": {},
+    "FLIGHT": {
+        "citytravel": BookingApiCatalogEntry(
+            code="citytravel",
+            name="City Travel",
+            configs=(
+                "ApiLogin",
+                "ApiPassword",
+                "TokenGuid",
+                "DeviceId",
+                "EndPointUrl",
+            ),
+            lib_name="CityTravel",
+            auth_required=False,
+        ),
+    },
     "HOTEL": {
         "ratehawk": BookingApiCatalogEntry(
             code="ratehawk",
@@ -113,4 +127,16 @@ def credential_value(configs: dict[str, str], *labels: str) -> str:
             if value is not None and str(value).strip():
                 return str(value).strip()
     return ""
+
+
+def normalize_booking_api_currency(currency: str | None) -> str | None:
+    """Return uppercased ISO-4217-ish code (3 letters) or None if empty/invalid."""
+    if currency is None:
+        return None
+    code = str(currency).strip().upper()
+    if not code:
+        return None
+    if len(code) != 3 or not code.isalpha():
+        return None
+    return code
 

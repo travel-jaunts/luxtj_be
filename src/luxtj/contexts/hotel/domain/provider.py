@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any, Protocol, runtime_checkable
 
-from luxtj.shared_kernel.infrastructure.http.multi_http_client import HandleDescriptor
+from luxtj.shared_kernel.infrastructure.http import HandleDescriptor
 
 
 @runtime_checkable

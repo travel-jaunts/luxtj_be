@@ -20,7 +20,6 @@ from luxtj.contexts.hotel.application.promo import HotelPromo
 from luxtj.contexts.hotel.domain.common import HotelCommon
 from luxtj.contexts.hotel.domain.provider import HotelProvider
 from luxtj.contexts.hotel.infrastructure.block_cache import cache_get
-from luxtj.contexts.hotel.infrastructure.multi_http import MultiHttpClient
 from luxtj.contexts.hotel.infrastructure.persistence.sqlalchemy_models import (
     HotelBookingDetailsRow,
     HotelBookingItineraryDetailsRow,
@@ -30,6 +29,7 @@ from luxtj.contexts.hotel.infrastructure.persistence.sqlalchemy_models import (
 )
 from luxtj.contexts.hotel.infrastructure.ratehawk.provider import RateHawkHotelProvider
 from luxtj.contexts.integration.infrastructure.registry_cache import get_integration_registry
+from luxtj.shared_kernel.infrastructure.http import MultiHttpClient
 from luxtj.utils import timeutils
 
 logger = logging.getLogger(__name__)
@@ -243,11 +243,8 @@ class HotelBlender:
                             batches.append(data)
 
                     for batch in batches:
-                        admin_batch = self._convert_search_hotels_to_admin(
-                            batch, search_data
-                        )
                         marked = await self._apply_markup_to_search_hotels(
-                            admin_batch,
+                            batch,
                             search_data,
                             provider_code.lower(),
                         )
@@ -283,39 +280,6 @@ class HotelBlender:
             "data": {"hotels": [], "moreResults": False},
             "errors": None,
         }
-
-    def _convert_search_hotels_to_admin(
-        self, hotels: list[Any], search_data: dict[str, Any]
-    ) -> list[Any]:
-        """Convert supplier show amounts to admin currency before markup / FE stream."""
-        nights = HotelCommon.hotel_stay_nights(
-            str(search_data.get("checkin_date") or ""),
-            str(search_data.get("checkout_date") or ""),
-        )
-        fallback_currency = str(
-            search_data.get("currency") or AdminCurrency.code() or "USD"
-        ).upper()
-        admin_code = AdminCurrency.code()
-        out: list[Any] = []
-        for hotel in hotels:
-            if not isinstance(hotel, dict):
-                out.append(hotel)
-                continue
-            hotel = dict(hotel)
-            from_cur = str(
-                hotel.get("show_currency") or hotel.get("currency") or fallback_currency
-            ).upper()[:3] or fallback_currency
-            basis = float(hotel.get("price") or 0)
-            converted = AdminCurrency.convert_amount_to_admin(basis, from_cur)
-            hotel["price"] = converted["amount"]
-            hotel["price_per_night"] = (
-                round(converted["amount"] / nights, 2) if nights > 0 else converted["amount"]
-            )
-            hotel["currency"] = admin_code
-            hotel["conversion_rate"] = converted["rate"]
-            hotel["supplier_currency"] = from_cur
-            out.append(hotel)
-        return out
 
     async def get_hotel_details(self, result_token: str) -> dict[str, Any]:
         provider = self.resolve_provider_from_token(result_token)

@@ -1,3 +1,6 @@
+from luxtj.contexts.currency.infrastructure.persistence.sqlalchemy_repository import (
+    SqlAlchemyActiveCurrencyRepository,
+)
 from luxtj.contexts.integration.application.commands import (
     UpdateBookingApiCommand,
     UpdateModuleStatusCommand,
@@ -10,6 +13,7 @@ from luxtj.contexts.integration.domain.catalog import (
     OTHER_APIS,
     PAYMENT_GATEWAYS,
     SUB_MODULES_AND_BOOKING_APIS,
+    normalize_booking_api_currency,
     normalize_config_key,
 )
 from luxtj.contexts.integration.domain.entities import (
@@ -41,10 +45,25 @@ class IntegrationRegistryService:
         self,
         *,
         repository: SqlAlchemyIntegrationRepository,
+        currency_repository: SqlAlchemyActiveCurrencyRepository | None = None,
         cache: IntegrationRegistryCache | None = None,
     ) -> None:
         self._repo = repository
+        self._currency_repo = currency_repository
         self._cache = cache or get_integration_registry()
+
+    async def _assert_currency_in_catalog(self, currency: str) -> None:
+        if self._currency_repo is None:
+            return
+        known = {
+            m.code.upper()
+            for m in await self._currency_repo.list_currency_metadata()
+            if m.code
+        }
+        if currency.upper() not in known:
+            raise IntegrationValidationError(
+                f"currency '{currency}' is not in the currencies catalog"
+            )
 
     async def sync_catalog(self) -> None:
         """Idempotent seed from Layer A. Never overwrites credentials."""
@@ -199,7 +218,24 @@ class IntegrationRegistryService:
                 for o in other_apis
                 if o.code in OTHER_APIS
             ],
+            "currencies": await self._list_currency_options(),
         }
+
+    async def _list_currency_options(self) -> list[dict]:
+        if self._currency_repo is None:
+            return []
+        metadata = await self._currency_repo.list_currency_metadata()
+        active = {c.upper() for c in await self._currency_repo.list_active_codes()}
+        return [
+            {
+                "code": m.code.upper(),
+                "currency_name": m.currency_name,
+                "currency_symbol": m.currency_symbol,
+                "active": m.code.upper() in active,
+            }
+            for m in metadata
+            if m.code
+        ]
 
     async def update_module_status(self, command: UpdateModuleStatusCommand) -> Module:
         module = await self._repo.get_module(command.module_id)
@@ -231,15 +267,35 @@ class IntegrationRegistryService:
             )
         if command.api_type is not None and command.api_type not in {"test", "live"}:
             raise IntegrationValidationError("api_type must be test or live")
+
+        currency = api.currency
+        if command.currency is not None:
+            normalized = normalize_booking_api_currency(command.currency)
+            if command.currency.strip() and normalized is None:
+                raise IntegrationValidationError(
+                    "currency must be a 3-letter ISO code (e.g. USD, EUR, INR)"
+                )
+            currency = normalized
+
+        will_be_active = api.status if command.status is None else command.status
+        if will_be_active and not currency:
+            raise IntegrationValidationError(
+                "currency is required when enabling a booking API "
+                "(supplier call currency; amounts are converted to admin currency for FE/DB)"
+            )
+        if currency:
+            await self._assert_currency_in_catalog(currency)
+
         configs = None
         if command.configs is not None:
             configs = {normalize_config_key(k) if " " in k else k: v for k, v in command.configs.items()}
         api.update_settings(
             status=command.status,
             api_type=command.api_type,
-            currency=command.currency,
             configs=configs,
         )
+        if command.currency is not None:
+            api.currency = currency
         await self._repo.save_booking_api(api)
         await self.refresh_cache()
         return api
@@ -259,17 +315,35 @@ class IntegrationRegistryService:
             "percentage",
         }:
             raise IntegrationValidationError("convenience_type must be flat or percentage")
+
+        currency = gateway.currency
+        if command.currency is not None:
+            normalized = normalize_booking_api_currency(command.currency)
+            if command.currency.strip() and normalized is None:
+                raise IntegrationValidationError(
+                    "currency must be a 3-letter ISO code (e.g. USD, EUR, INR)"
+                )
+            currency = normalized
+        will_be_active = gateway.status if command.status is None else command.status
+        if will_be_active and not currency:
+            raise IntegrationValidationError(
+                "currency is required when enabling a payment gateway"
+            )
+        if currency:
+            await self._assert_currency_in_catalog(currency)
+
         configs = None
         if command.configs is not None:
             configs = {normalize_config_key(k) if " " in k else k: v for k, v in command.configs.items()}
         gateway.update_settings(
             status=command.status,
             api_type=command.api_type,
-            currency=command.currency,
             convenience_type=command.convenience_type,
             convenience_value=command.convenience_value,
             configs=configs,
         )
+        if command.currency is not None:
+            gateway.currency = currency
         await self._repo.save_payment_gateway(gateway)
         await self.refresh_cache()
         return gateway

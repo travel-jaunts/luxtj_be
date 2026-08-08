@@ -123,12 +123,20 @@ class OtherApiSerializer(ApiSerializerBaseModel):
         )
 
 
+class IntegrationsCurrencyOptionSerializer(ApiSerializerBaseModel):
+    code: str
+    currency_name: str
+    currency_symbol: str
+    active: bool
+
+
 class IntegrationsOverviewSerializer(ApiSerializerBaseModel):
     modules: list[ModuleSerializer]
     sub_modules: list[SubModuleSerializer]
     booking_apis: list[BookingApiSerializer]
     payment_gateways: list[PaymentGatewaySerializer]
     other_apis: list[OtherApiSerializer]
+    currencies: list[IntegrationsCurrencyOptionSerializer] = []
 
 
 class StatusBody(ApiSerializerBaseModel):
