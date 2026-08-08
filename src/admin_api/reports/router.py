@@ -3,6 +3,7 @@ from fastapi import APIRouter, Depends
 from admin_api.reports.bookings.router import bookings_router
 from admin_api.reports.customers.router import customers_router
 from admin_api.reports.finance.router import finance_router
+from admin_api.reports.flight_bookings.router import flight_bookings_router
 from admin_api.reports.marketing.router import marketing_router as marketing_reports_router
 from admin_api.reports.operations.router import operations_router
 from admin_api.reports.partners.router import partners_router
@@ -16,6 +17,7 @@ reports_router.include_router(
         Depends(require_any_permission("reports.booking.view", "dashboard.view"))
     ],
 )
+reports_router.include_router(flight_bookings_router)
 reports_router.include_router(
     customers_router,
     dependencies=[

@@ -66,6 +66,17 @@ PERMISSION_DEFINITIONS: tuple[PermissionDefinition, ...] = (
     _p("payments.refunds.view", "View refunds hub", "Access refunds hub"),
     _p("payments.payouts.view", "View partner payouts", "Access partner payouts"),
     _p("payments.commissions.view", "View commission tracking", "Access commission tracking"),
+    # Refund queues (ops)
+    _p(
+        "refund_queues.flight.view",
+        "View flight refund queues",
+        "Access flight bookings awaiting refund",
+    ),
+    _p(
+        "refund_queues.flight.refund",
+        "Issue flight refunds",
+        "Process API or manual refunds for flight payments",
+    ),
     # Marketing
     _p("marketing.view", "View marketing", "Access marketing module"),
     _p("marketing.campaigns.view", "View campaigns", "Access marketing campaigns"),
@@ -81,6 +92,16 @@ PERMISSION_DEFINITIONS: tuple[PermissionDefinition, ...] = (
     _p("reports.customer.view", "View customer reports", "Access customer reports"),
     _p("reports.operations.view", "View operations reports", "Access operations reports"),
     _p("reports.booking.view", "View booking reports", "Access booking reports"),
+    _p(
+        "reports.flight_bookings.view",
+        "View flight booking reports",
+        "Access flight booking list and detail reports",
+    ),
+    _p(
+        "reports.flight_bookings.cancel",
+        "Cancel flight bookings",
+        "Cancel or VOID flight bookings from admin reports",
+    ),
     _p("reports.partner.view", "View partner reports", "Access partner reports"),
     _p("reports.marketing.view", "View marketing reports", "Access marketing reports"),
     # Approvals (global)

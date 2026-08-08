@@ -22,6 +22,7 @@ class PaymentGatewayTransactionRow(PaymentBase):
             "ix_payment_gateway_transactions_flight_booking_details_id",
             "flight_booking_details_id",
         ),
+        Index("ix_payment_gateway_transactions_status", "status"),
     )
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True)
@@ -41,6 +42,11 @@ class PaymentGatewayTransactionRow(PaymentBase):
         Numeric(18, 8), nullable=True
     )
     pg_amount: Mapped[Decimal | None] = mapped_column(Numeric(12, 2), nullable=True)
+    refunded_amount: Mapped[Decimal] = mapped_column(Numeric(12, 2), nullable=False, default=0)
+    refund_remark: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    refund_mode: Mapped[str | None] = mapped_column(String(20), nullable=True)
+    refund_details: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+    refunded_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
 
@@ -68,6 +74,11 @@ class PaymentGatewayTransactionRow(PaymentBase):
             pg_currency=entity.pg_currency,
             pg_currency_conversion_rate=entity.pg_currency_conversion_rate,
             pg_amount=entity.pg_amount,
+            refunded_amount=entity.refunded_amount or Decimal("0"),
+            refund_remark=entity.refund_remark,
+            refund_mode=entity.refund_mode,
+            refund_details=entity.refund_details if isinstance(entity.refund_details, dict) else None,
+            refunded_at=entity.refunded_at,
             created_at=entity.created_at,
             updated_at=entity.updated_at,
         )
@@ -93,6 +104,11 @@ class PaymentGatewayTransactionRow(PaymentBase):
             ),
             pg_amount=None if self.pg_amount is None else Decimal(str(self.pg_amount)),
             flight_booking_details_id=self.flight_booking_details_id,
+            refunded_amount=Decimal(str(self.refunded_amount or 0)),
+            refund_remark=self.refund_remark,
+            refund_mode=self.refund_mode,
+            refund_details=self.refund_details if isinstance(self.refund_details, dict) else None,
+            refunded_at=self.refunded_at,
             created_at=self.created_at,
             updated_at=self.updated_at,
         )

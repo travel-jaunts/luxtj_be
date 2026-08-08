@@ -195,6 +195,7 @@ class IntegrationRegistryService:
                         ],
                         "currency": PAYMENT_GATEWAYS[g.code].currency,
                         "lib_name": PAYMENT_GATEWAYS[g.code].lib_name,
+                        "refund_api": PAYMENT_GATEWAYS[g.code].refund_api,
                     }
                     if g.code in PAYMENT_GATEWAYS
                     else None,

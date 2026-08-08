@@ -1,3 +1,4 @@
+from decimal import Decimal
 from typing import Any, Protocol
 
 from luxtj.contexts.payment.domain.transaction import PaymentGatewayTransaction
@@ -29,4 +30,16 @@ class PaymentGatewayTransactionRepository(Protocol):
 
     async def update_pg_reference_id(
         self, transaction_id: str, pg_reference_id: str
+    ) -> None: ...
+
+    async def apply_refund(
+        self,
+        transaction_id: str,
+        *,
+        status: str,
+        refunded_amount: Decimal,
+        refund_remark: str | None,
+        refund_mode: str,
+        refund_details: dict[str, Any] | None,
+        response_params: dict[str, Any] | list | None = None,
     ) -> None: ...

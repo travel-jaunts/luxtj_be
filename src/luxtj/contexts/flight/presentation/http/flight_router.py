@@ -74,6 +74,7 @@ async def flight_service(
         "ProcessBooking": _process_booking,
         "GetBookingDetails": _get_booking_details,
         "RefreshBookingStatus": _refresh_booking_status,
+        "CancelBooking": _cancel_booking,
     }
     handler = handlers.get(request_type)
     if handler is None:
@@ -240,8 +241,11 @@ async def _process_booking(
     blender: FlightBlender,
     request: Request,
 ) -> JSONResponse:
-    result = await blender.not_implemented("ProcessBooking")
-    return _err(result["message"], status_code=501)
+    result = await blender.process_booking(body if isinstance(body, dict) else {})
+    if not result.get("status"):
+        status_code = 402 if "payment" in str(result.get("message") or "").lower() else 400
+        return _err(result.get("message") or "ProcessBooking failed", status_code=status_code)
+    return _ok(result.get("data") or {}, result.get("message") or "Success")
 
 
 async def _get_booking_details(
@@ -250,8 +254,11 @@ async def _get_booking_details(
     blender: FlightBlender,
     request: Request,
 ) -> JSONResponse:
-    result = await blender.not_implemented("GetBookingDetails")
-    return _err(result["message"], status_code=501)
+    app_ref = str(body.get("app_reference") or body.get("AppReference") or "").strip()
+    result = await blender.get_booking_details(app_ref)
+    if not result.get("status"):
+        return _err(result.get("message") or "Booking not found", status_code=404)
+    return _ok(result.get("data") or {}, result.get("message") or "Success")
 
 
 async def _refresh_booking_status(
@@ -260,5 +267,21 @@ async def _refresh_booking_status(
     blender: FlightBlender,
     request: Request,
 ) -> JSONResponse:
-    result = await blender.not_implemented("RefreshBookingStatus")
-    return _err(result["message"], status_code=501)
+    app_ref = str(body.get("app_reference") or body.get("AppReference") or "").strip()
+    result = await blender.refresh_booking_status(app_ref)
+    if not result.get("status"):
+        return _err(result.get("message") or "Refresh failed")
+    return _ok(result.get("data") or {}, result.get("message") or "Success")
+
+
+async def _cancel_booking(
+    body: dict[str, Any],
+    session: AsyncSession,
+    blender: FlightBlender,
+    request: Request,
+) -> JSONResponse:
+    app_ref = str(body.get("app_reference") or body.get("AppReference") or "").strip()
+    result = await blender.cancel_booking(app_ref)
+    if not result.get("status"):
+        return _err(result.get("message") or "Cancel failed")
+    return _ok(result.get("data") or {}, result.get("message") or "Success")

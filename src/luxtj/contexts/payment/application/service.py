@@ -11,7 +11,7 @@ from httpx import AsyncClient
 
 from luxtj.bootstrap import config
 from luxtj.contexts.currency.domain.admin_currency import AdminCurrency
-from luxtj.contexts.integration.domain.catalog import PAYMENT_GATEWAYS
+from luxtj.contexts.integration.domain.catalog import PAYMENT_GATEWAYS, gateway_supports_refund_api
 from luxtj.contexts.integration.domain.entities import PaymentGateway as RegistryPaymentGateway
 from luxtj.contexts.integration.infrastructure.registry_cache import (
     IntegrationRegistryCache,
@@ -154,6 +154,77 @@ class PaymentGatewayService:
             "status": True,
             "transaction_id": transaction_id,
             "payment_url": self.payment_url_for(transaction_id),
+            "pg_code": pg.code,
+            "app_reference": app_reference,
+        }
+
+    async def create_and_initiate_payment(
+        self,
+        *,
+        app_reference: str,
+        pg_code: str | None,
+        currency: str,
+        booking_amount: Decimal | float,
+        amount: Decimal | float,
+        firstname: str,
+        email: str,
+        phone: str,
+        productinfo: str,
+        flight_booking_details_id: str | None = None,
+    ) -> dict[str, Any]:
+        """Create a pending txn row then create the gateway order/session."""
+        created = await self.create_payment_record(
+            app_reference=app_reference,
+            pg_code=pg_code,
+            currency=currency,
+            booking_amount=booking_amount,
+            amount=amount,
+            firstname=firstname,
+            email=email,
+            phone=phone,
+            productinfo=productinfo,
+            flight_booking_details_id=flight_booking_details_id,
+        )
+        if not created.get("status"):
+            return created
+
+        transaction_id = str(created["transaction_id"])
+        initiated = await self.initiate_payment_for_transaction(transaction_id)
+        if not initiated.get("status"):
+            await self.update_payment_record_status(
+                transaction_id,
+                "declined",
+                {"initiate_error": initiated.get("message")},
+            )
+            return {
+                "status": False,
+                "message": initiated.get("message") or "Payment initiation failed",
+                "transaction_id": transaction_id,
+                "app_reference": app_reference,
+                "pg_code": created.get("pg_code"),
+            }
+
+        data = initiated.get("data") if isinstance(initiated.get("data"), dict) else {}
+        payment_data = (
+            data.get("payment_data") if isinstance(data.get("payment_data"), dict) else {}
+        )
+        mode = str(payment_data.get("mode") or "").strip()
+        if not mode:
+            mode = "redirect" if payment_data.get("checkoutSessionUrl") else "checkout_modal"
+
+        return {
+            "status": True,
+            "transaction_id": transaction_id,
+            "payment_url": created.get("payment_url"),
+            "pg_code": created.get("pg_code"),
+            "app_reference": app_reference,
+            "pg_reference_id": data.get("pg_reference_id"),
+            "payment": {
+                "mode": mode,
+                "pg_code": created.get("pg_code"),
+                "pg_reference_id": data.get("pg_reference_id"),
+                "checkout": payment_data,
+            },
         }
 
     async def read_payment_record(
@@ -226,10 +297,27 @@ class PaymentGatewayService:
         self,
         transaction_id: str,
         pg_reference_id_from_request: str | None = None,
+        gateway_response: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         record = await self.read_payment_record(transaction_id)
         if record is None:
-            return {"status": False, "message": "Invalid transaction"}
+            return {
+                "status": False,
+                "message": "Invalid transaction",
+                "app_reference": None,
+                "transaction_id": transaction_id,
+            }
+
+        if record.is_accepted():
+            return {
+                "status": True,
+                "message": "Already paid",
+                "paid_amount": float(record.amount),
+                "app_reference": record.app_reference,
+                "transaction_id": transaction_id,
+                "pg_code": record.pg_code,
+                "paid": True,
+            }
 
         pg_reference_id = (
             pg_reference_id_from_request
@@ -244,9 +332,19 @@ class PaymentGatewayService:
 
         gateway = self.get_gateway_by_code(record.pg_code)
         if gateway is None:
-            return {"status": False, "message": "Payment gateway not available"}
+            return {
+                "status": False,
+                "message": "Payment gateway not available",
+                "app_reference": record.app_reference,
+                "transaction_id": transaction_id,
+                "pg_code": record.pg_code,
+                "paid": False,
+            }
 
-        pg_response = await gateway.check_payment_status(pg_reference_id)
+        pg_response = await gateway.check_payment_status(
+            pg_reference_id,
+            gateway_response=gateway_response,
+        )
         if pg_response.get("status"):
             amount = Decimal(str(pg_response.get("amount") or 0))
             expected = Decimal(str(record.pg_amount or 0))
@@ -257,6 +355,10 @@ class PaymentGatewayService:
                 return {
                     "status": False,
                     "message": "Payment validation failed. Please contact support.",
+                    "app_reference": record.app_reference,
+                    "transaction_id": transaction_id,
+                    "pg_code": record.pg_code,
+                    "paid": False,
                 }
             await self.update_payment_record_status(
                 transaction_id, "accepted", pg_response.get("data") or {}
@@ -265,12 +367,227 @@ class PaymentGatewayService:
                 "status": True,
                 "message": "Success",
                 "paid_amount": float(amount),
+                "app_reference": record.app_reference,
+                "transaction_id": transaction_id,
+                "pg_code": record.pg_code,
+                "paid": True,
             }
 
-        await self.update_payment_record_status(
-            transaction_id, "declined", pg_response.get("data") or {}
-        )
+        payment_status = str(pg_response.get("payment_status") or "").lower()
+        message = str(pg_response.get("message") or "Payment failed")
+        # Keep row pending when gateway still reports unpaid (same order can be retried).
+        # Decline on hard failures / bad signature / explicit failed statuses.
+        hard_fail = payment_status in {
+            "failed",
+            "cancelled",
+            "canceled",
+            "refunded",
+        } or "signature" in message.lower()
+        if hard_fail:
+            await self.update_payment_record_status(
+                transaction_id, "declined", pg_response.get("data") or {}
+            )
+
         return {
             "status": False,
-            "message": pg_response.get("message") or "Payment failed",
+            "message": message,
+            "app_reference": record.app_reference,
+            "transaction_id": transaction_id,
+            "pg_code": record.pg_code,
+            "paid": False,
+            "payment_status": payment_status or None,
+        }
+
+    async def revalidate_payment_status(
+        self,
+        *,
+        transaction_id: str,
+        pg_reference_id: str | None = None,
+        gateway_response: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
+        """
+        Common cross-module payment revalidation.
+
+        Verifies with the gateway adapter, updates DB status, and returns a
+        payload booking modules can gate ProcessBooking on.
+        """
+        check = await self.check_and_update_payment_status(
+            transaction_id,
+            pg_reference_id_from_request=pg_reference_id,
+            gateway_response=gateway_response,
+        )
+        app_ref = check.get("app_reference")
+        fully_paid = False
+        if app_ref:
+            fully_paid = await self.get_payment_status(str(app_ref))
+        return {
+            **check,
+            "paid": bool(check.get("status")) and fully_paid,
+            "fully_paid": fully_paid,
+        }
+
+    @staticmethod
+    def _extract_gateway_payment_id(record: PaymentGatewayTransaction) -> str:
+        """Best-effort gateway payment id from stored verify response / request."""
+        resp = record.response_params if isinstance(record.response_params, dict) else {}
+        for key in ("id", "razorpay_payment_id", "payment_id", "pg_payment_id"):
+            value = str(resp.get(key) or "").strip()
+            if value and not value.startswith("order_"):
+                return value
+        # Nested shapes from verify payload
+        for nest_key in ("data", "payment", "payload"):
+            nested = resp.get(nest_key)
+            if isinstance(nested, dict):
+                for key in ("id", "razorpay_payment_id", "payment_id"):
+                    value = str(nested.get(key) or "").strip()
+                    if value and not value.startswith("order_"):
+                        return value
+        req = record.request_params if isinstance(record.request_params, dict) else {}
+        for key in ("razorpay_payment_id", "payment_id"):
+            value = str(req.get(key) or "").strip()
+            if value:
+                return value
+        return ""
+
+    async def issue_refund(
+        self,
+        *,
+        transaction_id: str,
+        refund_amount: Decimal | float,
+        remark: str | None = None,
+        manual_details: str | None = None,
+        admin_user_id: str | None = None,
+    ) -> dict[str, Any]:
+        """
+        Issue API or manual refund for an accepted (or partially refunded) payment.
+        """
+        txn_id = str(transaction_id or "").strip()
+        record = await self._repo.get_by_transaction_id(txn_id)
+        if record is None:
+            return {"status": False, "message": "Payment transaction not found"}
+
+        status_l = str(record.status or "").lower()
+        if status_l not in {"accepted", "partially_refunded"}:
+            return {
+                "status": False,
+                "message": f"Payment status '{record.status}' is not refundable",
+            }
+
+        amount = Decimal(str(refund_amount or 0))
+        if amount <= 0:
+            return {"status": False, "message": "Refund amount must be greater than zero"}
+
+        remaining = record.refundable_amount()
+        if amount > remaining + Decimal("0.001"):
+            return {
+                "status": False,
+                "message": (
+                    f"Refund amount must be ≤ refundable amount "
+                    f"({float(remaining)} {record.currency})"
+                ),
+            }
+
+        supports_api = gateway_supports_refund_api(record.pg_code)
+        remark_clean = str(remark or "").strip() or None
+        manual_clean = str(manual_details or "").strip() or None
+
+        refund_payload: dict[str, Any] = {
+            "admin_user_id": admin_user_id,
+            "remark": remark_clean,
+        }
+        gateway_response: dict[str, Any] | None = None
+        refund_mode: str
+
+        if supports_api:
+            gateway = self.get_gateway_by_code(record.pg_code)
+            if gateway is None:
+                return {"status": False, "message": "Payment gateway adapter not available"}
+            payment_id = self._extract_gateway_payment_id(record)
+            if not payment_id:
+                return {
+                    "status": False,
+                    "message": "Gateway payment id missing; cannot call refund API",
+                }
+            notes: dict[str, Any] = {"app_reference": record.app_reference}
+            if remark_clean:
+                notes["admin_remark"] = remark_clean
+            api_result = await gateway.refund_payment(
+                {
+                    "payment_id": payment_id,
+                    "amount": float(amount),
+                    "currency": record.currency,
+                    "notes": notes,
+                    "receipt": record.transaction_id[:40],
+                }
+            )
+            if not api_result.get("status"):
+                return {
+                    "status": False,
+                    "message": api_result.get("message") or "Gateway refund failed",
+                    "data": api_result.get("data") or {},
+                }
+            refund_mode = "api"
+            gateway_response = (
+                api_result.get("data") if isinstance(api_result.get("data"), dict) else {}
+            )
+            refund_payload["gateway"] = {
+                "refund_id": api_result.get("refund_id"),
+                "payment_id": payment_id,
+                "response": gateway_response,
+            }
+            # Prefer amount returned by gateway when present
+            try:
+                if api_result.get("amount") is not None:
+                    amount = Decimal(str(api_result["amount"]))
+            except Exception:  # noqa: BLE001
+                pass
+        else:
+            if not manual_clean:
+                return {
+                    "status": False,
+                    "message": (
+                        "This payment gateway has no refund API. "
+                        "Manual refund details are required."
+                    ),
+                    "requires_manual_details": True,
+                }
+            refund_mode = "manual"
+            refund_payload["manual_details"] = manual_clean
+
+        new_refunded = Decimal(str(record.refunded_amount or 0)) + amount
+        paid = Decimal(str(record.amount or 0))
+        if new_refunded + Decimal("0.001") >= paid:
+            new_status = "refunded"
+            new_refunded = paid
+        else:
+            new_status = "partially_refunded"
+
+        # Merge prior response with refund trail
+        prior = record.response_params if isinstance(record.response_params, dict) else {}
+        merged_response = {
+            **prior,
+            "refund": refund_payload,
+        }
+
+        await self._repo.apply_refund(
+            txn_id,
+            status=new_status,
+            refunded_amount=new_refunded,
+            refund_remark=remark_clean,
+            refund_mode=refund_mode,
+            refund_details=refund_payload,
+            response_params=merged_response,
+        )
+
+        return {
+            "status": True,
+            "message": "Refund recorded" if refund_mode == "manual" else "Refund processed",
+            "transaction_id": txn_id,
+            "app_reference": record.app_reference,
+            "payment_status": new_status,
+            "refund_mode": refund_mode,
+            "refunded_amount": float(new_refunded),
+            "refund_amount_this_request": float(amount),
+            "currency": record.currency,
+            "supports_refund_api": supports_api,
         }

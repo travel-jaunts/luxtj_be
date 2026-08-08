@@ -48,3 +48,7 @@ class FlightProvider(Protocol):
     async def refresh_booking_from_supplier(
         self, locator: str, context: dict[str, Any] | None = None
     ) -> dict[str, Any]: ...
+
+    async def cancel_booking(
+        self, locator: str, context: dict[str, Any] | None = None
+    ) -> dict[str, Any]: ...

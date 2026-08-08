@@ -27,6 +27,11 @@ class PaymentGatewayTransaction:
     pg_currency_conversion_rate: Decimal | None
     pg_amount: Decimal | None
     flight_booking_details_id: str | None
+    refunded_amount: Decimal
+    refund_remark: str | None
+    refund_mode: str | None
+    refund_details: dict | None
+    refunded_at: datetime | None
     created_at: datetime
     updated_at: datetime
 
@@ -62,6 +67,11 @@ class PaymentGatewayTransaction:
             pg_currency_conversion_rate=pg_currency_conversion_rate,
             pg_amount=amount,
             flight_booking_details_id=flight_booking_details_id,
+            refunded_amount=Decimal("0"),
+            refund_remark=None,
+            refund_mode=None,
+            refund_details=None,
+            refunded_at=None,
             created_at=ts,
             updated_at=ts,
         )
@@ -71,3 +81,9 @@ class PaymentGatewayTransaction:
 
     def is_pending(self) -> bool:
         return self.status.lower() == "pending"
+
+    def refundable_amount(self) -> Decimal:
+        paid = Decimal(str(self.amount or 0))
+        already = Decimal(str(self.refunded_amount or 0))
+        remaining = paid - already
+        return remaining if remaining > 0 else Decimal("0")

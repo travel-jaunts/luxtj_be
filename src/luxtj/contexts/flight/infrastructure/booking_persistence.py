@@ -103,6 +103,7 @@ async def persist_pre_book(
         phone=str(lead.get("ContactNo") or lead.get("phone") or "") or None,
         attributes={
             "fare_quote_token": fare_quote_token,
+            "prebook_result_token": token_data.get("ResultToken"),
             "pricing_quote": charge_quote,
             "prebook_passenger_extras": _extract_extras(passengers),
         },

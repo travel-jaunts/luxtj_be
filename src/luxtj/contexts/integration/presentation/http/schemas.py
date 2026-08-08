@@ -39,6 +39,7 @@ class CatalogFieldSerializer(ApiSerializerBaseModel):
     lib_name: str | None = None
     auth_required: bool | None = None
     currency: str | None = None
+    refund_api: str | None = None
 
 
 class BookingApiSerializer(ApiSerializerBaseModel):

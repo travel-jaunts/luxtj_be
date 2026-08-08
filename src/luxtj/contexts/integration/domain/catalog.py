@@ -19,6 +19,8 @@ class PaymentGatewayCatalogEntry:
     configs: tuple[str, ...]
     currency: str
     lib_name: str
+    # "yes" = gateway exposes a programmatic refund API; "no" = manual refund only
+    refund_api: str = "no"
 
 
 @dataclass(frozen=True, slots=True)
@@ -74,6 +76,7 @@ PAYMENT_GATEWAYS: dict[str, PaymentGatewayCatalogEntry] = {
         configs=("API Key", "API Secret", "Company Name"),
         currency="INR",
         lib_name="Razorpay",
+        refund_api="yes",
     ),
 }
 
@@ -139,4 +142,11 @@ def normalize_booking_api_currency(currency: str | None) -> str | None:
     if len(code) != 3 or not code.isalpha():
         return None
     return code
+
+
+def gateway_supports_refund_api(pg_code: str) -> bool:
+    entry = PAYMENT_GATEWAYS.get(str(pg_code or "").strip().lower())
+    if entry is None:
+        return False
+    return str(entry.refund_api or "no").strip().lower() == "yes"
 

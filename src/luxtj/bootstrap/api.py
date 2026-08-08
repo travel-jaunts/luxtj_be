@@ -14,6 +14,7 @@ from twilio.http.async_http_client import AsyncTwilioHttpClient
 from admin_api.audit_logs.router import audit_logs_router as admin_audit_logs_router
 from admin_api.customer.router import customer_router
 from admin_api.partner.router import partner_router
+from admin_api.refund_queues.router import refund_queues_router
 from admin_api.reports.router import reports_router
 from luxtj.bootstrap import config
 from luxtj.contexts.account.infrastructure.persistence.sqlalchemy_models import AccountAuthBase
@@ -273,6 +274,7 @@ def server_factory() -> FastAPI:
     admin_router.include_router(customer_router)
     admin_router.include_router(partner_router)
     admin_router.include_router(reports_router)
+    admin_router.include_router(refund_queues_router)
     admin_router.include_router(marketing_router)
     admin_router.include_router(action_centre_router)
     admin_router.include_router(admin_audit_logs_router)

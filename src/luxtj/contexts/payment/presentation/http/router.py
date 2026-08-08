@@ -12,6 +12,8 @@ from luxtj.contexts.payment.application.service import PaymentGatewayService
 from luxtj.contexts.payment.bootstrap import build_payment_gateway_service
 from luxtj.contexts.payment.presentation.http.schemas import (
     PaymentResponseBody,
+    PaymentRevalidateBody,
+    PaymentRevalidateResult,
     PaymentStatusBody,
     PaymentStatusResult,
     PaymentTransactionBody,
@@ -272,5 +274,38 @@ async def payment_status(
         output=PaymentStatusResult(
             paid=paid,
             message="Success" if paid else "Payment not completed",
+        ),
+    )
+
+
+@payment_gateway_router.post(
+    "/revalidate",
+    response_model=ApiSuccessResponse[PaymentRevalidateResult] | ApiErrorResponse,
+    summary="Revalidate payment with gateway and update DB (shared across modules)",
+    name="Payment Gateway Revalidate",
+)
+async def payment_revalidate(
+    service: Annotated[PaymentGatewayService, Depends(build_payment_gateway_service)],
+    body: Annotated[PaymentRevalidateBody, Body(...)],
+) -> ApiSuccessResponse[PaymentRevalidateResult] | ApiErrorResponse:
+    result = await service.revalidate_payment_status(
+        transaction_id=body.transaction_id,
+        pg_reference_id=body.pg_reference_id,
+        gateway_response=body.gateway_response,
+    )
+    return ApiSuccessResponse(
+        status=RequestProcessStatus.OK,
+        output=PaymentRevalidateResult(
+            paid=bool(result.get("paid")),
+            fully_paid=bool(result.get("fully_paid")),
+            app_reference=result.get("app_reference"),
+            transaction_id=result.get("transaction_id") or body.transaction_id,
+            pg_code=result.get("pg_code"),
+            paid_amount=(
+                float(result["paid_amount"])
+                if result.get("paid_amount") is not None
+                else None
+            ),
+            message=str(result.get("message") or ""),
         ),
     )

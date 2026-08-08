@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import base64
 import json
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from functools import lru_cache
 from typing import Any
 from zoneinfo import ZoneInfo
@@ -56,6 +56,161 @@ def extract_aero_prebook_result(parsed: dict[str, Any] | None) -> dict[str, Any]
             if "FullPrice" in resp or "Offers" in resp or "Success" in resp:
                 return resp
     return {}
+
+
+def _unwrap_soap_result(
+    parsed: dict[str, Any] | None,
+    *,
+    response_keys: tuple[str, ...],
+    result_keys: tuple[str, ...],
+    identity_keys: tuple[str, ...] = (),
+) -> dict[str, Any]:
+    if not isinstance(parsed, dict) or not parsed:
+        return {}
+    for key in identity_keys:
+        if key in parsed:
+            return parsed
+    for key in result_keys:
+        node = parsed.get(key)
+        if isinstance(node, dict):
+            return node
+    body = parsed.get("Body")
+    if isinstance(body, dict):
+        for rk in response_keys:
+            resp = body.get(rk)
+            if isinstance(resp, dict):
+                for key in result_keys:
+                    node = resp.get(key)
+                    if isinstance(node, dict):
+                        return node
+                if any(k in resp for k in identity_keys):
+                    return resp
+    return {}
+
+
+def extract_aero_book_result(parsed: dict[str, Any] | None) -> dict[str, Any]:
+    return _unwrap_soap_result(
+        parsed,
+        response_keys=("AeroBookResponse",),
+        result_keys=("AeroBookResult",),
+        identity_keys=("BookId", "BookGuid", "Offers", "Success"),
+    )
+
+
+def extract_confirm_book_result(parsed: dict[str, Any] | None) -> dict[str, Any]:
+    result = _unwrap_soap_result(
+        parsed,
+        response_keys=("ConfirmBookResponse",),
+        result_keys=("ConfirmBookResult",),
+        identity_keys=("OrderInfoData", "Success"),
+    )
+    if not result:
+        return {}
+    order = result.get("OrderInfoData")
+    if isinstance(order, dict):
+        merged = dict(order)
+        if "Success" in result:
+            merged["Success"] = result.get("Success")
+        return merged
+    return result
+
+
+def extract_order_info_result(parsed: dict[str, Any] | None) -> dict[str, Any]:
+    result = _unwrap_soap_result(
+        parsed,
+        response_keys=("OrderInfoResponse",),
+        result_keys=("OrderInfoResult",),
+        identity_keys=("OrderInfoData", "Success", "BookingStatus"),
+    )
+    if not result:
+        return {}
+    order = result.get("OrderInfoData")
+    if isinstance(order, dict):
+        merged = dict(order)
+        if "Success" in result:
+            merged["Success"] = result.get("Success")
+        return merged
+    return result
+
+
+def extract_annulate_book_result(parsed: dict[str, Any] | None) -> dict[str, Any]:
+    return _unwrap_soap_result(
+        parsed,
+        response_keys=("AnnulateBookResponse",),
+        result_keys=("AnnulateBookResult",),
+        identity_keys=("Success", "Currency", "ServiceUrl"),
+    )
+
+
+def soap_flag_true(value: Any) -> bool:
+    if value is True:
+        return True
+    if value is False or value is None:
+        return False
+    return str(value).strip().lower() in {"true", "1", "yes"}
+
+
+def void_deadline_utc(order: dict[str, Any]) -> datetime | None:
+    """Parse DeadLineDateUtc (preferred) or DeadLineDate from OrderInfo/ConfirmBook."""
+    raw = str(order.get("DeadLineDateUtc") or order.get("DeadLineDate") or "").strip()
+    parsed = parse_ct_datetime(raw)
+    if parsed is None:
+        return None
+    # CT docs treat DeadLineDateUtc as UTC wall clock without offset.
+    if parsed.tzinfo is None:
+        return parsed.replace(tzinfo=UTC)
+    return parsed.astimezone(UTC)
+
+
+def first_pnr_from_offers(book_or_order: dict[str, Any]) -> str:
+    candidates: list[Any] = []
+    offers = book_or_order.get("Offers")
+    if isinstance(offers, dict):
+        candidates.extend(force_list(offers.get("OfferInfo") or offers.get("Offer") or offers))
+    else:
+        candidates.extend(force_list(offers))
+    gates = book_or_order.get("MultiGatesInfo")
+    if isinstance(gates, dict):
+        candidates.extend(force_list(gates.get("OfferInfo") or gates))
+    else:
+        candidates.extend(force_list(gates))
+    for offer in candidates:
+        if not isinstance(offer, dict):
+            continue
+        origin = str(offer.get("OriginPnr") or "").strip()
+        if origin:
+            return origin
+        pnr = str(offer.get("PNR") or "").strip()
+        if pnr:
+            return pnr
+    return ""
+
+
+def ticket_passengers_from_order(order: dict[str, Any]) -> list[dict[str, Any]]:
+    """Normalize ticket rows from ConfirmBook / OrderInfo MultiGatesInfo."""
+    out: list[dict[str, Any]] = []
+    gates = order.get("MultiGatesInfo")
+    offers = force_list(gates.get("OfferInfo") if isinstance(gates, dict) else gates)
+    for offer in offers:
+        if not isinstance(offer, dict):
+            continue
+        pax_node = offer.get("Passengers") or offer.get("OfferPassenger")
+        for pax in force_list(
+            pax_node.get("OfferPassenger") if isinstance(pax_node, dict) else pax_node
+        ):
+            if not isinstance(pax, dict):
+                continue
+            ticket = str(pax.get("TicketNumber") or "").strip()
+            if not ticket:
+                continue
+            out.append(
+                {
+                    "Guid": str(pax.get("Guid") or "").strip(),
+                    "TicketNumber": ticket,
+                    "PNR": str(offer.get("OriginPnr") or offer.get("PNR") or "").strip(),
+                }
+            )
+    return out
 
 
 def _as_float(value: Any, default: float = 0.0) -> float:
