@@ -16,7 +16,6 @@ from __future__ import annotations
 import asyncio
 import hashlib
 import json
-import time
 from collections.abc import Awaitable, Callable, Mapping, Sequence
 from dataclasses import dataclass, field
 from inspect import isawaitable
@@ -94,33 +93,41 @@ def default_cache_key(url: str, body: str = "") -> str:
     return hashlib.md5(f"{url}|{body}".encode(), usedforsecurity=False).hexdigest()
 
 
-class InMemoryResponseCache:
-    """Process-local TTL cache keyed by md5(url|body) (or explicit cache_key)."""
+class RedisResponseCache:
+    """Redis TTL cache for outbound HTTP bodies (search SOAP etc.)."""
 
-    def __init__(self) -> None:
-        self._store: dict[str, tuple[float, str]] = {}
+    _NAMESPACE = "http_response"
 
     def get(self, key: str) -> str | None:
-        entry = self._store.get(key)
-        if entry is None:
-            return None
-        expires_at, value = entry
-        if expires_at <= time.monotonic():
-            del self._store[key]
-            return None
+        from luxtj.shared_kernel.infrastructure.redis_cache import redis_cache_get
+
+        value = redis_cache_get(self._NAMESPACE, key)
         if value is None or value == "":
             return None
-        return value
+        if isinstance(value, bytes):
+            try:
+                return value.decode("utf-8")
+            except Exception:
+                return None
+        return str(value)
 
     def set(self, key: str, value: str, ttl: int) -> None:
+        from luxtj.shared_kernel.infrastructure.redis_cache import redis_cache_put
+
         if value is None or value == "":
             return
         if ttl <= 0:
             return
-        self._store[key] = (time.monotonic() + ttl, value)
+        redis_cache_put(self._NAMESPACE, key, value, ttl)
 
     def clear(self) -> None:
-        self._store.clear()
+        from luxtj.shared_kernel.infrastructure.redis_cache import redis_cache_clear_namespace
+
+        redis_cache_clear_namespace(self._NAMESPACE)
+
+
+# Back-compat alias used by MultiHttpTransport constructor defaults.
+InMemoryResponseCache = RedisResponseCache
 
 
 @dataclass(slots=True)
@@ -143,14 +150,14 @@ class MultiHttpTransport:
         *,
         client: httpx.AsyncClient | None = None,
         audit: RequestResponseAuditRepository | None = None,
-        cache: InMemoryResponseCache | None = None,
+        cache: RedisResponseCache | None = None,
         default_timeout: float = 60.0,
         max_retries: int = 2,
         retry_backoff_seconds: float = 0.4,
     ) -> None:
         self._client = client
         self._audit = audit
-        self._cache = cache if cache is not None else InMemoryResponseCache()
+        self._cache = cache if cache is not None else RedisResponseCache()
         self._default_timeout = default_timeout
         self._max_retries = max(0, max_retries)
         self._retry_backoff_seconds = retry_backoff_seconds

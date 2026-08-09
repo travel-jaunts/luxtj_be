@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import hmac
+import json
 from typing import Any
 
 from httpx import AsyncClient
@@ -300,9 +301,25 @@ class RazorpayPaymentGateway:
             body = {}
 
         if res.status_code >= 400 or not isinstance(body, dict) or not body.get("id"):
-            message = None
-            if isinstance(body.get("error"), dict):
-                message = body["error"].get("description")
+            # Pass Razorpay's error through unchanged for admin display.
+            message = ""
+            err = body.get("error") if isinstance(body, dict) else None
+            if isinstance(err, dict):
+                message = str(err.get("description") or "").strip()
+                if not message:
+                    message = str(err.get("code") or "").strip()
+                if not message:
+                    try:
+                        message = json.dumps(err, default=str)
+                    except Exception:  # noqa: BLE001
+                        message = str(err)
+            elif isinstance(err, str) and err.strip():
+                message = err.strip()
+            elif isinstance(body, dict) and body:
+                try:
+                    message = json.dumps(body, default=str)
+                except Exception:  # noqa: BLE001
+                    message = str(body)
             return {
                 "status": False,
                 "message": message or f"Razorpay refund failed ({res.status_code})",

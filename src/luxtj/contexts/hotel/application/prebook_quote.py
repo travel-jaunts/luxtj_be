@@ -12,7 +12,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 class HotelPreBookQuote:
     @staticmethod
     def supplier_pricing_baseline(room: dict[str, Any], list_inner: dict[str, Any]) -> dict[str, Any]:
-        currency = str(list_inner.get("currency") or room.get("currency") or "USD").upper()
+        # Prefer room.currency: BlockRoom amounts are already converted to admin currency.
+        # list_inner.currency may still be the original search/supplier currency.
+        currency = str(room.get("currency") or list_inner.get("currency") or "USD").upper()
         extra_fees = room.get("extraFees") if isinstance(room.get("extraFees"), list) else []
         extra_fees_sum = 0.0
         for fee in extra_fees:
@@ -27,8 +29,17 @@ class HotelPreBookQuote:
             sub_total = max(0.0, base_fare + taxes_legacy + extra_fees_sum)
 
         prepaid = max(0.0, sub_total - extra_fees_sum)
-        taxes = float(room.get("TotalTax") or room.get("taxes") or 0)
-        room_rate_exclusive = max(0.0, prepaid - taxes)
+        # Client room taxes include folded markup; DB must store hotel-API tax only.
+        taxes_incl = float(room.get("TotalTax") or room.get("taxes") or 0)
+        embedded_mk = max(
+            0.0,
+            round(float(room.get("_teenva_admin_markup") or room.get("AdminMarkup") or 0), 2),
+        )
+        if room.get("_teenva_supplier_taxes") is not None:
+            taxes_supplier = max(0.0, round(float(room["_teenva_supplier_taxes"]), 2))
+        else:
+            taxes_supplier = max(0.0, round(taxes_incl - embedded_mk, 2))
+        room_rate_exclusive = max(0.0, prepaid - taxes_incl)
         discount_block = room.get("Discount")
         supplier_discount = 0.0
         if isinstance(discount_block, dict):
@@ -39,7 +50,9 @@ class HotelPreBookQuote:
             "extra_fees_sum": round(extra_fees_sum, 2),
             "sub_total_supplier": round(sub_total, 2),
             "prepaid_room_supplier": round(prepaid, 2),
-            "taxes_supplier": round(taxes, 2),
+            "taxes_supplier": round(taxes_supplier, 2),
+            "taxes_incl_markup": round(taxes_incl, 2),
+            "embedded_admin_markup": embedded_mk,
             "room_rate_exclusive_supplier": round(room_rate_exclusive, 2),
             "supplier_discount": round(supplier_discount, 2),
             "payable_after_supplier_discount": round(payable, 2),
@@ -56,6 +69,11 @@ class HotelPreBookQuote:
     ) -> dict[str, Any]:
         b = HotelPreBookQuote.supplier_pricing_baseline(room, list_inner)
         currency = b["currency"]
+        # Promo on base fare + taxes including markup (excludes pay-at-hotel extra fees).
+        promo_base = max(
+            0.0,
+            float(b["room_rate_exclusive_supplier"]) + float(b["taxes_incl_markup"]),
+        )
         payable_after_supplier = b["payable_after_supplier_discount"]
 
         promo_discount = 0.0
@@ -63,11 +81,12 @@ class HotelPreBookQuote:
         promo_offer_valid = False
         promo_discount_type = None
         promo_rule_amount = None
+        promo_message = None
         trim_promo = (promo_code or "").strip()
         rate = float(AdminCurrency.rate_to_admin_or_one(currency))
         if trim_promo:
-            payable_admin = round(payable_after_supplier * rate, 2)
-            eval_result = await HotelPromo.evaluate(session, trim_promo, payable_admin)
+            promo_base_admin = round(promo_base * rate, 2)
+            eval_result = await HotelPromo.evaluate(session, trim_promo, promo_base_admin)
             if eval_result.get("applicable"):
                 promo_offer_valid = True
                 promo_code_applied = eval_result["promo_code"]
@@ -75,6 +94,7 @@ class HotelPreBookQuote:
                 promo_discount = (
                     round(promo_discount_admin / rate, 2) if rate > 0 else round(promo_discount_admin, 2)
                 )
+                promo_discount = min(promo_discount, round(payable_after_supplier, 2))
                 promo_discount_type = eval_result["discount_type"]
                 rule_val = float(eval_result["discount_rule_value"])
                 promo_rule_amount = (
@@ -82,15 +102,23 @@ class HotelPreBookQuote:
                     if promo_discount_type == "percentage"
                     else (round(rule_val / rate, 2) if rate > 0 else round(rule_val, 2))
                 )
+            else:
+                promo_message = str(
+                    eval_result.get("message") or "Promo code is not applicable"
+                )
 
         payable_after_promo = max(0.0, round(payable_after_supplier - promo_discount, 2))
-        embedded_mk = max(0.0, round(float(room.get("_teenva_admin_markup") or 0), 2))
+        # Payable already includes embedded markup (in room amount). Only add request markup.
+        # Convenience is always on what the guest pays before the fee:
+        # base + taxes (incl. markup) − supplier discount − promo (+ request markup).
+        embedded_mk = max(0.0, float(b.get("embedded_admin_markup") or 0))
         request_mk = max(0.0, round(float(admin_markup), 2))
         payable_before_convenience = max(0.0, round(payable_after_promo + request_mk, 2))
         conv = HotelPreBookQuote.convenience_amount(payment_gateway, payable_before_convenience)
         total_charge = max(0.0, round(payable_before_convenience + conv["amount"], 2))
         quote = {
             **b,
+            "promo_evaluation_base": round(promo_base, 2),
             "promo_discount": round(promo_discount, 2),
             "admin_markup": round(embedded_mk + request_mk, 2),
             "payable_before_convenience": payable_before_convenience,
@@ -102,6 +130,7 @@ class HotelPreBookQuote:
             "promo_offer_valid": promo_offer_valid,
             "promo_discount_type": promo_discount_type,
             "promo_rule_amount": round(promo_rule_amount, 2) if promo_rule_amount is not None else None,
+            "promo_message": promo_message,
             "currency_conversion_rate": rate,
             "admin_currency": AdminCurrency.code(),
         }

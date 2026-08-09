@@ -18,13 +18,8 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from luxtj.contexts.currency.domain.admin_currency import AdminCurrency
-from luxtj.contexts.currency.infrastructure.persistence.sqlalchemy_models import (
-    CityRow,
-    CountryRow,
-)
 from luxtj.contexts.hotel.domain.common import HotelCommon
 from luxtj.contexts.hotel.infrastructure.persistence.sqlalchemy_models import (
-    ApiCityMapRow,
     HotelBookingDetailsRow,
     HotelBookingPaxDetailsRow,
     HotelBookingTransactionDetailsRow,
@@ -206,37 +201,23 @@ class RateHawkHotelProvider(HotelCommon):
 
     # ── SEARCH ─────────────────────────────────────────────────────────
 
-    async def _resolve_region_id(self, city_id: str) -> str | None:
-        """Resolve RateHawk region code from catalogue region id or legacy api_city_map."""
-        if not city_id or not self.booking_api_id:
+    async def _resolve_region_id(self, region_id: str) -> str | None:
+        """Resolve RateHawk region code from catalogue region id."""
+        if not region_id or not self.booking_api_id or self._crs_session is None:
             return None
         from luxtj.contexts.crs.infrastructure.persistence.sqlalchemy_models import (
             BookingSourceRegionMapRow,
         )
 
-        if self._crs_session is not None:
-            mapped = (
-                await self._crs_session.execute(
-                    select(BookingSourceRegionMapRow).where(
-                        BookingSourceRegionMapRow.booking_source_id == self.booking_api_id,
-                        BookingSourceRegionMapRow.new_cities_n_region_id == city_id,
-                    )
-                )
-            ).scalar_one_or_none()
-            if mapped is not None:
-                return str(mapped.booking_source_region_code)
-
-        if self._session is None:
-            return None
-        row = (
-            await self._session.execute(
-                select(ApiCityMapRow).where(
-                    ApiCityMapRow.api_fk == self.booking_api_id,
-                    ApiCityMapRow.city_fk == city_id,
+        mapped = (
+            await self._crs_session.execute(
+                select(BookingSourceRegionMapRow).where(
+                    BookingSourceRegionMapRow.booking_source_id == self.booking_api_id,
+                    BookingSourceRegionMapRow.new_cities_n_region_id == region_id,
                 )
             )
         ).scalar_one_or_none()
-        return str(row.api_city_code) if row else None
+        return str(mapped.booking_source_region_code) if mapped is not None else None
 
     def _build_guests_payload(self, rooms: list[Any]) -> list[dict[str, Any]]:
         if not rooms:
@@ -279,24 +260,54 @@ class RateHawkHotelProvider(HotelCommon):
                 "RateHawk credentials missing in booking_apis registry (API key ID / access token)"
             )
             return []
-        # region resolved async in blender before calling; allow pre-resolved region_id
-        region_id = search_data.get("_region_id") or search_data.get("region_id")
-        if region_id is None:
-            return []
         guests = self._build_guests_payload(search_data.get("rooms") or [])
         # Supplier request currency comes only from booking_apis.currency (admin config).
         request_currency = str(self.currency or AdminCurrency.code() or "USD").upper()[:3]
-        payload = {
-            "checkin": search_data.get("checkin_date") or timeutils.datetime_now().strftime("%Y-%m-%d"),
-            "checkout": search_data.get("checkout_date")
-            or timeutils.datetime_now().strftime("%Y-%m-%d"),
-            "residency": self.ratehawk_residency_from_nationality(search_data),
-            "language": "en",
-            "guests": guests,
-            "region_id": int(region_id),
-            "currency": request_currency,
-        }
-        url = self.base_url.rstrip("/") + "/b2b/v3/search/serp/region/"
+        checkin = search_data.get("checkin_date") or timeutils.datetime_now().strftime("%Y-%m-%d")
+        checkout = search_data.get("checkout_date") or timeutils.datetime_now().strftime("%Y-%m-%d")
+        residency = self.ratehawk_residency_from_nationality(search_data)
+
+        lat = search_data.get("lat")
+        lng = search_data.get("lng")
+        use_geo = lat is not None and lng is not None
+        if use_geo:
+            try:
+                lat_f = float(lat)
+                lng_f = float(lng)
+            except (TypeError, ValueError):
+                return []
+            try:
+                radius = int(search_data.get("radius") or 25000)
+            except (TypeError, ValueError):
+                radius = 25000
+            radius = max(1, min(70000, radius))
+            payload = {
+                "checkin": checkin,
+                "checkout": checkout,
+                "residency": residency,
+                "language": "en",
+                "guests": guests,
+                "latitude": lat_f,
+                "longitude": lng_f,
+                "radius": radius,
+                "currency": request_currency,
+            }
+            url = self.base_url.rstrip("/") + "/b2b/v3/search/serp/geo/"
+        else:
+            region_id = search_data.get("_region_id") or search_data.get("region_id")
+            if region_id is None:
+                return []
+            payload = {
+                "checkin": checkin,
+                "checkout": checkout,
+                "residency": residency,
+                "language": "en",
+                "guests": guests,
+                "region_id": int(region_id),
+                "currency": request_currency,
+            }
+            url = self.base_url.rstrip("/") + "/b2b/v3/search/serp/region/"
+
         handle = self.build_post_handle(
             url,
             payload,
@@ -315,10 +326,15 @@ class RateHawkHotelProvider(HotelCommon):
                 "RateHawk credentials missing in booking_apis registry (API key ID / access token)"
             )
             return []
-        region_id = await self._resolve_region_id(str(search_data.get("city_id") or ""))
-        if region_id is None:
+        lat = search_data.get("lat")
+        lng = search_data.get("lng")
+        if lat is not None and lng is not None:
+            return self.get_search_request(search_data)
+        catalogue_region_id = str(search_data.get("region_id") or "")
+        region_code = await self._resolve_region_id(catalogue_region_id)
+        if region_code is None:
             return []
-        search_data["_region_id"] = region_id
+        search_data["_region_id"] = region_code
         return self.get_search_request(search_data)
 
     def _parse_serp_hotels(self, raw_response: Any) -> tuple[list[dict[str, Any]], str | None]:
@@ -344,8 +360,7 @@ class RateHawkHotelProvider(HotelCommon):
         if err is not None:
             return
 
-        city_id = str(search_data.get("city_id") or "")
-        region_id = search_data.get("_region_id") or await self._resolve_region_id(city_id)
+        region_id = search_data.get("_region_id") or search_data.get("region_id") or ""
         booking_api_id = str(search_data.get("booking_api_id") or self.booking_api_id or "")
         booking_source_code = str(search_data.get("booking_source_code") or self.booking_source)
         checkin = str(search_data.get("checkin_date") or "")
@@ -368,10 +383,18 @@ class RateHawkHotelProvider(HotelCommon):
         for offset in range(0, len(ordered_hids), CRS_SEARCH_CODE_WINDOW):
             window_hids = ordered_hids[offset : offset + CRS_SEARCH_CODE_WINDOW]
             static_by_hid: dict[str, Any] = {}
-            if self._crs_session is not None and booking_api_id and city_id:
+            if self._crs_session is not None and booking_api_id:
                 static_by_hid = await self.get_search_static_details_by_supplier_hotel_codes(
-                    self._crs_session, window_hids, booking_api_id, city_id
+                    self._crs_session, window_hids, booking_api_id
                 )
+
+            search_lat = search_data.get("lat")
+            search_lng = search_data.get("lng")
+            try:
+                search_lat_f = float(search_lat) if search_lat is not None else None
+                search_lng_f = float(search_lng) if search_lng is not None else None
+            except (TypeError, ValueError):
+                search_lat_f = search_lng_f = None
 
             batch: list[dict[str, Any]] = []
             for hid in window_hids:
@@ -397,6 +420,17 @@ class RateHawkHotelProvider(HotelCommon):
                 rate_norm = self.ratehawk_normalize_hp_rate_row(best_rate)
                 meal_code = str(rate_norm.get("meal_code") or "nomeal")
                 meal_included = bool(rate_norm.get("breakfast_included") or meal_code != "nomeal")
+                meal_display = str(rate_norm.get("meal_display") or "")
+                allotment = int(rate_norm.get("available") or best_rate.get("allotment") or 0)
+                tax_breakdown = self.ratehawk_parse_payment_tax_breakdown(pt)
+                taxes_included = float(tax_breakdown.get("includedTaxesSum") or 0) > 0 or float(
+                    tax_breakdown.get("vatIncludedAmount") or 0
+                ) > 0
+                serp_filters = [
+                    str(f)
+                    for f in (best_rate.get("serp_filters") or api_hotel.get("serp_filters") or [])
+                    if f
+                ]
 
                 static = static_by_hid.get(hid) or {}
                 crs = static.get("hotel") or {}
@@ -404,17 +438,43 @@ class RateHawkHotelProvider(HotelCommon):
                     # Prefer CRS-backed search cards only.
                     continue
                 other_amenities = static.get("other_amenities") or []
+                amenity_names = [
+                    str(a.get("name") or "").strip()
+                    for a in other_amenities
+                    if isinstance(a, dict) and str(a.get("name") or "").strip()
+                ]
+                featured_amenity = amenity_names[0] if amenity_names else ""
                 name = str(crs.get("name") or "")
                 star = int(crs.get("star_rating") or 0)
                 unique_key = str(crs.get("unique_key") or "")
+                token_region_id = str(crs.get("region_id") or region_id or "")
                 if not unique_key and name:
-                    unique_key = self.compute_unique_key(name, star, city_id)
+                    unique_key = self.compute_unique_key(name, star, token_region_id or hid)
                 if not unique_key:
-                    unique_key = __import__("hashlib").md5(f"{hid}|{city_id}".encode()).hexdigest()
+                    unique_key = __import__("hashlib").md5(f"{hid}|{token_region_id}".encode()).hexdigest()
 
                 rate_key = str(best_rate.get("match_hash") or "")
                 if not rate_key:
                     continue
+
+                hotel_lat = float(crs.get("latitude") or 0)
+                hotel_lng = float(crs.get("longitude") or 0)
+                distance_city_km = None
+                if search_lat_f is not None and search_lng_f is not None:
+                    distance_city_km = self.haversine_km(
+                        search_lat_f, search_lng_f, hotel_lat, hotel_lng
+                    )
+
+                meals: list[dict[str, str]] = []
+                if meal_included or (meal_code and meal_code.lower() != "nomeal"):
+                    icon = "tea" if rate_norm.get("breakfast_included") else "utensils"
+                    meals.append(
+                        {
+                            "icon": icon,
+                            "text": meal_display or ("Breakfast included" if meal_included else "Meals included"),
+                            "code": meal_code,
+                        }
+                    )
 
                 token = self.encode_result_token(
                     self.booking_source,
@@ -422,7 +482,7 @@ class RateHawkHotelProvider(HotelCommon):
                         {
                             "hid": hid,
                             "region_id": region_id,
-                            "city_id": city_id,
+                            "region_id": token_region_id,
                             "checkin": checkin,
                             "checkout": checkout,
                             "guests": guests_payload,
@@ -439,6 +499,9 @@ class RateHawkHotelProvider(HotelCommon):
                     for p in [str(crs.get("address_line1") or ""), str(crs.get("address_line2") or "")]
                     if p
                 ]
+                property_type = str(crs.get("accommodation_type") or "").strip()
+                hotel_chain = str(crs.get("hotel_chain") or "").strip()
+                description = str(crs.get("description") or "").strip()
                 batch.append(
                     {
                         "HotelCode": hid,
@@ -450,17 +513,33 @@ class RateHawkHotelProvider(HotelCommon):
                         "image": str(crs.get("image") or ""),
                         "address": ", ".join(address_parts),
                         "location": str(crs.get("location") or ""),
-                        "amenities": [],
+                        "description": description,
+                        "amenities": amenity_names,
                         "other_amenities": other_amenities,
+                        "featured_amenity": featured_amenity,
+                        "property_type": property_type,
+                        "accommodation_type": property_type,
+                        "hotel_chain": hotel_chain,
+                        "rooms_count": crs.get("rooms_count"),
                         "geoPoint": {
-                            "lat": float(crs.get("latitude") or 0),
-                            "lng": float(crs.get("longitude") or 0),
+                            "lat": hotel_lat,
+                            "lng": hotel_lng,
                         },
+                        "distance_city_km": distance_city_km,
+                        "distance_city_label": "City Centre",
                         "free_cancellation_before": free_cancel_before or "",
                         "unique_key": unique_key,
                         "booking_source": booking_source_code,
                         "refundable": free_cancel_before is not None,
                         "meal_included": meal_included,
+                        "meal_code": meal_code,
+                        "meal_display": meal_display,
+                        "meals": meals,
+                        "serp_filters": serp_filters,
+                        "instant_booking": allotment > 0,
+                        "book_now": allotment > 0,
+                        "taxes_included": taxes_included,
+                        "tax_label": "Includes all Taxes" if taxes_included else "Taxes may apply",
                         "show_currency": show_currency,
                         "supplier_currency": show_currency,
                         "currency": admin_code,
@@ -519,18 +598,15 @@ class RateHawkHotelProvider(HotelCommon):
         if not hid:
             return {"status": False, "message": "Missing hotel id in token"}
         booking_api_id = str(self.booking_api_id or "")
-        city_id = str(inner.get("city_id") or "")
         crs = await self.get_hotel_crs_details_for_supplier_code(
-            self._crs_session, hid, booking_api_id, city_id
+            self._crs_session, hid, booking_api_id
         )
-        if crs is None and city_id:
-            crs = await self.get_hotel_crs_details_for_supplier_code(
-                self._crs_session, hid, booking_api_id, ""
-            )
         if crs is None:
             return {"status": False, "message": "Hotel not found in inventory"}
-        resolved_city = str((crs["hotel"].get("city_id") or city_id) or "")
-        list_inner = {**inner, "city_id": resolved_city}
+        resolved_region = str(
+            (crs["hotel"].get("region_id") or inner.get("region_id") or "") or ""
+        )
+        list_inner = {**inner, "region_id": resolved_region}
         if not list_inner.get("guests"):
             list_inner["guests"] = self._build_guests_payload([])
         list_token = self.encode_result_token(
@@ -544,17 +620,16 @@ class RateHawkHotelProvider(HotelCommon):
         hotel = crs["hotel"]
         city_name = str(hotel.get("location") or "")
         country_name = ""
-        if self._session is not None and hotel.get("city_id"):
-            row = (
-                await self._session.execute(
-                    select(CityRow, CountryRow)
-                    .join(CountryRow, CountryRow.id == CityRow.country_id)
-                    .where(CityRow.id == hotel["city_id"])
-                )
-            ).first()
-            if row:
-                city_name = row[0].name
-                country_name = row[1].name
+        region_id = str(hotel.get("region_id") or "")
+        if self._crs_session is not None and region_id:
+            from luxtj.contexts.crs.infrastructure.persistence.sqlalchemy_models import (
+                NewCitiesNRegionRow,
+            )
+
+            region = await self._crs_session.get(NewCitiesNRegionRow, region_id)
+            if region is not None:
+                city_name = str(region.name or city_name)
+                country_name = str(region.country_name or "")
         main_image = str(hotel.get("image") or "").strip()
         gallery = crs.get("gallery_image_urls") or []
         images: list[str] = []
@@ -582,7 +657,7 @@ class RateHawkHotelProvider(HotelCommon):
             "location": str(hotel.get("location") or city_name),
             "Images": images,
             "Address": ", ".join(address_parts),
-            "CityId": str(hotel.get("city_id") or ""),
+            "RegionId": str(hotel.get("region_id") or ""),
             "CityName": city_name,
             "CountryName": country_name,
             "lat": float(hotel.get("latitude") or 0),
@@ -624,16 +699,13 @@ class RateHawkHotelProvider(HotelCommon):
             return {"status": False, "message": decoded.get("error") or "Error"}
         rates = (((decoded.get("data") or {}).get("hotels") or [{}])[0].get("rates")) or []
         hid = str(inner.get("hid") or "")
-        city_id = str(inner.get("city_id") or "")
         booking_api_id = str(self.booking_api_id or "")
         hotel_crs_id = ""
         hotel_crs_code = ""
         star = 0
         if hid and booking_api_id and self._crs_session is not None:
             crs_hotel = await self.get_hotel_crs_details_for_supplier_code(
-                self._crs_session, hid, booking_api_id, city_id
-            ) or await self.get_hotel_crs_details_for_supplier_code(
-                self._crs_session, hid, booking_api_id, ""
+                self._crs_session, hid, booking_api_id
             )
             if crs_hotel:
                 hotel_crs_id = str(crs_hotel["hotel"].get("id") or "")
@@ -725,20 +797,48 @@ class RateHawkHotelProvider(HotelCommon):
         self, rate: dict[str, Any], base_inner: dict[str, Any], booking_source_key: str
     ) -> dict[str, Any]:
         norm = self.ratehawk_normalize_hp_rate_row(rate)
-        inner = {**base_inner, "rate_key": norm["book_hash"]}
+        pt = self.ratehawk_first_payment_type(rate)
+        show_currency = str(
+            (pt or {}).get("show_currency_code")
+            or (pt or {}).get("currency_code")
+            or self.currency
+            or AdminCurrency.code()
+            or "USD"
+        ).upper()[:3]
+        converted = AdminCurrency.convert_amount_to_admin(float(norm["amount"] or 0), show_currency)
+        taxes_converted = AdminCurrency.convert_amount_to_admin(
+            float(norm["taxes"] or 0), show_currency
+        )
+        admin_code = AdminCurrency.code()
+        meal = str(norm["meal_display"] or "Room only")
+        free_before = norm.get("free_cancellation_before")
+        variation_bits = [meal]
+        if free_before:
+            variation_bits.append("Free cancellation")
+        elif not free_before:
+            variation_bits.append("Non-refundable")
+        inner = {
+            **base_inner,
+            "rate_key": norm["book_hash"],
+            "currency": show_currency,
+        }
         return {
-            "variation": norm["variation_label"],
-            "amount": norm["amount"],
-            "taxes": norm["taxes"],
+            "variation": " · ".join(variation_bits),
+            "amount": float(converted["amount"]),
+            "taxes": float(taxes_converted["amount"]),
             "extraFees": norm["extraFees"],
-            "meal": norm["meal_display"],
+            "meal": meal,
+            "meal_code": norm.get("meal_code") or "",
             "breakfastIncluded": norm["breakfast_included"],
             "childMealIncluded": norm["child_meal_included"],
             "available": norm["available"],
-            "freeCancellationBefore": norm["free_cancellation_before"],
+            "freeCancellationBefore": free_before,
             "cancelPolicies": norm["cancel_policies"],
             "ResultToken": self.encode_result_token(booking_source_key, json.dumps(inner)),
             "Discount": {"value": 0, "is_percentage": False, "amount": 0},
+            "currency": admin_code,
+            "supplier_currency": show_currency,
+            "conversion_rate": float(converted["rate"]),
         }
 
     async def block_room(
@@ -776,17 +876,30 @@ class RateHawkHotelProvider(HotelCommon):
             return {"status": False, "message": "Missing book hash after prebook"}
 
         hid = str(inner.get("hid") or "")
-        city_id = str(inner.get("city_id") or "")
         booking_api_id = str(self.booking_api_id or "")
         crs = await self.get_hotel_crs_details_for_supplier_code(
-            self._crs_session, hid, booking_api_id, city_id
-        ) or await self.get_hotel_crs_details_for_supplier_code(
-            self._crs_session, hid, booking_api_id, ""
+            self._crs_session, hid, booking_api_id
         )
         if crs is None:
             return {"status": False, "message": "Hotel not found in inventory"}
-        resolved_city = str((crs["hotel"].get("city_id") or city_id) or "")
+        resolved_region = str(
+            (crs["hotel"].get("region_id") or inner.get("region_id") or "") or ""
+        )
         norm = self.ratehawk_normalize_hp_rate_row(rate)
+        pt = self.ratehawk_first_payment_type(rate)
+        show_currency = str(
+            (pt or {}).get("show_currency_code")
+            or (pt or {}).get("currency_code")
+            or inner.get("currency")
+            or self.currency
+            or AdminCurrency.code()
+            or "USD"
+        ).upper()[:3]
+        amount_admin = AdminCurrency.convert_amount_to_admin(float(norm["amount"] or 0), show_currency)
+        taxes_admin = AdminCurrency.convert_amount_to_admin(float(norm["taxes"] or 0), show_currency)
+        base_admin = AdminCurrency.convert_amount_to_admin(
+            float(norm.get("show_amount") or norm["amount"] or 0), show_currency
+        )
         room_name_full = norm["room_name"]
         rdt = rate.get("room_data_trans") if isinstance(rate.get("room_data_trans"), dict) else {}
         room_display = str(rdt.get("main_room_type") or "").strip() or room_name_full or "Room"
@@ -828,7 +941,7 @@ class RateHawkHotelProvider(HotelCommon):
             "currency": str(inner.get("currency") or "USD"),
             "residency": str(inner.get("residency") or "gb"),
             "search_id": inner.get("search_id") or "",
-            "city_id": resolved_city,
+            "region_id": resolved_region,
         }
         booking_code = self.encode_list_token(
             str(token_data.get("booking_source") or self.booking_source), list_token_data
@@ -839,8 +952,8 @@ class RateHawkHotelProvider(HotelCommon):
             "variation": norm["variation_label"],
             "images": static.get("images") or [],
             "amenities": amenities_combined,
-            "amount": norm["amount"],
-            "taxes": norm["taxes"],
+            "amount": float(amount_admin["amount"]),
+            "taxes": float(taxes_admin["amount"]),
             "extraFees": norm["extraFees"],
             "meal": norm["meal_display"],
             "meal_code": norm["meal_code"],
@@ -858,8 +971,11 @@ class RateHawkHotelProvider(HotelCommon):
             "hotelStarRating": int(crs["hotel"].get("star_rating") or 0),
             "BookingCode": booking_code,
             "Discount": {"value": 0, "is_percentage": False, "amount": 0},
-            "BaseFare": norm["show_amount"],
-            "TotalTax": norm["taxes"],
+            "BaseFare": float(base_admin["amount"]),
+            "TotalTax": float(taxes_admin["amount"]),
+            "currency": AdminCurrency.code(),
+            "supplier_currency": show_currency,
+            "conversion_rate": float(amount_admin["rate"]),
         }
         return {
             "status": True,
@@ -1189,6 +1305,237 @@ class RateHawkHotelProvider(HotelCommon):
         if isinstance(debug, dict) and debug.get("validation_error"):
             msg += " — " + str(debug["validation_error"])
         return f"RateHawk {step} failed: {msg}"
+
+    @staticmethod
+    def _confirmation_ref_from_order_row(order: dict[str, Any]) -> str:
+        sd = order.get("supplier_data")
+        if isinstance(sd, dict):
+            cid = str(sd.get("confirmation_id") or "").strip()
+            if cid:
+                return cid
+            so = str(sd.get("order_id") or "").strip()
+            if so:
+                return so
+        oid = order.get("order_id")
+        if oid is not None and oid != "":
+            return str(oid)
+        return ""
+
+    @staticmethod
+    def _map_order_status(order_status: str) -> str | None:
+        st = str(order_status or "").strip().lower()
+        if not st:
+            return None
+        if st in {"cancelled", "canceled", "cancelled_by_partner", "cancelled_by_hotel"}:
+            return "CANCELLED"
+        if st in {"ok", "completed", "confirmed"}:
+            return "BOOKING_CONFIRMED"
+        if st in {"rejected", "failed", "error"}:
+            return "BOOKING_FAILED"
+        return None
+
+    async def _fetch_order_info(
+        self, partner_order_id: str, order_id: Any
+    ) -> dict[str, Any]:
+        """POST hotel/order/info/ — confirmation ref + order row status."""
+        out: dict[str, Any] = {
+            "confirmation_reference": "",
+            "order_status": None,
+            "order_row": None,
+            "order_info_raw": None,
+            "order_id": order_id,
+        }
+        searches: list[dict[str, Any]] = []
+        if partner_order_id:
+            searches.append({"partner_order_ids": [partner_order_id]})
+            searches.append({"partner_order_ids": [partner_order_id], "status": "ok"})
+        if order_id is not None and order_id != "":
+            try:
+                oid = int(order_id)
+            except (TypeError, ValueError):
+                oid = None
+            if oid is not None and oid > 0:
+                searches.append({"order_ids": [oid]})
+                searches.append({"order_ids": [oid], "status": "ok"})
+
+        for search in searches:
+            payload = {
+                "language": "en",
+                "ordering": {"ordering_type": "desc", "ordering_by": "created_at"},
+                "pagination": {"page_size": "10", "page_number": "1"},
+                "search": search,
+            }
+            meta = await self._send_request(
+                "/b2b/v3/hotel/order/info/", "POST", payload, None
+            )
+            if meta.get("curl_errno") or not meta.get("body"):
+                continue
+            try:
+                decoded = json.loads(meta["body"])
+            except Exception:
+                continue
+            if not isinstance(decoded, dict) or decoded.get("status") != "ok":
+                continue
+            data = decoded.get("data") if isinstance(decoded.get("data"), dict) else {}
+            orders = data.get("orders") if isinstance(data, dict) else None
+            if not isinstance(orders, list) or not orders:
+                continue
+            first = orders[0]
+            if not isinstance(first, dict):
+                continue
+            ref = self._confirmation_ref_from_order_row(first)
+            out["confirmation_reference"] = ref
+            out["order_status"] = first.get("status")
+            out["order_row"] = first
+            out["order_info_raw"] = data
+            if first.get("order_id") is not None:
+                out["order_id"] = first.get("order_id")
+            if ref or out["order_status"]:
+                break
+        return out
+
+    async def refresh_booking_from_supplier(
+        self, booking_reference: str, context: dict[str, Any] | None = None
+    ) -> dict[str, Any]:
+        """Poll finish/status (when awaiting) and/or order/info for confirmation."""
+        import asyncio
+
+        ctx = context if isinstance(context, dict) else {}
+        partner_order_id = str(
+            ctx.get("partner_order_id") or booking_reference or ""
+        ).strip()
+        order_id = ctx.get("order_id")
+        if order_id is None or order_id == "":
+            order_id = booking_reference if str(booking_reference).strip().isdigit() else None
+        current_status = str(ctx.get("current_status") or "").upper()
+
+        if not partner_order_id and (order_id is None or order_id == ""):
+            return {
+                "status": False,
+                "message": "Supplier booking reference is missing",
+                "outcome": "missing_ref",
+                "data": {},
+            }
+
+        finish_status_data: dict[str, Any] | None = None
+        if current_status in {
+            "BOOKING_AWAITING_CONFIRMATION",
+            "BOOKING_PENDING",
+            "PENDING_PAYMENT",
+        } or bool(ctx.get("finish_pending")):
+            if partner_order_id:
+                round_result = await self._poll_finish_status_one_round(partner_order_id)
+                if round_result["decision"] == "terminal_failure":
+                    return {
+                        "status": True,
+                        "message": round_result.get("message") or "Supplier booking failed",
+                        "outcome": "failed",
+                        "data": {
+                            "BookingRef": str(order_id or partner_order_id),
+                            "ConfirmationReference": "",
+                            "Status": "BOOKING_FAILED",
+                            "RawResponse": {
+                                "finish_status_error": round_result.get("message"),
+                            },
+                        },
+                    }
+                if round_result["decision"] == "success":
+                    finish_status_data = (
+                        round_result["data"]
+                        if isinstance(round_result.get("data"), dict)
+                        else {}
+                    )
+                    await asyncio.sleep(self.RATEHAWK_STATUS_POLL_INTERVAL_SEC)
+
+        order_info = await self._fetch_order_info(partner_order_id, order_id)
+        mapped = self._map_order_status(str(order_info.get("order_status") or ""))
+        conf = str(order_info.get("confirmation_reference") or "").strip()
+        booking_ref = str(
+            order_info.get("order_id") or order_id or partner_order_id or ""
+        )
+
+        raw: dict[str, Any] = {
+            "order_info": order_info.get("order_info_raw"),
+            "order_row": order_info.get("order_row"),
+        }
+        if finish_status_data is not None:
+            raw["finish_status"] = finish_status_data
+
+        if mapped == "CANCELLED":
+            return {
+                "status": True,
+                "message": "Booking cancelled at supplier",
+                "outcome": "cancelled",
+                "data": {
+                    "BookingRef": booking_ref,
+                    "ConfirmationReference": conf,
+                    "Status": "CANCELLED",
+                    "RawResponse": raw,
+                },
+            }
+        if mapped == "BOOKING_FAILED":
+            return {
+                "status": True,
+                "message": "Booking failed at supplier",
+                "outcome": "failed",
+                "data": {
+                    "BookingRef": booking_ref,
+                    "ConfirmationReference": conf,
+                    "Status": "BOOKING_FAILED",
+                    "RawResponse": raw,
+                },
+            }
+        if finish_status_data is not None or mapped == "BOOKING_CONFIRMED" or conf:
+            return {
+                "status": True,
+                "message": "Status updated",
+                "outcome": "confirmed",
+                "data": {
+                    "BookingRef": booking_ref,
+                    "ConfirmationReference": conf,
+                    "Status": "BOOKING_CONFIRMED",
+                    "RawResponse": raw,
+                },
+            }
+
+        # Do not downgrade an already-confirmed (or other terminal) local status
+        # when supplier order/info is temporarily empty.
+        if current_status == "BOOKING_CONFIRMED":
+            return {
+                "status": True,
+                "message": "No supplier updates",
+                "outcome": "unchanged",
+                "data": {
+                    "BookingRef": booking_ref,
+                    "ConfirmationReference": conf,
+                    "Status": "BOOKING_CONFIRMED",
+                    "RawResponse": raw,
+                },
+            }
+        if current_status == "BOOKING_FAILED":
+            return {
+                "status": True,
+                "message": "No supplier updates",
+                "outcome": "unchanged",
+                "data": {
+                    "BookingRef": booking_ref,
+                    "ConfirmationReference": conf,
+                    "Status": "BOOKING_FAILED",
+                    "RawResponse": raw,
+                },
+            }
+
+        return {
+            "status": True,
+            "message": "Still awaiting supplier confirmation",
+            "outcome": "awaiting",
+            "data": {
+                "BookingRef": booking_ref,
+                "ConfirmationReference": conf,
+                "Status": "BOOKING_AWAITING_CONFIRMATION",
+                "RawResponse": raw,
+            },
+        }
 
     async def get_booking_details(self, booking_reference: str) -> dict[str, Any]:
         meta = await self._send_request(

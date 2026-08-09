@@ -26,9 +26,10 @@ class HotelMarkupRuleResolver:
         if cc is not None and (ctx_cc is None or cc != ctx_cc):
             return False
 
-        rule_city = getattr(rule, "city_id", None)
-        if rule_city is not None:
-            if context.get("city_id") is None or str(rule_city) != str(context["city_id"]):
+        rule_region = getattr(rule, "region_id", None)
+        if rule_region is not None and str(rule_region).strip():
+            ctx_region = context.get("region_id")
+            if ctx_region is None or str(rule_region) != str(ctx_region):
                 return False
 
         hc = self.normalize_filter(getattr(rule, "hotel_code", None))
@@ -70,7 +71,8 @@ class HotelMarkupRuleResolver:
             score += 5
         if self.normalize_country_code(getattr(rule, "country_code", None)) is not None:
             score += 4
-        if getattr(rule, "city_id", None) is not None:
+        region = getattr(rule, "region_id", None)
+        if region is not None and str(region).strip():
             score += 4
         if self.normalize_filter(getattr(rule, "hotel_code", None)) is not None:
             score += 6

@@ -6,6 +6,10 @@ import base64
 import json
 from typing import Any
 
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from luxtj.contexts.flight.application.promo import FlightPromo
+
 
 class FlightPreBookQuote:
     @staticmethod
@@ -104,26 +108,42 @@ class FlightPreBookQuote:
         return cls._sum_nested_selection(passengers, "MealDetails", "MealKey")
 
     @classmethod
-    def compute(
+    async def compute(
         cls,
+        session: AsyncSession,
         token_data: dict[str, Any],
         discount_data: dict[str, Any] | None,
         passengers: list[Any],
         promo_code: str | None,
         payment_gateway: Any | None,
     ) -> dict[str, Any]:
-        """gross − promo − admin discount + SSR → convenience → final (all admin)."""
+        """gross (base+tax+markup) − promo − admin discount + SSR → convenience → final (all admin).
+
+        Promo is evaluated on gross only (exclusive of meal / baggage / seat).
+        Convenience fee is calculated on the amount the user will pay before the fee itself:
+        gross + SSR − promo − admin_discount.
+        """
         price = token_data.get("Price") if isinstance(token_data.get("Price"), dict) else {}
         gross = float(price.get("TotalDisplayFare") or 0)
         discount = discount_data if isinstance(discount_data, dict) else {}
         admin_discount = float(discount.get("amount") or 0)
+        promo_evaluation_base = max(0.0, cls.round_amount(gross - admin_discount))
 
-        # Flight promo engine not wired yet — accept code but apply 0 until Phase promo.
         promo_discount = 0.0
         promo_applied = None
         promo_type = None
         promo_value = 0.0
-        _ = (promo_code or "").strip()
+        promo_message = None
+        trim_promo = (promo_code or "").strip()
+        if trim_promo:
+            eval_result = await FlightPromo.evaluate(session, trim_promo, promo_evaluation_base)
+            if eval_result.get("applicable"):
+                promo_discount = float(eval_result["discount_amount_admin"] or 0)
+                promo_applied = eval_result.get("promo_code")
+                promo_type = eval_result.get("discount_type")
+                promo_value = float(eval_result.get("discount_rule_value") or 0)
+            else:
+                promo_message = str(eval_result.get("message") or "Promo code is not applicable")
 
         seat_total = cls.sum_seat_selection_prices(passengers)
         baggage_total = cls.sum_baggage_selection_prices(passengers)
@@ -148,11 +168,13 @@ class FlightPreBookQuote:
 
         return {
             "gross_display_fare": cls.round_amount(gross),
+            "promo_evaluation_base": promo_evaluation_base,
             "admin_discount": cls.round_amount(admin_discount),
             "promo_discount": cls.round_amount(promo_discount),
             "promocode_applied": promo_applied,
             "promocode_type": promo_type,
             "promocode_value": round(promo_value, 2),
+            "promo_message": promo_message,
             "seat_selection_total": seat_total,
             "baggage_selection_total": baggage_total,
             "meal_selection_total": meal_total,

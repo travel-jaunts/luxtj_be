@@ -95,27 +95,37 @@ class AdminCurrency:
         quote["supplier_currency"] = supplier_cur
         quote["currency_conversion_rate"] = rate
 
-        for key in (
-            "extra_fees_sum",
-            "sub_total_supplier",
-            "prepaid_room_supplier",
-            "taxes_supplier",
-            "room_rate_exclusive_supplier",
-            "supplier_discount",
-            "payable_after_supplier_discount",
-            "promo_discount",
-        ):
-            if key in quote:
-                quote[key] = scale(float(quote[key]))
+        # Amounts on the quote are already in admin currency when room.currency == admin
+        # (RateHawk BlockRoom converts before blender). Only scale when still in supplier currency.
+        if supplier_cur != admin.upper() and rate != 1.0:
+            for key in (
+                "extra_fees_sum",
+                "sub_total_supplier",
+                "prepaid_room_supplier",
+                "taxes_supplier",
+                "taxes_incl_markup",
+                "embedded_admin_markup",
+                "room_rate_exclusive_supplier",
+                "supplier_discount",
+                "payable_after_supplier_discount",
+                "promo_evaluation_base",
+                "promo_discount",
+            ):
+                if key in quote:
+                    quote[key] = scale(float(quote[key]))
 
-        pdt = str(quote.get("promo_discount_type") or "").lower()
-        if (
-            pdt != "percentage"
-            and "promo_rule_amount" in quote
-            and quote["promo_rule_amount"] is not None
-        ):
-            quote["promo_rule_amount"] = scale(float(quote["promo_rule_amount"]))
+            pdt = str(quote.get("promo_discount_type") or "").lower()
+            if (
+                pdt != "percentage"
+                and "promo_rule_amount" in quote
+                and quote["promo_rule_amount"] is not None
+            ):
+                quote["promo_rule_amount"] = scale(float(quote["promo_rule_amount"]))
+            quote["admin_markup"] = scale(float(quote.get("admin_markup") or 0))
+        else:
+            quote["currency_conversion_rate"] = 1.0
 
+        # Convenience on: base + taxes (incl. markup) − supplier discount − promo (+ request mk).
         payable_after_promo = max(
             0,
             round(
@@ -124,11 +134,14 @@ class AdminCurrency:
                 2,
             ),
         )
-        request_mk_scaled = scale(max(0, round(admin_markup, 2)))
-        before_conv = max(0, round(payable_after_promo + request_mk_scaled, 2))
+        request_mk = max(0.0, round(float(admin_markup or 0), 2))
+        if supplier_cur != admin.upper() and rate != 1.0:
+            request_mk = scale(request_mk)
+        before_conv = max(0, round(payable_after_promo + request_mk, 2))
 
         conv = _convenience_amount(payment_gateway, before_conv)
-        quote["admin_markup"] = scale(float(quote.get("admin_markup") or 0))
+        if "admin_markup" not in quote or quote.get("admin_markup") is None:
+            quote["admin_markup"] = 0.0
         quote["payable_before_convenience"] = before_conv
         quote["convenience_fee"] = conv["amount"]
         quote["convenience_type"] = conv["type"]

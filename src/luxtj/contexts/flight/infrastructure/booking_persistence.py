@@ -192,13 +192,17 @@ async def persist_pre_book(
         )
 
     pb = price.get("PriceBreakup") if isinstance(price.get("PriceBreakup"), dict) else {}
+    admin_markup = max(0.0, float(pb.get("AdminMarkup") or 0))
+    # PriceBreakup.Tax is client-facing (airline tax + embedded markup). Persist separately.
+    tax_with_markup = float(pb.get("Tax") or 0)
+    airline_tax = max(0.0, round(tax_with_markup - admin_markup, 2))
     session.add(
         FlightBookingTransactionDetailsRow(
             id=str(uuid.uuid4()),
             app_reference=app_reference,
             basic_fare=Decimal(str(pb.get("BasicFare") or 0)),
-            airline_tax=Decimal(str(pb.get("Tax") or 0)),
-            admin_markup=Decimal("0"),
+            airline_tax=Decimal(str(airline_tax)),
+            admin_markup=Decimal(str(round(admin_markup, 2))),
             admin_discount=Decimal(str(charge_quote.get("admin_discount") or 0)),
             promocode=charge_quote.get("promocode_applied"),
             discount_amount=Decimal(str(charge_quote.get("promo_discount") or 0)),
@@ -207,15 +211,50 @@ async def persist_pre_book(
             currency=AdminCurrency.code()[:3],
             currency_conversion_rate=Decimal("1"),
             payment_mode=(payment_gateway_code or "").lower() or None,
-            pax_wise_fare_breakdown=price.get("PassengerBreakup")
-            if isinstance(price.get("PassengerBreakup"), dict)
-            else None,
+            pax_wise_fare_breakdown=_airline_only_passenger_breakup(
+                price.get("PassengerBreakup")
+                if isinstance(price.get("PassengerBreakup"), dict)
+                else None,
+                admin_markup,
+            ),
             created_at=now,
             updated_at=now,
         )
     )
     await session.flush()
     return booking
+
+
+def _airline_only_passenger_breakup(
+    passenger_breakup: dict[str, Any] | None,
+    admin_markup: float,
+) -> dict[str, Any] | None:
+    """Persist pax Tax/TotalPrice without embedded admin markup."""
+    if not isinstance(passenger_breakup, dict) or not passenger_breakup:
+        return None
+    if admin_markup <= 0:
+        return dict(passenger_breakup)
+
+    pax_cnt = 0
+    for pax in passenger_breakup.values():
+        if isinstance(pax, dict):
+            pax_cnt += int(pax.get("PassengerCount") or 0)
+    if pax_cnt < 1:
+        pax_cnt = 1
+    per_pax = round(admin_markup / pax_cnt, 2)
+
+    out: dict[str, Any] = {}
+    for pax_type, row in passenger_breakup.items():
+        if not isinstance(row, dict):
+            out[pax_type] = row
+            continue
+        copy = dict(row)
+        tax = max(0.0, round(float(copy.get("Tax") or 0) - per_pax, 2))
+        base = float(copy.get("BasePrice") or 0)
+        copy["Tax"] = tax
+        copy["TotalPrice"] = round(base + tax, 2)
+        out[pax_type] = copy
+    return out
 
 
 def _extract_extras(passengers: list[dict[str, Any]]) -> list[dict[str, Any]]:

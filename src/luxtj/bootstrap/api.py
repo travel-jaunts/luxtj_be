@@ -16,6 +16,7 @@ from admin_api.customer.router import customer_router
 from admin_api.partner.router import partner_router
 from admin_api.refund_queues.router import refund_queues_router
 from admin_api.reports.router import reports_router
+from admin_api.promo_codes.router import promo_codes_router
 from luxtj.bootstrap import config
 from luxtj.contexts.account.infrastructure.persistence.sqlalchemy_models import AccountAuthBase
 from luxtj.contexts.account.presentation.http.router import account_auth_router
@@ -52,6 +53,7 @@ from luxtj.contexts.flight.presentation.http.flight_router import flight_router
 from luxtj.contexts.hotel.infrastructure.persistence.sqlalchemy_models import HotelBase
 from luxtj.contexts.hotel.presentation.http.hotel_router import hotel_router
 from luxtj.contexts.hotel.presentation.http.markup_router import hotel_markup_router
+from luxtj.contexts.flight.presentation.http.markup_router import flight_markup_router
 from luxtj.contexts.maps.presentation.http.router import maps_router
 from luxtj.contexts.identity.bootstrap import build_identity_bootstrap_service
 from luxtj.contexts.identity.infrastructure.persistence.sqlalchemy_models import IdentityBase
@@ -281,6 +283,8 @@ def server_factory() -> FastAPI:
     admin_router.include_router(crs_mapping_router)
     admin_router.include_router(crs_inventory_router)
     admin_router.include_router(hotel_markup_router)
+    admin_router.include_router(flight_markup_router)
+    admin_router.include_router(promo_codes_router)
     api_application.include_router(admin_router)
 
     public_router = APIRouter(prefix="/v1")

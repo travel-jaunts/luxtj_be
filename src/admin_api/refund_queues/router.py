@@ -12,8 +12,12 @@ from admin_api.refund_queues.serializers import (
     FlightRefundIssueResultSerializer,
     FlightRefundQueueListBody,
     FlightRefundQueueListResultSerializer,
+    HotelRefundIssueBody,
+    HotelRefundIssueResultSerializer,
+    HotelRefundQueueListBody,
+    HotelRefundQueueListResultSerializer,
 )
-from admin_api.refund_queues.service import FlightRefundQueueService
+from admin_api.refund_queues.service import FlightRefundQueueService, HotelRefundQueueService
 from luxtj.contexts.identity.presentation.http.dependencies import (
     AuthenticatedPrincipal,
     get_current_principal,
@@ -39,6 +43,13 @@ def _flight_service(
     http_client: Annotated[Any, Depends(http_client_handle)],
 ) -> FlightRefundQueueService:
     return FlightRefundQueueService(session, http_client=http_client)
+
+
+def _hotel_service(
+    session: Annotated[AsyncSession, Depends(database_session_handle)],
+    http_client: Annotated[Any, Depends(http_client_handle)],
+) -> HotelRefundQueueService:
+    return HotelRefundQueueService(session, http_client=http_client)
 
 
 @refund_queues_router.post(
@@ -72,7 +83,45 @@ async def issue_flight_refund(
             refund_amount=body.refund_amount,
             remark=body.remark,
             manual_details=body.manual_details,
-                    admin_user_id=str(principal.user_id) if principal.user_id else None,
+            admin_user_id=str(principal.user_id) if principal.user_id else None,
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    return ApiSuccessResponse(status=RequestProcessStatus.OK, output=result)
+
+
+@refund_queues_router.post(
+    "/hotel/list",
+    response_model=ApiSuccessResponse[HotelRefundQueueListResultSerializer],
+    summary="List hotel bookings awaiting refund",
+    dependencies=[Depends(require_permission("refund_queues.hotel.view"))],
+)
+async def list_hotel_refund_queue(
+    body: Annotated[HotelRefundQueueListBody, Body(...)],
+    service: Annotated[HotelRefundQueueService, Depends(_hotel_service)],
+) -> ApiSuccessResponse[HotelRefundQueueListResultSerializer]:
+    result = await service.list_queue(body)
+    return ApiSuccessResponse(status=RequestProcessStatus.OK, output=result)
+
+
+@refund_queues_router.post(
+    "/hotel/issue-refund",
+    response_model=ApiSuccessResponse[HotelRefundIssueResultSerializer],
+    summary="Issue API or manual refund for a hotel payment",
+    dependencies=[Depends(require_permission("refund_queues.hotel.refund"))],
+)
+async def issue_hotel_refund(
+    body: Annotated[HotelRefundIssueBody, Body(...)],
+    service: Annotated[HotelRefundQueueService, Depends(_hotel_service)],
+    principal: Annotated[AuthenticatedPrincipal, Depends(get_current_principal)],
+) -> ApiSuccessResponse[HotelRefundIssueResultSerializer]:
+    try:
+        result = await service.issue_refund(
+            transaction_id=body.transaction_id,
+            refund_amount=body.refund_amount,
+            remark=body.remark,
+            manual_details=body.manual_details,
+            admin_user_id=str(principal.user_id) if principal.user_id else None,
         )
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc

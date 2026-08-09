@@ -271,9 +271,6 @@ class HotelCrsHotelRow(CrsBase):
     __tablename__ = "hotel_crs_hotels"
     __table_args__ = (
         Index("ix_hotel_crs_hotels_name_normalized", "name_normalized"),
-        Index("ix_hotel_crs_hotels_city_id", "city_id"),
-        Index("ix_hotel_crs_hotels_city_id_star_rating", "city_id", "star_rating"),
-        Index("ix_hotel_crs_hotels_city_id_status", "city_id", "status"),
         Index("ix_hotel_crs_hotels_region_id", "region_id"),
         Index("ix_hotel_crs_hotels_region_id_star_rating", "region_id", "star_rating"),
         Index("ix_hotel_crs_hotels_region_id_status", "region_id", "status"),
@@ -290,8 +287,6 @@ class HotelCrsHotelRow(CrsBase):
     name_normalized: Mapped[str] = mapped_column(String(255), nullable=False)
     star_rating: Mapped[int] = mapped_column(SmallInteger, nullable=False, default=0)
     unique_key: Mapped[str] = mapped_column(String(32), nullable=False, unique=True)
-    # Soft ref → main DB cities.id (legacy); prefer region_id for Path B
-    city_id: Mapped[str | None] = mapped_column(String(36), nullable=True)
     region_id: Mapped[str | None] = mapped_column(
         String(36),
         ForeignKey("new_cities_n_regions.id", ondelete="SET NULL"),

@@ -11,6 +11,7 @@ from luxtj.contexts.currency.domain.admin_currency import AdminCurrency
 class BookingMoneyForClient:
     @staticmethod
     def strip_admin_markup_from_flight_price_block(price: dict[str, Any]) -> dict[str, Any]:
+        price.pop("AdminMarkup", None)
         breakup = price.get("PriceBreakup")
         if isinstance(breakup, dict):
             breakup.pop("AdminMarkup", None)
@@ -24,6 +25,33 @@ class BookingMoneyForClient:
                 price
             )
         return flight
+
+    @staticmethod
+    def strip_admin_markup_from_hotel_room(room: dict[str, Any]) -> dict[str, Any]:
+        """Remove internal markup / supplier-tax snapshot keys from B2C hotel payloads."""
+        room.pop("_teenva_admin_markup", None)
+        room.pop("_teenva_supplier_taxes", None)
+        room.pop("AdminMarkup", None)
+        return room
+
+    @staticmethod
+    def strip_admin_markup_from_hotel_rooms(rooms: list[Any]) -> list[Any]:
+        out: list[Any] = []
+        for room in rooms:
+            if not isinstance(room, dict):
+                out.append(room)
+                continue
+            row = dict(room)
+            variations = row.get("roomVariations")
+            if isinstance(variations, list):
+                row["roomVariations"] = [
+                    BookingMoneyForClient.strip_admin_markup_from_hotel_room(dict(v))
+                    if isinstance(v, dict)
+                    else v
+                    for v in variations
+                ]
+            out.append(BookingMoneyForClient.strip_admin_markup_from_hotel_room(row))
+        return out
 
     @staticmethod
     def admin_to_booking_amount(admin_amount: float, booking_to_admin_rate: float) -> float:

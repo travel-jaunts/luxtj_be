@@ -542,7 +542,7 @@ def deduplicate_and_insert(
                 """
                 INSERT INTO hotel_crs_hotels (
                     id, code, name, name_normalized, star_rating, unique_key,
-                    city_id, region_id, address_line1, address_line2, postal_code, location,
+                    region_id, address_line1, address_line2, postal_code, location,
                     latitude, longitude, phone, email, check_in_time, check_in_time_end,
                     check_out_time, front_desk_time_start, front_desk_time_end, description,
                     policy_text, hotel_policies, image,
@@ -559,7 +559,7 @@ def deduplicate_and_insert(
                     register_state_registration_number, register_work_time,
                     supplier_slug, external_code, status, created_at, updated_at
                 ) VALUES (
-                    %s,%s,%s,%s,%s,%s,NULL,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,
+                    %s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,
                     %s,%s,%s,
                     %s,%s,%s,%s,%s,
                     %s,%s,%s,%s,%s,%s,%s,%s,%s,

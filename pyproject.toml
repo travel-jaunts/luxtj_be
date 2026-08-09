@@ -21,6 +21,7 @@ dependencies = [
     "psycopg[binary]>=3.2",
     "zeep>=4.3.3",
     "airportsdata>=20260803",
+    "redis>=8.1.0",
 ]
 
 

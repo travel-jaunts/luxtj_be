@@ -1,4 +1,4 @@
-"""Hotel promo evaluation — mirrors TeenvaHotelPromo (uses marketing_offers)."""
+"""Flight promo evaluation — mirrors TeenvaFlightPromo (uses marketing_offers)."""
 
 from __future__ import annotations
 
@@ -19,8 +19,11 @@ REASON_EXPIRED = "expired"
 REASON_BELOW_MINIMUM = "below_minimum"
 REASON_INVALID_CONFIG = "invalid_config"
 
+AMOUNT_DECIMALS = 4
+PERCENT_DECIMALS = 2
 
-class HotelPromo:
+
+class FlightPromo:
     @staticmethod
     def _failure(reason: str, message: str) -> dict[str, Any]:
         return {
@@ -42,7 +45,7 @@ class HotelPromo:
         return any(str(a).upper() in (module.upper(), "ALL", "*") for a in apps)
 
     @staticmethod
-    async def resolve_hotel_offer(
+    async def resolve_flight_offer(
         session: AsyncSession, promo_code: str
     ) -> MarketingOfferRow | None:
         code = promo_code.strip().upper()
@@ -59,7 +62,7 @@ class HotelPromo:
             row
             for row in rows
             if str(row.status) != OfferStatusEnum.DELETED.value
-            and HotelPromo._applies_to_module(row, "HOTEL")
+            and FlightPromo._applies_to_module(row, "FLIGHT")
         ]
         if not matches:
             return None
@@ -73,43 +76,46 @@ class HotelPromo:
             return 0.0
         otype = str(offer.type or "").lower()
         if otype in (OfferTypeEnum.PERCENTAGE_OFF.value, "percentage", "percentage_off"):
-            return min(base_amount_admin, round((amt * base_amount_admin) / 100, 2))
-        return min(base_amount_admin, round(amt, 2))
+            return min(
+                base_amount_admin,
+                round((amt * base_amount_admin) / 100, AMOUNT_DECIMALS),
+            )
+        return min(base_amount_admin, round(amt, AMOUNT_DECIMALS))
 
     @staticmethod
     async def evaluate(
-        session: AsyncSession, promo_code: str, payable_total_admin: float
+        session: AsyncSession, promo_code: str, gross_fare_admin: float
     ) -> dict[str, Any]:
         trim = promo_code.strip()
         if not trim:
-            return HotelPromo._failure(REASON_EMPTY, "Promo code is required.")
-        offer = await HotelPromo.resolve_hotel_offer(session, trim)
+            return FlightPromo._failure(REASON_EMPTY, "Promo code is required.")
+        offer = await FlightPromo.resolve_flight_offer(session, trim)
         if offer is None:
-            return HotelPromo._failure(REASON_NOT_FOUND, "This promo code is not valid.")
+            return FlightPromo._failure(REASON_NOT_FOUND, "This promo code is not valid.")
         if str(offer.status) != OfferStatusEnum.ACTIVE.value:
-            return HotelPromo._failure(REASON_INACTIVE, "This promo code is not active.")
+            return FlightPromo._failure(REASON_INACTIVE, "This promo code is not active.")
         now = timeutils.datetime_now()
         end = offer.validity_end
         if end.tzinfo is None:
             end = end.replace(tzinfo=timezone.utc)
         if end < now:
-            return HotelPromo._failure(REASON_EXPIRED, "This promo code has expired.")
+            return FlightPromo._failure(REASON_EXPIRED, "This promo code has expired.")
         start = offer.validity_start
         if start.tzinfo is None:
             start = start.replace(tzinfo=timezone.utc)
         if start > now:
-            return HotelPromo._failure(REASON_INACTIVE, "This promo code is not active yet.")
+            return FlightPromo._failure(REASON_INACTIVE, "This promo code is not active yet.")
         minimum = float(offer.min_booking_value or 0)
-        if minimum > 0 and payable_total_admin < minimum:
-            return HotelPromo._failure(
+        if minimum > 0 and gross_fare_admin < minimum:
+            return FlightPromo._failure(
                 REASON_BELOW_MINIMUM,
-                "This promo code requires a minimum spend that is not met for this booking.",
+                "This promo code requires a minimum fare that is not met for this booking.",
             )
-        discount = HotelPromo.compute_discount_amount(offer, payable_total_admin)
+        discount = FlightPromo.compute_discount_amount(offer, gross_fare_admin)
         if discount <= 0:
-            return HotelPromo._failure(
+            return FlightPromo._failure(
                 REASON_INVALID_CONFIG,
-                "This promo code cannot be applied to this booking.",
+                "This promo code cannot be applied to this fare.",
             )
         otype = str(offer.type or "").lower()
         discount_type = (
@@ -117,6 +123,7 @@ class HotelPromo:
             if otype in (OfferTypeEnum.PERCENTAGE_OFF.value, "percentage", "percentage_off")
             else "plus"
         )
+        rule_value = float(offer.discount_value or 0)
         return {
             "applicable": True,
             "message": "Applied successfully",
@@ -124,6 +131,8 @@ class HotelPromo:
             "promo_code": trim.upper(),
             "promo_description": str(offer.name or ""),
             "discount_type": discount_type,
-            "discount_rule_value": round(float(offer.discount_value or 0), 2),
-            "discount_amount_admin": round(discount, 2),
+            "discount_rule_value": round(
+                rule_value, PERCENT_DECIMALS if discount_type == "percentage" else AMOUNT_DECIMALS
+            ),
+            "discount_amount_admin": round(discount, AMOUNT_DECIMALS),
         }

@@ -49,7 +49,7 @@ class HotelMarkupRuleRow(HotelBase):
     status: Mapped[str] = mapped_column(String(20), nullable=False, default="inactive")
     supplier_code: Mapped[str | None] = mapped_column(String(50), nullable=True)
     country_code: Mapped[str | None] = mapped_column(String(2), nullable=True)
-    city_id: Mapped[str | None] = mapped_column(String(36), nullable=True)
+    region_id: Mapped[str | None] = mapped_column(String(36), nullable=True)
     hotel_code: Mapped[str | None] = mapped_column(String(100), nullable=True)
     star_rating: Mapped[int | None] = mapped_column(SmallInteger, nullable=True)
     check_in_date_from: Mapped[date | None] = mapped_column(Date, nullable=True)
@@ -64,8 +64,7 @@ class HotelSearchRow(HotelBase):
     __tablename__ = "hotel_searches"
     __table_args__ = (
         Index(
-            "ix_hotel_searches_city_checkin_checkout",
-            "city_id",
+            "ix_hotel_searches_checkin_checkout",
             "checkin_date",
             "checkout_date",
         ),
@@ -74,7 +73,6 @@ class HotelSearchRow(HotelBase):
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True)
     user_id: Mapped[str | None] = mapped_column(String(36), nullable=True)
-    city_id: Mapped[str] = mapped_column(String(36), nullable=False)
     checkin_date: Mapped[date] = mapped_column(Date, nullable=False)
     checkout_date: Mapped[date] = mapped_column(Date, nullable=False)
     nationality: Mapped[str | None] = mapped_column(String(2), nullable=True)

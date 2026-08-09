@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import json
+import time
+import uuid
 from decimal import Decimal
 from typing import Any
 from urllib.parse import urljoin
@@ -511,19 +513,22 @@ class PaymentGatewayService:
             notes: dict[str, Any] = {"app_reference": record.app_reference}
             if remark_clean:
                 notes["admin_remark"] = remark_clean
+            # Receipt is Razorpay's idempotency key per payment — unique per attempt.
+            receipt = f"rf-{uuid.uuid4().hex[:12]}-{int(time.time()) % 10_000_000}"[:40]
             api_result = await gateway.refund_payment(
                 {
                     "payment_id": payment_id,
                     "amount": float(amount),
                     "currency": record.currency,
                     "notes": notes,
-                    "receipt": record.transaction_id[:40],
+                    "receipt": receipt,
                 }
             )
             if not api_result.get("status"):
+                # Surface gateway message (e.g. Razorpay error.description) as-is.
                 return {
                     "status": False,
-                    "message": api_result.get("message") or "Gateway refund failed",
+                    "message": str(api_result.get("message") or "Gateway refund failed"),
                     "data": api_result.get("data") or {},
                 }
             refund_mode = "api"

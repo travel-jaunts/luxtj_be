@@ -47,7 +47,7 @@ class HotelCrsService:
         self._session = session
 
     async def deduplicate_and_insert(
-        self, hotels: list[dict[str, Any]], city_id: str
+        self, hotels: list[dict[str, Any]], region_id: str
     ) -> dict[str, int]:
         stats = {
             "inserted": 0,
@@ -59,7 +59,7 @@ class HotelCrsService:
             "roomImagesSynced": 0,
             "roomAmenitiesMapped": 0,
         }
-        if not hotels or not city_id:
+        if not hotels or not region_id:
             return stats
         try:
             booking_sources = list(
@@ -82,7 +82,7 @@ class HotelCrsService:
                 if not name:
                     stats["errors"] += 1
                     continue
-                unique_key = HotelCommon.compute_unique_key(name, star, city_id)
+                unique_key = HotelCommon.compute_unique_key(name, star, region_id)
                 name_normalized = HotelCommon.normalize_name(name)
                 lookup_key = f"{name_normalized}|{star}"
                 hotel_data_map[unique_key] = {
@@ -100,7 +100,7 @@ class HotelCrsService:
                 return stats
 
             existing_hotels = await self._batch_find_existing_hotels(
-                city_id, list(normalized_names_map.keys())
+                region_id, list(normalized_names_map.keys())
             )
             existing_key_map: dict[str, str] = {}
             for existing in existing_hotels:
@@ -111,7 +111,7 @@ class HotelCrsService:
                     for uk in normalized_names_map[lk]:
                         if uk not in existing_key_map:
                             computed = HotelCommon.compute_unique_key(
-                                existing.name, existing_star, city_id
+                                existing.name, existing_star, region_id
                             )
                             if computed == uk:
                                 existing_key_map[uk] = existing.id
@@ -128,7 +128,7 @@ class HotelCrsService:
                     unique_key_to_id[unique_key] = existing_id
                 else:
                     to_insert_batch[unique_key] = self._build_insert_row(
-                        hotel, data, city_id, unique_key
+                        hotel, data, region_id, unique_key
                     )
                 if data["hotel_code"]:
                     hotel_code_map[unique_key] = {
@@ -139,7 +139,7 @@ class HotelCrsService:
 
             if to_insert_batch:
                 inserted_map = await self._batch_insert_hotels(
-                    list(to_insert_batch.values()), city_id
+                    list(to_insert_batch.values()), region_id
                 )
                 stats["inserted"] += len(inserted_map)
                 unique_key_to_id.update(inserted_map)
@@ -194,7 +194,7 @@ class HotelCrsService:
         return supplier_map
 
     async def _batch_find_existing_hotels(
-        self, city_id: str, lookup_keys: list[str]
+        self, region_id: str, lookup_keys: list[str]
     ) -> list[HotelCrsHotelRow]:
         star_ratings: list[int] = []
         for key in lookup_keys:
@@ -203,7 +203,7 @@ class HotelCrsService:
                 star_ratings.append(int(parts[1]))
         star_ratings = list(set(star_ratings))
         stmt = select(HotelCrsHotelRow).where(
-            HotelCrsHotelRow.city_id == city_id,
+            HotelCrsHotelRow.region_id == region_id,
             HotelCrsHotelRow.status.is_(True),
         )
         if star_ratings:
@@ -215,7 +215,7 @@ class HotelCrsService:
         self,
         hotel: dict[str, Any],
         data: dict[str, Any],
-        city_id: str,
+        region_id: str,
         unique_key: str,
     ) -> dict[str, Any]:
         address = str(hotel.get("address") or hotel.get("HotelAddress") or "")
@@ -233,7 +233,7 @@ class HotelCrsService:
             "name_normalized": data["name_normalized"],
             "star_rating": data["star"],
             "unique_key": unique_key,
-            "city_id": city_id,
+            "region_id": region_id,
             "address_line1": parts["line1"] or None,
             "address_line2": parts["line2"] or None,
             "postal_code": str(hotel.get("zipCode") or "") or None,
@@ -260,7 +260,7 @@ class HotelCrsService:
         }
 
     async def _batch_insert_hotels(
-        self, hotels_data: list[dict[str, Any]], city_id: str
+        self, hotels_data: list[dict[str, Any]], region_id: str
     ) -> dict[str, str]:
         unique_key_to_id: dict[str, str] = {}
         for i in range(0, len(hotels_data), BATCH_SIZE):

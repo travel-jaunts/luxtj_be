@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import copy
 import logging
 import uuid
 from collections.abc import AsyncIterator
@@ -12,7 +13,10 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from luxtj.contexts.currency.domain.admin_currency import AdminCurrency
+from luxtj.contexts.currency.domain.booking_money_for_client import BookingMoneyForClient
+from luxtj.contexts.flight.application.markup import FlightMarkup
 from luxtj.contexts.flight.application.prebook_quote import FlightPreBookQuote
+from luxtj.contexts.flight.application.promo import FlightPromo
 from luxtj.contexts.flight.domain.common import FlightCommon
 from luxtj.contexts.flight.domain.provider import FlightProvider
 from luxtj.contexts.flight.infrastructure.booking_persistence import persist_pre_book
@@ -44,10 +48,125 @@ class FlightBlender:
         *,
         http_client: Any | None = None,
         multi_http: MultiHttpClient | None = None,
+        flight_markup: FlightMarkup | None = None,
     ) -> None:
         self._session = session
         self._http = http_client
         self._curl = multi_http or MultiHttpClient(http_client, session=session)
+        self._markup = flight_markup or FlightMarkup(session)
+
+    @staticmethod
+    def _round_amount(amount: float) -> float:
+        return round(float(amount), 2)
+
+    @staticmethod
+    def _first_last_segments(flight: dict[str, Any]) -> tuple[dict[str, Any], dict[str, Any]] | None:
+        details = flight.get("FlightDetails")
+        if not isinstance(details, list) or not details:
+            return None
+        first_leg = details[0]
+        if not isinstance(first_leg, list) or not first_leg or not isinstance(first_leg[0], dict):
+            return None
+        last_leg = details[-1] if isinstance(details[-1], list) and details[-1] else first_leg
+        last_seg = last_leg[-1] if isinstance(last_leg[-1], dict) else first_leg[0]
+        return first_leg[0], last_seg
+
+    def _markup_params_from_flight(self, flight: dict[str, Any]) -> dict[str, Any] | None:
+        segs = self._first_last_segments(flight)
+        if segs is None:
+            return None
+        first_seg, last_seg = segs
+        origin = first_seg.get("Origin") if isinstance(first_seg.get("Origin"), dict) else {}
+        dest = last_seg.get("Destination") if isinstance(last_seg.get("Destination"), dict) else {}
+        airline = (
+            first_seg.get("OperatorCode")
+            or first_seg.get("MarketingAirlineCode")
+            or first_seg.get("OperatingAirlineCode")
+            or ""
+        )
+        return {
+            "airline": str(airline or ""),
+            "origin": str(origin.get("AirportCode") or ""),
+            "destination": str(dest.get("AirportCode") or ""),
+            "cabinClass": str(first_seg.get("CabinClass") or ""),
+            "travelDate": str(origin.get("date") or ""),
+        }
+
+    async def set_flight_markup(self, flight: dict[str, Any]) -> float:
+        """
+        Embed admin markup into Tax / TotalDisplayFare / per-pax Tax+TotalPrice.
+        Stores AdminMarkup on PriceBreakup for persistence; strip before client responses.
+        Returns markup amount applied.
+        """
+        params = self._markup_params_from_flight(flight)
+        if params is None:
+            return 0.0
+        price = flight.get("Price")
+        if not isinstance(price, dict):
+            return 0.0
+        # Avoid double-applying if the same Price dict is reused from cache.
+        if float(price.get("AdminMarkup") or (price.get("PriceBreakup") or {}).get("AdminMarkup") or 0) > 0:
+            pb0 = price.get("PriceBreakup") if isinstance(price.get("PriceBreakup"), dict) else {}
+            return float(pb0.get("AdminMarkup") or price.get("AdminMarkup") or 0)
+
+        amount = float(price.get("TotalDisplayFare") or 0)
+        markup_data = await self._markup.get_markup_amount_for_flight(params, amount)
+        markup_amount = max(0.0, float(markup_data.get("amount") or 0))
+        if markup_amount <= 0:
+            return 0.0
+
+        pb = price.get("PriceBreakup")
+        if not isinstance(pb, dict):
+            pb = {"Tax": 0.0, "BasicFare": 0.0}
+            price["PriceBreakup"] = pb
+
+        pax_breakup = price.get("PassengerBreakup")
+        if not isinstance(pax_breakup, dict) or not pax_breakup:
+            pb["AdminMarkup"] = markup_amount
+            pb["Tax"] = self._round_amount(float(pb.get("Tax") or 0) + markup_amount)
+            price["TotalDisplayFare"] = self._round_amount(
+                float(pb.get("BasicFare") or 0) + float(pb["Tax"])
+            )
+            return markup_amount
+
+        # PassengerBreakup amounts are per-passenger (City Travel / FE contract).
+        pax_cnt = 0
+        for pax in pax_breakup.values():
+            if isinstance(pax, dict):
+                pax_cnt += int(pax.get("PassengerCount") or 0)
+        if pax_cnt < 1:
+            pax_cnt = 1
+        per_pax_markup = self._round_amount(markup_amount / pax_cnt)
+
+        for pax in pax_breakup.values():
+            if not isinstance(pax, dict):
+                continue
+            pax["Tax"] = self._round_amount(float(pax.get("Tax") or 0) + per_pax_markup)
+            pax["TotalPrice"] = self._round_amount(float(pax.get("BasePrice") or 0) + float(pax["Tax"]))
+
+        pb["AdminMarkup"] = markup_amount
+        pb["Tax"] = self._round_amount(float(pb.get("Tax") or 0) + markup_amount)
+        price["TotalDisplayFare"] = self._round_amount(
+            float(pb.get("BasicFare") or 0) + float(pb["Tax"])
+        )
+        return markup_amount
+
+    async def _prepare_flight_for_client(self, flight: dict[str, Any]) -> dict[str, Any]:
+        """Deep-copy Price, apply markup, strip AdminMarkup for B2C."""
+        row = dict(flight)
+        if isinstance(row.get("Price"), dict):
+            row["Price"] = copy.deepcopy(row["Price"])
+        await self.set_flight_markup(row)
+        return BookingMoneyForClient.strip_admin_markup_from_flight_row(row)
+
+    async def _prepare_flights_for_client(
+        self, flights: list[Any]
+    ) -> list[dict[str, Any]]:
+        out: list[dict[str, Any]] = []
+        for flight in flights:
+            if isinstance(flight, dict):
+                out.append(await self._prepare_flight_for_client(flight))
+        return out
 
     async def create_search_session(
         self, search_data: dict[str, Any], user_id: str | None = None
@@ -213,11 +332,12 @@ class FlightBlender:
                     flights = formatted.get("data") if isinstance(formatted, dict) else None
                     if not isinstance(flights, list) or not flights:
                         continue
+                    marked = await self._prepare_flights_for_client(flights)
                     await out_q.put(
                         {
                             "status": True,
                             "message": "Inprogress",
-                            "data": {"flights": flights, "moreResults": True},
+                            "data": {"flights": marked, "moreResults": True},
                             "errors": None,
                         }
                     )
@@ -251,7 +371,13 @@ class FlightBlender:
             return {"status": False, "message": "Invalid token or provider not available"}
         decoded = FlightCommon.decode_result_token(result_token)
         assert decoded is not None
-        return await provider.get_upsell(str(decoded["token"]))
+        result = await provider.get_upsell(str(decoded["token"]))
+        if result.get("status") and isinstance(result.get("data"), list):
+            result = {
+                **result,
+                "data": await self._prepare_flights_for_client(result["data"]),
+            }
+        return result
 
     async def get_update_fare_quote(self, result_token: str) -> dict[str, Any]:
         provider = self.resolve_provider_from_token(result_token)
@@ -259,7 +385,11 @@ class FlightBlender:
             return {"status": False, "message": "Invalid token or provider not available"}
         decoded = FlightCommon.decode_result_token(result_token)
         assert decoded is not None
-        return await provider.get_update_fare_quote(str(decoded["token"]))
+        result = await provider.get_update_fare_quote(str(decoded["token"]))
+        if result.get("status") and isinstance(result.get("data"), dict):
+            marked = await self._prepare_flight_for_client(result["data"])
+            result = {**result, "data": marked}
+        return result
 
     async def get_extra_services(self, result_token: str) -> dict[str, Any]:
         provider = self.resolve_provider_from_token(result_token)
@@ -442,23 +572,35 @@ class FlightBlender:
             }
 
         token_data = dict(result["data"])
-        # Markup / admin discount not wired for flight yet.
+        if isinstance(token_data.get("Price"), dict):
+            token_data["Price"] = copy.deepcopy(token_data["Price"])
+        await self.set_flight_markup(token_data)
+        # Admin discount rules not wired yet.
         discount_data = {"amount": 0, "isPercentage": False, "value": 0, "type": None}
         token_data.setdefault("Price", {})
         if isinstance(token_data["Price"], dict):
             token_data["Price"]["discount"] = discount_data
 
-        charge_quote = FlightPreBookQuote.compute(
+        charge_quote = await FlightPreBookQuote.compute(
+            self._session,
             token_data,
             discount_data,
             passengers,
             str(request.get("promo_code") or "").strip() or None,
             pg_model,
         )
+        trim_promo = str(request.get("promo_code") or "").strip()
+        if trim_promo and not charge_quote.get("promocode_applied"):
+            return {
+                "status": False,
+                "message": charge_quote.get("promo_message") or "Promo code is not valid",
+                "data": [],
+            }
         if isinstance(token_data.get("Price"), dict):
             token_data["Price"]["total_seat_price"] = charge_quote["seat_selection_total"]
             token_data["Price"]["total_baggage_price"] = charge_quote["baggage_selection_total"]
             token_data["Price"]["total_meal_price"] = charge_quote["meal_selection_total"]
+            token_data["Price"]["PromoDiscount"] = charge_quote["promo_discount"]
             token_data["Price"]["ConvenienceFee"] = charge_quote["convenience_fee_amount"]
             token_data["Price"]["PayableTotal"] = charge_quote["final_total_fare"]
 
@@ -516,7 +658,12 @@ class FlightBlender:
             }
             for g in registry.active_payment_gateways.values()
         ]
-        return {"status": True, "data": token_data, "message": "Pre Booking data saved"}
+        # Never expose AdminMarkup to B2C clients (keep it on persisted Price for txn).
+        client_data = dict(token_data)
+        if isinstance(client_data.get("Price"), dict):
+            client_data["Price"] = copy.deepcopy(client_data["Price"])
+        client_data = BookingMoneyForClient.strip_admin_markup_from_flight_row(client_data)
+        return {"status": True, "data": client_data, "message": "Pre Booking data saved"}
 
     async def process_booking(self, request: dict[str, Any]) -> dict[str, Any]:
         """After payment: hold (AeroBook) → auto-issue (ConfirmBook) → persist snapshot."""
@@ -859,13 +1006,15 @@ class FlightBlender:
             if txn is None
             else {
                 "basic_fare": float(txn.basic_fare or 0),
-                "airline_tax": float(txn.airline_tax or 0),
+                # B2C: fold markup into tax; never expose admin_markup.
+                "airline_tax": float(txn.airline_tax or 0) + float(txn.admin_markup or 0),
                 "convenience_fee": float(txn.convenience_fee or 0),
                 "total_fare": float(txn.total_fare or 0),
                 "currency": txn.currency,
                 "payment_mode": txn.payment_mode,
             },
         }
+        data = BookingMoneyForClient.strip_admin_markup_from_flight_row(data)
         return {"status": True, "data": data, "message": "Success"}
 
     async def refresh_booking_status(self, app_reference: str) -> dict[str, Any]:
@@ -1031,6 +1180,66 @@ class FlightBlender:
         booking.attributes = attrs
         booking.updated_at = timeutils.datetime_now()
         await self._session.flush()
+
+    async def validate_flight_promo(self, request: dict[str, Any]) -> dict[str, Any]:
+        """
+        Validate promo against fare-quote token fare (base + taxes including markup).
+        SSR (meal / baggage / seat) is excluded from the promo evaluation base.
+        """
+        token = str(request.get("ResultToken") or request.get("resultToken") or "").strip()
+        promo_code = str(request.get("promo_code") or request.get("promoCode") or "").strip()
+        if not token:
+            return {"status": False, "message": "ResultToken is required", "data": []}
+        if not promo_code:
+            return {"status": False, "message": "Promo code is required", "data": []}
+
+        provider = self.resolve_provider_from_token(token)
+        if not provider:
+            return {"status": False, "message": "Invalid token or provider not available", "data": []}
+        decoded = FlightCommon.decode_result_token(token)
+        if decoded is None:
+            return {"status": False, "message": "Invalid ResultToken", "data": []}
+
+        result = await provider.get_flight_row_from_token_for_pricing(str(decoded["token"]))
+        if not result.get("status") or not isinstance(result.get("data"), dict):
+            return {
+                "status": False,
+                "message": result.get("message") or "Failed to load fare from token",
+                "data": [],
+            }
+
+        row = dict(result["data"])
+        if isinstance(row.get("Price"), dict):
+            row["Price"] = copy.deepcopy(row["Price"])
+        await self.set_flight_markup(row)
+        price = row.get("Price") if isinstance(row.get("Price"), dict) else {}
+        try:
+            gross = float(price.get("TotalDisplayFare") or 0)
+        except (TypeError, ValueError):
+            gross = 0.0
+        # Admin discount rules not wired yet — promo base is fare + tax (incl. markup).
+        admin_discount = 0.0
+        promo_base = max(0.0, round(gross - admin_discount, 4))
+
+        eval_result = await FlightPromo.evaluate(self._session, promo_code, promo_base)
+        data = {
+            **eval_result,
+            "gross_display_fare_admin": round(gross, 4),
+            "promo_evaluation_base_admin": round(promo_base, 4),
+            "admin_discount_amount_admin": round(admin_discount, 4),
+            "admin_currency": AdminCurrency.code(),
+        }
+        if not eval_result.get("applicable"):
+            return {
+                "status": False,
+                "message": eval_result.get("message") or "Promo code is not applicable",
+                "data": data,
+            }
+        return {
+            "status": True,
+            "message": eval_result.get("message") or "Applied successfully",
+            "data": data,
+        }
 
     async def not_implemented(self, action: str) -> dict[str, Any]:
         return {"status": False, "message": f"{action} is not implemented yet"}

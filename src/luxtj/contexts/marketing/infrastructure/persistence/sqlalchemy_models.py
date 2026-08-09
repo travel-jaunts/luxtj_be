@@ -92,7 +92,7 @@ class MarketingOfferRow(MarketingBase):
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True)
     name: Mapped[str] = mapped_column(String(255), nullable=False)
-    code: Mapped[str] = mapped_column(String(32), nullable=False, unique=True)
+    code: Mapped[str] = mapped_column(String(32), nullable=False, index=True)
     type: Mapped[str] = mapped_column(String(32), nullable=False)
     discount_value: Mapped[float] = mapped_column(Float, nullable=False)
     min_booking_value: Mapped[float] = mapped_column(Float, nullable=False)

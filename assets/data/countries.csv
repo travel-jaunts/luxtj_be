@@ -1,0 +1,251 @@
+id,name,iso3,iso2,phonecode,capital,currency,currency_name,currency_symbol,subregion_id,nationality,latitude,longitude,emoji
+1,Afghanistan,AFG,AF,93,Kabul,AFN,Afghan afghani,؋,14,Afghan,33,65,🇦🇫
+2,Aland Islands,ALA,AX,358,Mariehamn,EUR,Euro,€,18,Aland Island,60.116667,19.9,🇦🇽
+3,Albania,ALB,AL,355,Tirana,ALL,Albanian lek,Lek,16,Albanian ,41,20,🇦🇱
+4,Algeria,DZA,DZ,213,Algiers,DZD,Algerian dinar,دج,1,Algerian,28,3,🇩🇿
+5,American Samoa,ASM,AS,1,Pago Pago,USD,US Dollar,$,22,American Samoan,-14.33333333,-170,🇦🇸
+6,Andorra,AND,AD,376,Andorra la Vella,EUR,Euro,€,16,Andorran,42.5,1.5,🇦🇩
+7,Angola,AGO,AO,244,Luanda,AOA,Angolan kwanza,Kz,2,Angolan,-12.5,18.5,🇦🇴
+8,Anguilla,AIA,AI,1,The Valley,XCD,East Caribbean dollar,$,7,Anguillan,18.25,-63.16666666,🇦🇮
+9,Antarctica,ATA,AQ,672,,AAD,Antarctican dollar,$,23,Antarctic,-74.65,4.48,🇦🇶
+10,Antigua and Barbuda,ATG,AG,1,St. John's,XCD,Eastern Caribbean dollar,$,7,Antiguan or Barbudan,17.05,-61.8,🇦🇬
+11,Argentina,ARG,AR,54,Buenos Aires,ARS,Argentine peso,$,8,Argentine,-34,-64,🇦🇷
+12,Armenia,ARM,AM,374,Yerevan,AMD,Armenian dram,֏,11,Armenian,40,45,🇦🇲
+13,Aruba,ABW,AW,297,Oranjestad,AWG,Aruban florin,ƒ,7,Aruban,12.5,-69.96666666,🇦🇼
+14,Australia,AUS,AU,61,Canberra,AUD,Australian dollar,$,19,Australian,-27,133,🇦🇺
+15,Austria,AUT,AT,43,Vienna,EUR,Euro,€,17,Austrian,47.33333333,13.33333333,🇦🇹
+16,Azerbaijan,AZE,AZ,994,Baku,AZN,Azerbaijani manat,m,11,"Azerbaijani, Azeri",40.5,47.5,🇦🇿
+17,Bahamas,BHS,BS,1,Nassau,BSD,Bahamian dollar,B$,7,Bahamian,24.25,-76,🇧🇸
+18,Bahrain,BHR,BH,973,Manama,BHD,Bahraini dinar,.د.ب,11,Bahraini,26,50.55,🇧🇭
+19,Bangladesh,BGD,BD,880,Dhaka,BDT,Bangladeshi taka,৳,14,Bangladeshi,24,90,🇧🇩
+20,Barbados,BRB,BB,1,Bridgetown,BBD,Barbadian dollar,Bds$,7,Barbadian,13.16666666,-59.53333333,🇧🇧
+21,Belarus,BLR,BY,375,Minsk,BYN,Belarusian ruble,Br,15,Belarusian,53,28,🇧🇾
+22,Belgium,BEL,BE,32,Brussels,EUR,Euro,€,17,Belgian,50.83333333,4,🇧🇪
+23,Belize,BLZ,BZ,501,Belmopan,BZD,Belize dollar,$,9,Belizean,17.25,-88.75,🇧🇿
+24,Benin,BEN,BJ,229,Porto-Novo,XOF,West African CFA franc,CFA,3,"Beninese, Beninois",9.5,2.25,🇧🇯
+25,Bermuda,BMU,BM,1,Hamilton,BMD,Bermudian dollar,$,6,"Bermudian, Bermudan",32.33333333,-64.75,🇧🇲
+26,Bhutan,BTN,BT,975,Thimphu,BTN,Bhutanese ngultrum,Nu.,14,Bhutanese,27.5,90.5,🇧🇹
+27,Bolivia,BOL,BO,591,Sucre,BOB,Bolivian boliviano,Bs.,8,Bolivian,-17,-65,🇧🇴
+28,Bosnia and Herzegovina,BIH,BA,387,Sarajevo,BAM,Bosnia and Herzegovina convertible mark,KM,16,Bosnian or Herzegovinian,44,18,🇧🇦
+29,Botswana,BWA,BW,267,Gaborone,BWP,Botswana pula,P,5,"Motswana, Botswanan",-22,24,🇧🇼
+30,Bouvet Island,BVT,BV,55,,NOK,Norwegian Krone,ko,23,Bouvet Island,-54.43333333,3.4,🇧🇻
+31,Brazil,BRA,BR,55,Brasilia,BRL,Brazilian real,R$,8,Brazilian,-10,-55,🇧🇷
+32,British Indian Ocean Territory,IOT,IO,246,Diego Garcia,USD,United States dollar,$,4,BIOT,-6,71.5,🇮🇴
+33,Brunei,BRN,BN,673,Bandar Seri Begawan,BND,Brunei dollar,B$,13,Bruneian,4.5,114.66666666,🇧🇳
+34,Bulgaria,BGR,BG,359,Sofia,BGN,Bulgarian lev,Лв.,15,Bulgarian,43,25,🇧🇬
+35,Burkina Faso,BFA,BF,226,Ouagadougou,XOF,West African CFA franc,CFA,3,Burkinabe,13,-2,🇧🇫
+36,Burundi,BDI,BI,257,Bujumbura,BIF,Burundian franc,FBu,4,Burundian,-3.5,30,🇧🇮
+37,Cambodia,KHM,KH,855,Phnom Penh,KHR,Cambodian riel,KHR,13,Cambodian,13,105,🇰🇭
+38,Cameroon,CMR,CM,237,Yaounde,XAF,Central African CFA franc,FCFA,2,Cameroonian,6,12,🇨🇲
+39,Canada,CAN,CA,1,Ottawa,CAD,Canadian dollar,$,6,Canadian,60,-95,🇨🇦
+40,Cape Verde,CPV,CV,238,Praia,CVE,Cape Verdean escudo,$,3,Verdean,16,-24,🇨🇻
+41,Cayman Islands,CYM,KY,1,George Town,KYD,Cayman Islands dollar,$,7,Caymanian,19.5,-80.5,🇰🇾
+42,Central African Republic,CAF,CF,236,Bangui,XAF,Central African CFA franc,FCFA,2,Central African,7,21,🇨🇫
+43,Chad,TCD,TD,235,N'Djamena,XAF,Central African CFA franc,FCFA,2,Chadian,15,19,🇹🇩
+44,Chile,CHL,CL,56,Santiago,CLP,Chilean peso,$,8,Chilean,-30,-71,🇨🇱
+45,China,CHN,CN,86,Beijing,CNY,Chinese yuan,¥,12,Chinese,35,105,🇨🇳
+46,Christmas Island,CXR,CX,61,Flying Fish Cove,AUD,Australian dollar,$,19,Christmas Island,-10.5,105.66666666,🇨🇽
+47,Cocos (Keeling) Islands,CCK,CC,61,West Island,AUD,Australian dollar,$,19,Cocos Island,-12.5,96.83333333,🇨🇨
+48,Colombia,COL,CO,57,Bogotá,COP,Colombian peso,$,8,Colombian,4,-72,🇨🇴
+49,Comoros,COM,KM,269,Moroni,KMF,Comorian franc,CF,4,"Comoran, Comorian",-12.16666666,44.25,🇰🇲
+50,Congo,COG,CG,242,Brazzaville,XAF,Central African CFA franc,FC,2,Congolese,-1,15,🇨🇬
+51,Democratic Republic of the Congo,COD,CD,243,Kinshasa,CDF,Congolese Franc,FC,2,Congolese,0,25,🇨🇩
+52,Cook Islands,COK,CK,682,Avarua,NZD,Cook Islands dollar,$,22,Cook Island,-21.23333333,-159.76666666,🇨🇰
+53,Costa Rica,CRI,CR,506,San Jose,CRC,Costa Rican colón,₡,9,Costa Rican,10,-84,🇨🇷
+54,Cote d'Ivoire,CIV,CI,225,Yamoussoukro,XOF,West African CFA franc,CFA,3,Ivorian,8,-5,🇨🇮
+55,Croatia,HRV,HR,385,Zagreb,EUR,Euro,€,16,Croatian,45.16666666,15.5,🇭🇷
+56,Cuba,CUB,CU,53,Havana,CUP,Cuban peso,$,7,Cuban,21.5,-80,🇨🇺
+57,Cyprus,CYP,CY,357,Nicosia,EUR,Euro,€,16,Cypriot,35,33,🇨🇾
+58,Czech Republic,CZE,CZ,420,Prague,CZK,Czech koruna,Kč,15,Czech,49.75,15.5,🇨🇿
+59,Denmark,DNK,DK,45,Copenhagen,DKK,Danish krone,Kr.,18,Danish,56,10,🇩🇰
+60,Djibouti,DJI,DJ,253,Djibouti,DJF,Djiboutian franc,Fdj,4,Djiboutian,11.5,43,🇩🇯
+61,Dominica,DMA,DM,1,Roseau,XCD,Eastern Caribbean dollar,$,7,Dominican,15.41666666,-61.33333333,🇩🇲
+62,Dominican Republic,DOM,DO,1,Santo Domingo,DOP,Dominican peso,$,7,Dominican,19,-70.66666666,🇩🇴
+63,Timor-Leste,TLS,TL,670,Dili,USD,United States dollar,$,13,Timorese,-8.83333333,125.91666666,🇹🇱
+64,Ecuador,ECU,EC,593,Quito,USD,United States dollar,$,8,Ecuadorian,-2,-77.5,🇪🇨
+65,Egypt,EGY,EG,20,Cairo,EGP,Egyptian pound,ج.م,1,Egyptian,27,30,🇪🇬
+66,El Salvador,SLV,SV,503,San Salvador,USD,United States dollar,$,9,Salvadoran,13.83333333,-88.91666666,🇸🇻
+67,Equatorial Guinea,GNQ,GQ,240,Malabo,XAF,Central African CFA franc,FCFA,2,"Equatorial Guinean, Equatoguinean",2,10,🇬🇶
+68,Eritrea,ERI,ER,291,Asmara,ERN,Eritrean nakfa,Nfk,4,Eritrean,15,39,🇪🇷
+69,Estonia,EST,EE,372,Tallinn,EUR,Euro,€,18,Estonian,59,26,🇪🇪
+70,Ethiopia,ETH,ET,251,Addis Ababa,ETB,Ethiopian birr,Nkf,4,Ethiopian,8,38,🇪🇹
+71,Falkland Islands,FLK,FK,500,Stanley,FKP,Falkland Islands pound,£,8,Falkland Island,-51.75,-59,🇫🇰
+72,Faroe Islands,FRO,FO,298,Torshavn,DKK,Danish krone,Kr.,18,Faroese,62,-7,🇫🇴
+73,Fiji,FJI,FJ,679,Suva,FJD,Fijian dollar,FJ$,20,Fijian,-18,175,🇫🇯
+74,Finland,FIN,FI,358,Helsinki,EUR,Euro,€,18,Finnish,64,26,🇫🇮
+75,France,FRA,FR,33,Paris,EUR,Euro,€,17,French,46,2,🇫🇷
+76,French Guiana,GUF,GF,594,Cayenne,EUR,Euro,€,8,French Guianese,4,-53,🇬🇫
+77,French Polynesia,PYF,PF,689,Papeete,XPF,CFP franc,₣,22,French Polynesia,-15,-140,🇵🇫
+78,French Southern Territories,ATF,TF,262,Port-aux-Francais,EUR,Euro,€,5,French Southern Territories,-49.25,69.167,🇹🇫
+79,Gabon,GAB,GA,241,Libreville,XAF,Central African CFA franc,FCFA,2,Gabonese,-1,11.75,🇬🇦
+80,The Gambia,GMB,GM,220,Banjul,GMD,Gambian dalasi,D,3,Gambian,13.46666666,-16.56666666,🇬🇲
+81,Georgia,GEO,GE,995,Tbilisi,GEL,Georgian lari,ლ,11,Georgian,42,43.5,🇬🇪
+82,Germany,DEU,DE,49,Berlin,EUR,Euro,€,17,German,51,9,🇩🇪
+83,Ghana,GHA,GH,233,Accra,GHS,Ghanaian cedi,GH₵,3,Ghanaian,8,-2,🇬🇭
+84,Gibraltar,GIB,GI,350,Gibraltar,GIP,Gibraltar pound,£,16,Gibraltar,36.13333333,-5.35,🇬🇮
+85,Greece,GRC,GR,30,Athens,EUR,Euro,€,16,"Greek, Hellenic",39,22,🇬🇷
+86,Greenland,GRL,GL,299,Nuuk,DKK,Danish krone,Kr.,6,Greenlandic,72,-40,🇬🇱
+87,Grenada,GRD,GD,1,St. George's,XCD,Eastern Caribbean dollar,$,7,Grenadian,12.11666666,-61.66666666,🇬🇩
+88,Guadeloupe,GLP,GP,590,Basse-Terre,EUR,Euro,€,7,Guadeloupe,16.25,-61.583333,🇬🇵
+89,Guam,GUM,GU,1,Hagatna,USD,US Dollar,$,21,"Guamanian, Guambat",13.46666666,144.78333333,🇬🇺
+90,Guatemala,GTM,GT,502,Guatemala City,GTQ,Guatemalan quetzal,Q,9,Guatemalan,15.5,-90.25,🇬🇹
+91,Guernsey and Alderney,GGY,GG,44,St Peter Port,GBP,British pound,£,18,Channel Island,49.46666666,-2.58333333,🇬🇬
+92,Guinea,GIN,GN,224,Conakry,GNF,Guinean franc,FG,3,Guinean,11,-10,🇬🇳
+93,Guinea-Bissau,GNB,GW,245,Bissau,XOF,West African CFA franc,CFA,3,Bissau-Guinean,12,-15,🇬🇼
+94,Guyana,GUY,GY,592,Georgetown,GYD,Guyanese dollar,$,8,Guyanese,5,-59,🇬🇾
+95,Haiti,HTI,HT,509,Port-au-Prince,HTG,Haitian gourde,G,7,Haitian,19,-72.41666666,🇭🇹
+96,Heard Island and McDonald Islands,HMD,HM,672,,AUD,Australian dollar,$,23,Heard Island or McDonald Islands,-53.1,72.51666666,🇭🇲
+97,Honduras,HND,HN,504,Tegucigalpa,HNL,Honduran lempira,L,9,Honduran,15,-86.5,🇭🇳
+98,Hong Kong S.A.R.,HKG,HK,852,Hong Kong,HKD,Hong Kong dollar,$,12,"Hong Kong, Hong Kongese",22.25,114.16666666,🇭🇰
+99,Hungary,HUN,HU,36,Budapest,HUF,Hungarian forint,Ft,15,"Hungarian, Magyar",47,20,🇭🇺
+100,Iceland,ISL,IS,354,Reykjavik,ISK,Icelandic króna,ko,18,Icelandic,65,-18,🇮🇸
+101,India,IND,IN,91,New Delhi,INR,Indian rupee,₹,14,Indian,20,77,🇮🇳
+102,Indonesia,IDN,ID,62,Jakarta,IDR,Indonesian rupiah,Rp,13,Indonesian,-5,120,🇮🇩
+103,Iran,IRN,IR,98,Tehran,IRR,Iranian rial,﷼,14,"Iranian, Persian",32,53,🇮🇷
+104,Iraq,IRQ,IQ,964,Baghdad,IQD,Iraqi dinar,د.ع,11,Iraqi,33,44,🇮🇶
+105,Ireland,IRL,IE,353,Dublin,EUR,Euro,€,18,Irish,53,-8,🇮🇪
+106,Israel,ISR,IL,972,Jerusalem,ILS,Israeli new shekel,₪,11,Israeli,31.5,34.75,🇮🇱
+107,Italy,ITA,IT,39,Rome,EUR,Euro,€,16,Italian,42.83333333,12.83333333,🇮🇹
+108,Jamaica,JAM,JM,1,Kingston,JMD,Jamaican dollar,J$,7,Jamaican,18.25,-77.5,🇯🇲
+109,Japan,JPN,JP,81,Tokyo,JPY,Japanese yen,¥,12,Japanese,36,138,🇯🇵
+110,Jersey,JEY,JE,44,Saint Helier,GBP,British pound,£,18,Channel Island,49.25,-2.16666666,🇯🇪
+111,Jordan,JOR,JO,962,Amman,JOD,Jordanian dinar,ا.د,11,Jordanian,31,36,🇯🇴
+112,Kazakhstan,KAZ,KZ,7,Astana,KZT,Kazakhstani tenge,лв,10,"Kazakhstani, Kazakh",48,68,🇰🇿
+113,Kenya,KEN,KE,254,Nairobi,KES,Kenyan shilling,KSh,4,Kenyan,1,38,🇰🇪
+114,Kiribati,KIR,KI,686,Tarawa,AUD,Australian dollar,$,21,I-Kiribati,1.41666666,173,🇰🇮
+115,North Korea,PRK,KP,850,Pyongyang,KPW,North Korean Won,₩,12,North Korean,40,127,🇰🇵
+116,South Korea,KOR,KR,82,Seoul,KRW,Won,₩,12,South Korean,37,127.5,🇰🇷
+117,Kuwait,KWT,KW,965,Kuwait City,KWD,Kuwaiti dinar,ك.د,11,Kuwaiti,29.5,45.75,🇰🇼
+118,Kyrgyzstan,KGZ,KG,996,Bishkek,KGS,Kyrgyzstani som,лв,10,"Kyrgyzstani, Kyrgyz, Kirgiz, Kirghiz",41,75,🇰🇬
+119,Laos,LAO,LA,856,Vientiane,LAK,Lao kip,₭,13,"Lao, Laotian",18,105,🇱🇦
+120,Latvia,LVA,LV,371,Riga,EUR,Euro,€,18,Latvian,57,25,🇱🇻
+121,Lebanon,LBN,LB,961,Beirut,LBP,Lebanese pound,£,11,Lebanese,33.83333333,35.83333333,🇱🇧
+122,Lesotho,LSO,LS,266,Maseru,LSL,Lesotho loti,L,5,Basotho,-29.5,28.5,🇱🇸
+123,Liberia,LBR,LR,231,Monrovia,LRD,Liberian dollar,$,3,Liberian,6.5,-9.5,🇱🇷
+124,Libya,LBY,LY,218,Tripolis,LYD,Libyan dinar,د.ل,1,Libyan,25,17,🇱🇾
+125,Liechtenstein,LIE,LI,423,Vaduz,CHF,Swiss franc,CHf,17,Liechtenstein,47.26666666,9.53333333,🇱🇮
+126,Lithuania,LTU,LT,370,Vilnius,EUR,Euro,€,18,Lithuanian,56,24,🇱🇹
+127,Luxembourg,LUX,LU,352,Luxembourg,EUR,Euro,€,17,"Luxembourg, Luxembourgish",49.75,6.16666666,🇱🇺
+128,Macau S.A.R.,MAC,MO,853,Macao,MOP,Macanese pataca,$,12,"Macanese, Chinese",22.16666666,113.55,🇲🇴
+129,Macedonia,MKD,MK,389,Skopje,MKD,Denar,ден,16,Macedonian,41.83333333,22,🇲🇰
+130,Madagascar,MDG,MG,261,Antananarivo,MGA,Malagasy ariary,Ar,4,Malagasy,-20,47,🇲🇬
+131,Malawi,MWI,MW,265,Lilongwe,MWK,Malawian kwacha,MK,4,Malawian,-13.5,34,🇲🇼
+132,Malaysia,MYS,MY,60,Kuala Lumpur,MYR,Malaysian ringgit,RM,13,Malaysian,2.5,112.5,🇲🇾
+133,Maldives,MDV,MV,960,Male,MVR,Maldivian rufiyaa,Rf,14,Maldivian,3.25,73,🇲🇻
+134,Mali,MLI,ML,223,Bamako,XOF,West African CFA franc,CFA,3,"Malian, Malinese",17,-4,🇲🇱
+135,Malta,MLT,MT,356,Valletta,EUR,Euro,€,16,Maltese,35.83333333,14.58333333,🇲🇹
+136,Isle of Man,IMN,IM,44,"Douglas, Isle of Man",GBP,British pound,£,18,Manx,54.25,-4.5,🇮🇲
+137,Marshall Islands,MHL,MH,692,Majuro,USD,United States dollar,$,21,Marshallese,9,168,🇲🇭
+138,Martinique,MTQ,MQ,596,Fort-de-France,EUR,Euro,€,7,"Martiniquais, Martinican",14.666667,-61,🇲🇶
+139,Mauritania,MRT,MR,222,Nouakchott,MRO,Mauritanian ouguiya,MRU,3,Mauritanian,20,-12,🇲🇷
+140,Mauritius,MUS,MU,230,Port Louis,MUR,Mauritian rupee,₨,4,Mauritian,-20.28333333,57.55,🇲🇺
+141,Mayotte,MYT,YT,262,Mamoudzou,EUR,Euro,€,4,Mahoran,-12.83333333,45.16666666,🇾🇹
+142,Mexico,MEX,MX,52,Ciudad de México,MXN,Mexican peso,$,9,Mexican,23,-102,🇲🇽
+143,Micronesia,FSM,FM,691,Palikir,USD,United States dollar,$,21,Micronesian,6.91666666,158.25,🇫🇲
+144,Moldova,MDA,MD,373,Chisinau,MDL,Moldovan leu,L,15,Moldovan,47,29,🇲🇩
+145,Monaco,MCO,MC,377,Monaco,EUR,Euro,€,17,"Monegasque, Monacan",43.73333333,7.4,🇲🇨
+146,Mongolia,MNG,MN,976,Ulan Bator,MNT,Mongolian tögrög,₮,12,Mongolian,46,105,🇲🇳
+147,Montenegro,MNE,ME,382,Podgorica,EUR,Euro,€,16,Montenegrin,42.5,19.3,🇲🇪
+148,Montserrat,MSR,MS,1,Plymouth,XCD,Eastern Caribbean dollar,$,7,Montserratian,16.75,-62.2,🇲🇸
+149,Morocco,MAR,MA,212,Rabat,MAD,Moroccan dirham,DH,1,Moroccan,32,-5,🇲🇦
+150,Mozambique,MOZ,MZ,258,Maputo,MZN,Mozambican metical,MT,4,Mozambican,-18.25,35,🇲🇿
+151,Myanmar,MMR,MM,95,Nay Pyi Taw,MMK,Burmese kyat,K,13,Burmese,22,98,🇲🇲
+152,Namibia,NAM,NA,264,Windhoek,NAD,Namibian dollar,$,5,Namibian,-22,17,🇳🇦
+153,Nauru,NRU,NR,674,Yaren,AUD,Australian dollar,$,21,Nauruan,-0.53333333,166.91666666,🇳🇷
+154,Nepal,NPL,NP,977,Kathmandu,NPR,Nepalese rupee,₨,14,"Nepali, Nepalese",28,84,🇳🇵
+155,"Bonaire, Sint Eustatius and Saba",BES,BQ,599,Kralendijk,USD,United States dollar,$,7,Bonaire,12.15,-68.266667,🇧🇶
+156,Netherlands,NLD,NL,31,Amsterdam,EUR,Euro,€,17,"Dutch, Netherlandic",52.5,5.75,🇳🇱
+157,New Caledonia,NCL,NC,687,Noumea,XPF,CFP franc,₣,20,New Caledonian,-21.5,165.5,🇳🇨
+158,New Zealand,NZL,NZ,64,Wellington,NZD,New Zealand dollar,$,19,"New Zealand, NZ",-41,174,🇳🇿
+159,Nicaragua,NIC,NI,505,Managua,NIO,Nicaraguan córdoba,C$,9,Nicaraguan,13,-85,🇳🇮
+160,Niger,NER,NE,227,Niamey,XOF,West African CFA franc,CFA,3,Nigerien,16,8,🇳🇪
+161,Nigeria,NGA,NG,234,Abuja,NGN,Nigerian naira,₦,3,Nigerian,10,8,🇳🇬
+162,Niue,NIU,NU,683,Alofi,NZD,New Zealand dollar,$,22,Niuean,-19.03333333,-169.86666666,🇳🇺
+163,Norfolk Island,NFK,NF,672,Kingston,AUD,Australian dollar,$,19,Norfolk Island,-29.03333333,167.95,🇳🇫
+164,Northern Mariana Islands,MNP,MP,1,Saipan,USD,United States dollar,$,21,Northern Marianan,15.2,145.75,🇲🇵
+165,Norway,NOR,NO,47,Oslo,NOK,Norwegian krone,ko,18,Norwegian,62,10,🇳🇴
+166,Oman,OMN,OM,968,Muscat,OMR,Omani rial,.ع.ر,11,Omani,21,57,🇴🇲
+167,Pakistan,PAK,PK,92,Islamabad,PKR,Pakistani rupee,₨,14,Pakistani,30,70,🇵🇰
+168,Palau,PLW,PW,680,Melekeok,USD,United States dollar,$,21,Palauan,7.5,134.5,🇵🇼
+169,Palestinian Territory Occupied,PSE,PS,970,East Jerusalem,ILS,Israeli new shekel,₪,11,Palestinian,31.9,35.2,🇵🇸
+170,Panama,PAN,PA,507,Panama City,PAB,Panamanian balboa,B/.,9,Panamanian,9,-80,🇵🇦
+171,Papua New Guinea,PNG,PG,675,Port Moresby,PGK,Papua New Guinean kina,K,20,"Papua New Guinean, Papuan",-6,147,🇵🇬
+172,Paraguay,PRY,PY,595,Asuncion,PYG,Paraguayan guarani,₲,8,Paraguayan,-23,-58,🇵🇾
+173,Peru,PER,PE,51,Lima,PEN,Peruvian sol,S/.,8,Peruvian,-10,-76,🇵🇪
+174,Philippines,PHL,PH,63,Manila,PHP,Philippine peso,₱,13,"Philippine, Filipino",13,122,🇵🇭
+175,Pitcairn Island,PCN,PN,870,Adamstown,NZD,New Zealand dollar,$,22,Pitcairn Island,-25.06666666,-130.1,🇵🇳
+176,Poland,POL,PL,48,Warsaw,PLN,Polish złoty,zł,15,Polish,52,20,🇵🇱
+177,Portugal,PRT,PT,351,Lisbon,EUR,Euro,€,16,Portuguese,39.5,-8,🇵🇹
+178,Puerto Rico,PRI,PR,1,San Juan,USD,United States dollar,$,7,Puerto Rican,18.25,-66.5,🇵🇷
+179,Qatar,QAT,QA,974,Doha,QAR,Qatari riyal,ق.ر,11,Qatari,25.5,51.25,🇶🇦
+180,Reunion,REU,RE,262,Saint-Denis,EUR,Euro,€,4,"Reunionese, Reunionnais",-21.15,55.5,🇷🇪
+181,Romania,ROU,RO,40,Bucharest,RON,Romanian leu,lei,15,Romanian,46,25,🇷🇴
+182,Russia,RUS,RU,7,Moscow,RUB,Russian ruble,₽,15,Russian,60,100,🇷🇺
+183,Rwanda,RWA,RW,250,Kigali,RWF,Rwandan franc,FRw,4,Rwandan,-2,30,🇷🇼
+184,Saint Helena,SHN,SH,290,Jamestown,SHP,Saint Helena pound,£,3,Saint Helenian,-15.95,-5.7,🇸🇭
+185,Saint Kitts and Nevis,KNA,KN,1,Basseterre,XCD,Eastern Caribbean dollar,$,7,Kittitian or Nevisian,17.33333333,-62.75,🇰🇳
+186,Saint Lucia,LCA,LC,1,Castries,XCD,Eastern Caribbean dollar,$,7,Saint Lucian,13.88333333,-60.96666666,🇱🇨
+187,Saint Pierre and Miquelon,SPM,PM,508,Saint-Pierre,EUR,Euro,€,6,Saint-Pierrais or Miquelonnais,46.83333333,-56.33333333,🇵🇲
+188,Saint Vincent and the Grenadines,VCT,VC,1,Kingstown,XCD,Eastern Caribbean dollar,$,7,"Saint Vincentian, Vincentian",13.25,-61.2,🇻🇨
+189,Saint-Barthelemy,BLM,BL,590,Gustavia,EUR,Euro,€,7,Barthelemois,18.5,-63.41666666,🇧🇱
+190,Saint-Martin (French part),MAF,MF,590,Marigot,EUR,Euro,€,7,Saint-Martinoise,18.08333333,-63.95,🇲🇫
+191,Samoa,WSM,WS,685,Apia,WST,Samoan tālā,SAT,22,Samoan,-13.58333333,-172.33333333,🇼🇸
+192,San Marino,SMR,SM,378,San Marino,EUR,Euro,€,16,Sammarinese,43.76666666,12.41666666,🇸🇲
+193,Sao Tome and Principe,STP,ST,239,Sao Tome,STD,Dobra,Db,2,Sao Tomean,1,7,🇸🇹
+194,Saudi Arabia,SAU,SA,966,Riyadh,SAR,Saudi riyal,﷼,11,"Saudi, Saudi Arabian",25,45,🇸🇦
+195,Senegal,SEN,SN,221,Dakar,XOF,West African CFA franc,CFA,3,Senegalese,14,-14,🇸🇳
+196,Serbia,SRB,RS,381,Belgrade,RSD,Serbian dinar,din,16,Serbian,44,21,🇷🇸
+197,Seychelles,SYC,SC,248,Victoria,SCR,Seychellois rupee,SRe,4,Seychellois,-4.58333333,55.66666666,🇸🇨
+198,Sierra Leone,SLE,SL,232,Freetown,SLL,Sierra Leonean leone,Le,3,Sierra Leonean,8.5,-11.5,🇸🇱
+199,Singapore,SGP,SG,65,Singapur,SGD,Singapore dollar,$,13,Singaporean,1.36666666,103.8,🇸🇬
+200,Slovakia,SVK,SK,421,Bratislava,EUR,Euro,€,15,Slovak,48.66666666,19.5,🇸🇰
+201,Slovenia,SVN,SI,386,Ljubljana,EUR,Euro,€,16,"Slovenian, Slovene",46.11666666,14.81666666,🇸🇮
+202,Solomon Islands,SLB,SB,677,Honiara,SBD,Solomon Islands dollar,Si$,20,Solomon Island,-8,159,🇸🇧
+203,Somalia,SOM,SO,252,Mogadishu,SOS,Somali shilling,Sh.so.,4,"Somali, Somalian",10,49,🇸🇴
+204,South Africa,ZAF,ZA,27,Pretoria,ZAR,South African rand,R,5,South African,-29,24,🇿🇦
+205,South Georgia,SGS,GS,500,Grytviken,GBP,British pound,£,8,South Georgia or South Sandwich Islands,-54.5,-37,🇬🇸
+206,South Sudan,SSD,SS,211,Juba,SSP,South Sudanese pound,£,2,South Sudanese,7,30,🇸🇸
+207,Spain,ESP,ES,34,Madrid,EUR,Euro,€,16,Spanish,40,-4,🇪🇸
+208,Sri Lanka,LKA,LK,94,Colombo,LKR,Sri Lankan rupee,Rs,14,Sri Lankan,7,81,🇱🇰
+209,Sudan,SDN,SD,249,Khartoum,SDG,Sudanese pound,.س.ج,1,Sudanese,15,30,🇸🇩
+210,Suriname,SUR,SR,597,Paramaribo,SRD,Surinamese dollar,$,8,Surinamese,4,-56,🇸🇷
+211,Svalbard and Jan Mayen Islands,SJM,SJ,47,Longyearbyen,NOK,Norwegian Krone,ko,18,Svalbard,78,20,🇸🇯
+212,Eswatini,SWZ,SZ,268,Mbabane,SZL,Lilangeni,E,5,Swazi,-26.5,31.5,🇸🇿
+213,Sweden,SWE,SE,46,Stockholm,SEK,Swedish krona,ko,18,Swedish,62,15,🇸🇪
+214,Switzerland,CHE,CH,41,Bern,CHF,Swiss franc,CHf,17,Swiss,47,8,🇨🇭
+215,Syria,SYR,SY,963,Damascus,SYP,Syrian pound,LS,11,Syrian,35,38,🇸🇾
+216,Taiwan,TWN,TW,886,Taipei,TWD,New Taiwan dollar,$,12,"Chinese, Taiwanese",23.5,121,🇹🇼
+217,Tajikistan,TJK,TJ,992,Dushanbe,TJS,Tajikistani somoni,SM,10,Tajikistani,39,71,🇹🇯
+218,Tanzania,TZA,TZ,255,Dodoma,TZS,Tanzanian shilling,TSh,4,Tanzanian,-6,35,🇹🇿
+219,Thailand,THA,TH,66,Bangkok,THB,Thai baht,฿,13,Thai,15,100,🇹🇭
+220,Togo,TGO,TG,228,Lome,XOF,West African CFA franc,CFA,3,Togolese,8,1.16666666,🇹🇬
+221,Tokelau,TKL,TK,690,,NZD,New Zealand dollar,$,22,Tokelauan,-9,-172,🇹🇰
+222,Tonga,TON,TO,676,Nuku'alofa,TOP,Tongan paʻanga,$,22,Tongan,-20,-175,🇹🇴
+223,Trinidad and Tobago,TTO,TT,1,Port of Spain,TTD,Trinidad and Tobago dollar,$,7,Trinidadian or Tobagonian,11,-61,🇹🇹
+224,Tunisia,TUN,TN,216,Tunis,TND,Tunisian dinar,ت.د,1,Tunisian,34,9,🇹🇳
+225,Turkey,TUR,TR,90,Ankara,TRY,Turkish lira,₺,11,Turkish,39,35,🇹🇷
+226,Turkmenistan,TKM,TM,993,Ashgabat,TMT,Turkmenistan manat,T,10,Turkmen,40,60,🇹🇲
+227,Turks and Caicos Islands,TCA,TC,1,Cockburn Town,USD,United States dollar,$,7,Turks and Caicos Island,21.75,-71.58333333,🇹🇨
+228,Tuvalu,TUV,TV,688,Funafuti,AUD,Australian dollar,$,22,Tuvaluan,-8,178,🇹🇻
+229,Uganda,UGA,UG,256,Kampala,UGX,Ugandan shilling,USh,4,Ugandan,1,32,🇺🇬
+230,Ukraine,UKR,UA,380,Kyiv,UAH,Ukrainian hryvnia,₴,15,Ukrainian,49,32,🇺🇦
+231,United Arab Emirates,ARE,AE,971,Abu Dhabi,AED,United Arab Emirates dirham,إ.د,11,"Emirati, Emirian, Emiri",24,54,🇦🇪
+232,United Kingdom,GBR,GB,44,London,GBP,British pound,£,18,"British, UK",54,-2,🇬🇧
+233,United States,USA,US,1,Washington,USD,United States dollar,$,6,American,38,-97,🇺🇸
+234,United States Minor Outlying Islands,UMI,UM,1,,USD,United States dollar,$,6,American,0,0,🇺🇲
+235,Uruguay,URY,UY,598,Montevideo,UYU,Uruguayan peso,$,8,Uruguayan,-33,-56,🇺🇾
+236,Uzbekistan,UZB,UZ,998,Tashkent,UZS,Uzbekistani soʻm,лв,10,"Uzbekistani, Uzbek",41,64,🇺🇿
+237,Vanuatu,VUT,VU,678,Port Vila,VUV,Vanuatu vatu,VT,20,"Ni-Vanuatu, Vanuatuan",-16,167,🇻🇺
+238,Vatican City State (Holy See),VAT,VA,379,Vatican City,EUR,Euro,€,16,Vatican,41.9,12.45,🇻🇦
+239,Venezuela,VEN,VE,58,Caracas,VES,Bolívar,Bs,8,Venezuelan,8,-66,🇻🇪
+240,Vietnam,VNM,VN,84,Hanoi,VND,Vietnamese đồng,₫,13,Vietnamese,16.16666666,107.83333333,🇻🇳
+241,Virgin Islands (British),VGB,VG,1,Road Town,USD,United States dollar,$,7,British Virgin Island,18.431383,-64.62305,🇻🇬
+242,Virgin Islands (US),VIR,VI,1,Charlotte Amalie,USD,United States dollar,$,7,U.S. Virgin Island,18.34,-64.93,🇻🇮
+243,Wallis and Futuna,WLF,WF,681,Mata Utu,XPF,CFP franc,₣,22,"Wallis and Futuna, Wallisian or Futunan",-13.3,-176.2,🇼🇫
+244,Western Sahara,ESH,EH,212,El-Aaiun,MAD,Moroccan Dirham,MAD,1,"Sahrawi, Sahrawian, Sahraouian",24.5,-13,🇪🇭
+245,Yemen,YEM,YE,967,Sanaa,YER,Yemeni rial,﷼,11,Yemeni,15,48,🇾🇪
+246,Zambia,ZMB,ZM,260,Lusaka,ZMW,Zambian kwacha,ZK,5,Zambian,-15,30,🇿🇲
+247,Zimbabwe,ZWE,ZW,263,Harare,ZWL,Zimbabwe Dollar,$,4,Zimbabwean,-20,30,🇿🇼
+248,Kosovo,XKX,XK,383,Pristina,EUR,Euro,€,15,"Kosovar, Kosovan",42.5612909,20.3403035,🇽🇰
+249,Curaçao,CUW,CW,599,Willemstad,ANG,Netherlands Antillean guilder,ƒ,7,Curacaoan,12.116667,-68.933333,🇨🇼
+250,Sint Maarten (Dutch part),SXM,SX,1721,Philipsburg,ANG,Netherlands Antillean guilder,ƒ,7,Sint Maarten,18.033333,-63.05,🇸🇽

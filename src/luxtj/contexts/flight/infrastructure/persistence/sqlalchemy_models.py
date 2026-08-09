@@ -7,6 +7,7 @@ from decimal import Decimal
 
 from sqlalchemy import (
     JSON,
+    Boolean,
     Date,
     DateTime,
     ForeignKey,
@@ -158,5 +159,26 @@ class FlightBookingPassengerDetailsRow(FlightBase):
     document_expiry: Mapped[str | None] = mapped_column(String(20), nullable=True)
     ticket_number: Mapped[str | None] = mapped_column(String(50), nullable=True)
     attributes: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+
+
+class FlightMarkupRuleRow(FlightBase):
+    """Admin flight markup rules (TeenvaFlightMarkup engine)."""
+
+    __tablename__ = "flight_markup_rules"
+    __table_args__ = (Index("ix_flight_markup_rules_status", "status"),)
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True)
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
+    status: Mapped[str] = mapped_column(String(20), nullable=False, default="inactive")
+    airline: Mapped[str | None] = mapped_column(String(10), nullable=True)
+    origin: Mapped[str | None] = mapped_column(String(10), nullable=True)
+    destination: Mapped[str | None] = mapped_column(String(10), nullable=True)
+    cabin_class: Mapped[str | None] = mapped_column(String(40), nullable=True)
+    travel_date_from: Mapped[date | None] = mapped_column(Date, nullable=True)
+    travel_date_to: Mapped[date | None] = mapped_column(Date, nullable=True)
+    markup_amount: Mapped[Decimal] = mapped_column(Numeric(12, 4), nullable=False)
+    is_percentage: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)

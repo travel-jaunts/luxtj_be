@@ -33,9 +33,6 @@ PERMISSION_DEFINITIONS: tuple[PermissionDefinition, ...] = (
     _p("admin_users.view", "View admin user", "View a single admin user"),
     _p("admin_users.create", "Create admin user", "Create an admin user and assign a role"),
     _p("admin_users.edit", "Edit admin user", "Update an admin user"),
-    # Bookings
-    _p("bookings.modifications.view", "View booking modifications", "Access booking modifications"),
-    _p("bookings.cancellations.view", "View booking cancellations", "Access booking cancellations"),
     # Inventory
     _p("inventory.villas.view", "View villa inventory", "Access villa inventory"),
     _p("inventory.activities.view", "View activity inventory", "Access activity inventory"),
@@ -77,6 +74,16 @@ PERMISSION_DEFINITIONS: tuple[PermissionDefinition, ...] = (
         "Issue flight refunds",
         "Process API or manual refunds for flight payments",
     ),
+    _p(
+        "refund_queues.hotel.view",
+        "View hotel refund queues",
+        "Access hotel bookings awaiting refund",
+    ),
+    _p(
+        "refund_queues.hotel.refund",
+        "Issue hotel refunds",
+        "Process API or manual refunds for hotel payments",
+    ),
     # Marketing
     _p("marketing.view", "View marketing", "Access marketing module"),
     _p("marketing.campaigns.view", "View campaigns", "Access marketing campaigns"),
@@ -101,6 +108,16 @@ PERMISSION_DEFINITIONS: tuple[PermissionDefinition, ...] = (
         "reports.flight_bookings.cancel",
         "Cancel flight bookings",
         "Cancel or VOID flight bookings from admin reports",
+    ),
+    _p(
+        "reports.hotel_bookings.view",
+        "View hotel booking reports",
+        "Access hotel booking list and detail reports",
+    ),
+    _p(
+        "reports.hotel_bookings.cancel",
+        "Cancel hotel bookings",
+        "Cancel hotel bookings from admin reports",
     ),
     _p("reports.partner.view", "View partner reports", "Access partner reports"),
     _p("reports.marketing.view", "View marketing reports", "Access marketing reports"),
@@ -139,6 +156,14 @@ PERMISSION_DEFINITIONS: tuple[PermissionDefinition, ...] = (
     # Hotel markup
     _p("hotel_markup.view", "View hotel markup", "View hotel markup rules"),
     _p("hotel_markup.edit", "Edit hotel markup", "Create and edit hotel markup rules"),
+    # Flight markup
+    _p("flight_markup.view", "View flight markup", "View flight markup rules"),
+    _p("flight_markup.edit", "Edit flight markup", "Create and edit flight markup rules"),
+    # Promo codes
+    _p("promo_codes.flight.view", "View flight promo codes", "View flight promo codes"),
+    _p("promo_codes.flight.edit", "Edit flight promo codes", "Create and edit flight promo codes"),
+    _p("promo_codes.hotel.view", "View hotel promo codes", "View hotel promo codes"),
+    _p("promo_codes.hotel.edit", "Edit hotel promo codes", "Create and edit hotel promo codes"),
 )
 
 

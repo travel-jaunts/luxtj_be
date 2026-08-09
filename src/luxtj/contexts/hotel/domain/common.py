@@ -12,7 +12,7 @@ import uuid
 from datetime import datetime, timezone
 from typing import Any
 
-from sqlalchemy import or_, select
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from luxtj.contexts.crs.infrastructure.persistence.sqlalchemy_models import (
@@ -115,9 +115,9 @@ class HotelCommon:
         return re.sub(r"[^a-z0-9]", "", name.lower().strip())
 
     @staticmethod
-    def compute_unique_key(name: str, star: int, city_id: str | int) -> str:
+    def compute_unique_key(name: str, star: int, region_id: str | int) -> str:
         return hashlib.md5(
-            f"{HotelCommon.normalize_name(name)}|{star}|{city_id}".encode()
+            f"{HotelCommon.normalize_name(name)}|{star}|{region_id}".encode()
         ).hexdigest()
 
     # ── CRS enrich (async) ─────────────────────────────────────────────
@@ -127,9 +127,8 @@ class HotelCommon:
         session: AsyncSession,
         supplier_hotel_codes: list[str],
         booking_api_id: str,
-        city_id: str,
     ) -> dict[str, dict[str, Any]]:
-        if not city_id or not booking_api_id:
+        if not booking_api_id:
             return {}
         codes = list({str(c) for c in supplier_hotel_codes if c})
         if not codes:
@@ -141,12 +140,6 @@ class HotelCommon:
             .join(
                 HotelCrsSupplierRow,
                 HotelCrsSupplierRow.id == HotelCrsSupplierHotelMapRow.supplier_id,
-            )
-            .where(
-                or_(
-                    HotelCrsHotelRow.region_id == city_id,
-                    HotelCrsHotelRow.city_id == city_id,
-                )
             )
             .where(HotelCrsSupplierRow.booking_source_id == booking_api_id)
             .where(HotelCrsSupplierHotelMapRow.supplier_hotel_code.in_(codes))
@@ -189,11 +182,32 @@ class HotelCommon:
         return out
 
     @staticmethod
+    def haversine_km(lat1: float, lng1: float, lat2: float, lng2: float) -> float | None:
+        try:
+            if not all(isinstance(x, (int, float)) for x in (lat1, lng1, lat2, lng2)):
+                return None
+            if abs(lat1) < 1e-9 and abs(lng1) < 1e-9:
+                return None
+            if abs(lat2) < 1e-9 and abs(lng2) < 1e-9:
+                return None
+            from math import asin, cos, radians, sin, sqrt
+
+            r = 6371.0
+            dlat = radians(lat2 - lat1)
+            dlng = radians(lng2 - lng1)
+            a = (
+                sin(dlat / 2) ** 2
+                + cos(radians(lat1)) * cos(radians(lat2)) * sin(dlng / 2) ** 2
+            )
+            return round(2 * r * asin(sqrt(a)), 1)
+        except Exception:
+            return None
+
+    @staticmethod
     async def get_hotel_crs_details_for_supplier_code(
         session: AsyncSession,
         supplier_hotel_code: str,
         booking_api_id: str,
-        city_id: str = "",
     ) -> dict[str, Any] | None:
         if not booking_api_id or not supplier_hotel_code:
             return None
@@ -208,13 +222,6 @@ class HotelCommon:
             .where(HotelCrsSupplierHotelMapRow.supplier_hotel_code == supplier_hotel_code)
             .where(HotelCrsHotelRow.status.is_(True))
         )
-        if city_id:
-            stmt = stmt.where(
-                or_(
-                    HotelCrsHotelRow.region_id == city_id,
-                    HotelCrsHotelRow.city_id == city_id,
-                )
-            )
         row = (await session.execute(stmt)).first()
         if not row:
             return None
@@ -687,7 +694,6 @@ def _hotel_row_to_dict(hotel: HotelCrsHotelRow) -> dict[str, Any]:
         "name_normalized": hotel.name_normalized,
         "star_rating": hotel.star_rating,
         "unique_key": hotel.unique_key,
-        "city_id": hotel.city_id,
         "region_id": getattr(hotel, "region_id", None),
         "address_line1": hotel.address_line1,
         "address_line2": hotel.address_line2,
@@ -704,7 +710,13 @@ def _hotel_row_to_dict(hotel: HotelCrsHotelRow) -> dict[str, Any]:
         "description": hotel.description,
         "policy_text": hotel.policy_text,
         "hotel_policies": hotel.hotel_policies,
-        "meta": hotel.meta,
+        # HotelCrsHotelRow has no meta column (policies/amenities live in related tables).
+        "meta": getattr(hotel, "meta", None),
         "image": hotel.image,
         "status": hotel.status,
+        "accommodation_type": getattr(hotel, "accommodation_type", None),
+        "accommodation_type_code": getattr(hotel, "accommodation_type_code", None),
+        "hotel_chain": getattr(hotel, "hotel_chain", None),
+        "rooms_count": getattr(hotel, "rooms_count", None),
+        "floors_count": getattr(hotel, "floors_count", None),
     }

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import copy
 import hashlib
 import json
 import logging
@@ -537,9 +538,45 @@ class CityTravelFlightProvider:
         }
 
     async def get_flight_row_from_token_for_pricing(self, token: str) -> dict[str, Any]:
-        # TODO: Build price row from group/offer/fare-quote cache (no SOAP).
-        _ = token
-        return {}
+        """Build a FlightDetails/Price row from fare-quote (or offer) cache — no SOAP."""
+        cached = cache_get(token)
+        if not isinstance(cached, dict):
+            return {"status": False, "data": [], "message": "Invalid or expired token"}
+
+        details = cached.get("flightDetails")
+        if not isinstance(details, list):
+            details = cached.get("FlightDetails")
+        price = cached.get("price")
+        if not isinstance(price, dict):
+            price = cached.get("Price")
+        if not isinstance(details, list) or not details or not isinstance(price, dict):
+            return {"status": False, "data": [], "message": "Invalid or expired token"}
+
+        baggage = cached.get("baggageAllowance")
+        if not isinstance(baggage, dict):
+            baggage = cached.get("BaggageAllowance") if isinstance(cached.get("BaggageAllowance"), dict) else {}
+
+        attrs = cached.get("Attributes") if isinstance(cached.get("Attributes"), dict) else {
+            "IsRefundable": False,
+            "BrandName": "Published",
+            "fareAttributes": [],
+            "fareNotes": [],
+            "LatNames": bool(cached.get("LatNames")),
+            "DocumentsRequired": bool(cached.get("DocumentsRequired")),
+            "DocumentExDateRequired": bool(cached.get("DocumentExDateRequired")),
+            "MiddleNameRequired": bool(cached.get("MiddleNameRequired")),
+        }
+
+        return {
+            "status": True,
+            "data": {
+                "FlightDetails": details,
+                "Price": copy.deepcopy(price),
+                "BaggageAllowance": baggage,
+                "Attributes": attrs,
+            },
+            "message": "Success",
+        }
 
     async def get_pre_book_data(
         self,

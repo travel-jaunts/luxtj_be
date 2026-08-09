@@ -1,4 +1,4 @@
-"""Admin flight refund queue serializers."""
+"""Admin flight + hotel refund queue serializers."""
 
 from __future__ import annotations
 
@@ -54,6 +54,66 @@ class FlightRefundIssueBody(ApiSerializerBaseModel):
 
 
 class FlightRefundIssueResultSerializer(ApiSerializerBaseModel):
+    transaction_id: str
+    app_reference: str
+    payment_status: str
+    refund_mode: str
+    refunded_amount: float
+    refund_amount_this_request: float
+    currency: str
+    supports_refund_api: bool
+    message: str
+
+
+# ── Hotel (same issue body/result shape as flight) ─────────────────────
+
+
+class HotelRefundQueueListBody(ApiSerializerBaseModel):
+    page: int = Field(1, ge=1)
+    page_size: int = Field(20, ge=1, le=100, alias="pageSize")
+    search: str | None = None
+    booking_status: str | None = Field(None, alias="bookingStatus")
+
+
+class HotelRefundQueueItemSerializer(ApiSerializerBaseModel):
+    app_reference: str
+    booking_status: str
+    booking_source: str
+    email: str | None = None
+    phone: str | None = None
+    lead_guest_name: str | None = None
+    hotel_name: str | None = None
+    hotel_location: str | None = None
+    check_in: str | None = None
+    check_out: str | None = None
+    booking_created_at: datetime
+    transaction_id: str
+    pg_code: str
+    payment_status: str
+    paid_amount: float
+    refunded_amount: float
+    refundable_amount: float
+    currency: str
+    supports_refund_api: bool
+    refund_api: str
+    payment_created_at: datetime
+
+
+class HotelRefundQueueListResultSerializer(ApiSerializerBaseModel):
+    total: int
+    page: int
+    page_size: int
+    items: list[HotelRefundQueueItemSerializer]
+
+
+class HotelRefundIssueBody(ApiSerializerBaseModel):
+    transaction_id: str = Field(..., alias="transactionId", min_length=1)
+    refund_amount: float = Field(..., alias="refundAmount", gt=0)
+    remark: str | None = None
+    manual_details: str | None = Field(None, alias="manualDetails")
+
+
+class HotelRefundIssueResultSerializer(ApiSerializerBaseModel):
     transaction_id: str
     app_reference: str
     payment_status: str

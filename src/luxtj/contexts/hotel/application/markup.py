@@ -7,10 +7,7 @@ from typing import Any
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from luxtj.contexts.currency.infrastructure.persistence.sqlalchemy_models import (
-    CityRow,
-    CountryRow,
-)
+from luxtj.contexts.crs.infrastructure.persistence.sqlalchemy_models import NewCitiesNRegionRow
 from luxtj.contexts.hotel.application.markup_rule_resolver import HotelMarkupRuleResolver
 from luxtj.contexts.hotel.infrastructure.persistence.sqlalchemy_models import HotelMarkupRuleRow
 
@@ -27,7 +24,7 @@ class HotelMarkup:
         self._crs_session = crs_session or session
         self._resolver = resolver or HotelMarkupRuleResolver()
         self._cached_rules: list[HotelMarkupRuleRow] | None = None
-        self._city_country_cache: dict[str, str | None] = {}
+        self._region_country_cache: dict[str, str | None] = {}
 
     async def active_rules(self) -> list[HotelMarkupRuleRow]:
         if self._cached_rules is None:
@@ -37,35 +34,21 @@ class HotelMarkup:
             self._cached_rules = list((await self._session.execute(stmt)).scalars().all())
         return self._cached_rules
 
-    async def country_code_for_city_id(self, city_id: str) -> str | None:
-        if not city_id:
+    async def country_code_for_region_id(self, region_id: str) -> str | None:
+        if not region_id:
             return None
-        if city_id in self._city_country_cache:
-            return self._city_country_cache[city_id]
-        from luxtj.contexts.crs.infrastructure.persistence.sqlalchemy_models import (
-            NewCitiesNRegionRow,
-        )
-
-        region = await self._crs_session.get(NewCitiesNRegionRow, city_id)
-        if region is not None and region.country_code:
-            iso = str(region.country_code).upper()[:2]
-            self._city_country_cache[city_id] = iso
-            return iso
-        stmt = (
-            select(CountryRow.code)
-            .join(CityRow, CityRow.country_id == CountryRow.id)
-            .where(CityRow.id == city_id)
-        )
-        code = (await self._session.execute(stmt)).scalar_one_or_none()
-        iso = str(code).upper()[:2] if code else None
-        self._city_country_cache[city_id] = iso
+        if region_id in self._region_country_cache:
+            return self._region_country_cache[region_id]
+        region = await self._crs_session.get(NewCitiesNRegionRow, region_id)
+        iso = str(region.country_code).upper()[:2] if region is not None and region.country_code else None
+        self._region_country_cache[region_id] = iso
         return iso
 
     async def build_context(self, params: dict[str, Any]) -> dict[str, Any]:
-        city_id = str(params.get("city_id") or "") if params.get("city_id") else ""
+        region_id = str(params.get("region_id") or "") if params.get("region_id") else ""
         country = params.get("country_code")
-        if country is None and city_id:
-            country = await self.country_code_for_city_id(city_id)
+        if country is None and region_id:
+            country = await self.country_code_for_region_id(region_id)
         check_in = (
             params.get("check_in_date")
             or params.get("checkin")
@@ -79,7 +62,7 @@ class HotelMarkup:
             "country_code": HotelMarkupRuleResolver.normalize_country_code(
                 country if isinstance(country, str) else None
             ),
-            "city_id": city_id or None,
+            "region_id": region_id or None,
             "hotel_code": HotelMarkupRuleResolver.normalize_filter(
                 params.get("hotel_code") if isinstance(params.get("hotel_code"), str) else None
             ),

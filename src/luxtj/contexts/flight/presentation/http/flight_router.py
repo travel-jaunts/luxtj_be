@@ -219,8 +219,15 @@ async def _validate_promo(
     blender: FlightBlender,
     request: Request,
 ) -> JSONResponse:
-    result = await blender.not_implemented("ValidateFlightPromo")
-    return _err(result["message"], status_code=501)
+    result = await blender.validate_flight_promo(body if isinstance(body, dict) else {})
+    data = result.get("data") if isinstance(result.get("data"), dict) else {}
+    if result.get("status"):
+        return _ok(data, result.get("message") or "Applied successfully")
+    return _err(
+        result.get("message") or "Promo code is not valid",
+        data=data or None,
+        status_code=422,
+    )
 
 
 async def _pre_book(
