@@ -30,10 +30,20 @@ AUTH_OTP_PEPPER: str = os.getenv("LTJBE_AUTH_OTP_PEPPER", "insecure-dev-pepper")
 AUTH_OTP_TTL_SECONDS: int = int(os.getenv("LTJBE_AUTH_OTP_TTL_SECONDS", "300"))
 AUTH_OTP_MAX_ATTEMPTS: int = int(os.getenv("LTJBE_AUTH_OTP_MAX_ATTEMPTS", "5"))
 
-SUPERADMIN_EMAIL: str = os.getenv("LTJBE_SUPERADMIN_EMAIL", "")
-SUPERADMIN_PASSWORD: str = os.getenv("LTJBE_SUPERADMIN_PASSWORD", "")
-SUPERADMIN_FULL_NAME: str = os.getenv("LTJBE_SUPERADMIN_FULL_NAME", "Super Admin")
+# Bootstrapped on first startup if missing (not configurable via env).
+SUPERADMIN_EMAIL: str = "superadmin@luxtj.in"
+SUPERADMIN_PASSWORD: str = "Luxtj@123"
+SUPERADMIN_FULL_NAME: str = "Super Admin"
 
 ENABLE_OUTBOX_PROJECTOR: bool = (
     os.getenv("LTJBE_ENABLE_OUTBOX_PROJECTOR", "false").lower() == "true"
 )
+
+# Comma-separated browser origins allowed to call the API (admin + web).
+# Example: https://admin.example.com,https://www.example.com,https://example.com
+# In development, CORS allows all origins when this is empty.
+CORS_ORIGINS: list[str] = [
+    origin.strip().rstrip("/")
+    for origin in os.getenv("LTJBE_CORS_ORIGINS", "").split(",")
+    if origin.strip()
+]

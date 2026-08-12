@@ -315,10 +315,13 @@ def server_factory() -> FastAPI:
     api_application.add_middleware(EndpointExceptionHandler)
     api_application.add_middleware(EnforcePostMethodOnly)
 
-    if config.ENVIRONMENT == "development":
+    cors_origins = list(config.CORS_ORIGINS)
+    if config.ENVIRONMENT == "development" and not cors_origins:
+        cors_origins = ["*"]
+    if cors_origins:
         api_application.add_middleware(
             CORSMiddleware,
-            allow_origins=["*"],
+            allow_origins=cors_origins,
             allow_credentials=True,
             allow_methods=["*"],
             allow_headers=["*"],
