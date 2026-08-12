@@ -9,7 +9,10 @@ from sqlalchemy import pool
 from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import async_engine_from_config
 
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
+_CRS_ALEMBIC_DIR = Path(__file__).resolve().parent
+# So version scripts can `from helpers import ...` (alembic_crs/helpers.py).
+sys.path.insert(0, str(_CRS_ALEMBIC_DIR))
+sys.path.insert(0, str(_CRS_ALEMBIC_DIR.parent / "src"))
 
 from luxtj.contexts.crs.infrastructure.persistence.sqlalchemy_models import CrsBase
 
