@@ -1,6 +1,7 @@
 from uuid import UUID, uuid4
 
 from sqlalchemy import func, select
+from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from luxtj.contexts.identity.domain.enums import UserTypeEnum
@@ -169,28 +170,33 @@ class SqlAlchemyPermissionRepository:
         self._session = session
 
     async def upsert_many(self, permissions: list[Permission]) -> None:
-        for permission in permissions:
-            result = await self._session.execute(
-                select(PermissionRow).where(PermissionRow.code == permission.code)
-            )
-            row = result.scalar_one_or_none()
-            if row is None:
-                self._session.add(
-                    PermissionRow(
-                        id=str(permission.id),
-                        code=permission.code,
-                        name=permission.name,
-                        description=permission.description,
-                        resource=permission.resource,
-                        action=permission.action,
-                        created_at=permission.created_at,
-                    )
-                )
-            else:
-                row.name = permission.name
-                row.description = permission.description
-                row.resource = permission.resource
-                row.action = permission.action
+        if not permissions:
+            return
+        # ON CONFLICT so multi-worker boot (PM2) does not race on identity_permissions.code
+        stmt = insert(PermissionRow).values(
+            [
+                {
+                    "id": str(permission.id),
+                    "code": permission.code,
+                    "name": permission.name,
+                    "description": permission.description,
+                    "resource": permission.resource,
+                    "action": permission.action,
+                    "created_at": permission.created_at,
+                }
+                for permission in permissions
+            ]
+        )
+        stmt = stmt.on_conflict_do_update(
+            index_elements=[PermissionRow.code],
+            set_={
+                "name": stmt.excluded.name,
+                "description": stmt.excluded.description,
+                "resource": stmt.excluded.resource,
+                "action": stmt.excluded.action,
+            },
+        )
+        await self._session.execute(stmt)
         await self._session.flush()
 
     async def list_all(self) -> list[Permission]:
