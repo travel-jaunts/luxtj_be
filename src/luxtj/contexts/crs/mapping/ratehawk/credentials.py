@@ -3,9 +3,10 @@
 from __future__ import annotations
 
 import json
-from typing import Any
+from contextlib import contextmanager
+from typing import Any, Iterator
 
-from .db import db_cursor
+from .config import main_database_url
 
 
 def _credential(configs: dict[str, Any], *keys: str) -> str:
@@ -22,29 +23,54 @@ def _credential(configs: dict[str, Any], *keys: str) -> str:
     return ""
 
 
+@contextmanager
+def _main_db_cursor() -> Iterator[Any]:
+    import psycopg
+
+    conn = psycopg.connect(main_database_url())
+    try:
+        with conn.cursor() as cur:
+            yield cur
+        conn.commit()
+    except Exception:
+        try:
+            conn.rollback()
+        except Exception:
+            pass
+        raise
+    finally:
+        conn.close()
+
+
 def load_ratehawk_api() -> dict[str, Any]:
-    with db_cursor() as (_, cur):
-        cur.execute(
-            """
-            SELECT id, configuration
-            FROM booking_apis
-            WHERE code = 'ratehawk'
-              AND status IS TRUE
-            ORDER BY id ASC
-            LIMIT 1
-            """
-        )
-        row = cur.fetchone()
-        if not row:
-            raise RuntimeError("RateHawk booking API is not configured or inactive")
-        api_id = str(row[0])
-        raw_config = row[1]
-        if isinstance(raw_config, str):
-            config = json.loads(raw_config) if raw_config else {}
-        elif isinstance(raw_config, dict):
-            config = raw_config
-        else:
-            config = {}
+    try:
+        with _main_db_cursor() as cur:
+            cur.execute(
+                """
+                SELECT id, configuration
+                FROM booking_apis
+                WHERE code = 'ratehawk'
+                  AND status IS TRUE
+                ORDER BY id ASC
+                LIMIT 1
+                """
+            )
+            row = cur.fetchone()
+    except RuntimeError:
+        raise
+    except Exception as exc:
+        raise RuntimeError(f"Failed to load RateHawk credentials: {exc}") from exc
+
+    if not row:
+        raise RuntimeError("RateHawk booking API is not configured or inactive")
+    api_id = str(row[0])
+    raw_config = row[1]
+    if isinstance(raw_config, str):
+        config = json.loads(raw_config) if raw_config else {}
+    elif isinstance(raw_config, dict):
+        config = raw_config
+    else:
+        config = {}
 
     configs = config.get("configs") if isinstance(config.get("configs"), dict) else config
     if not isinstance(configs, dict):

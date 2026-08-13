@@ -42,6 +42,14 @@ def database_url() -> str:
     return _to_sync_psycopg_url(url)
 
 
+def main_database_url() -> str:
+    """Main app DB — booking_apis / integrations live here, not on the CRS DB."""
+    url = os.getenv("LTJBE_DATABASE_URL", "").strip()
+    if not url:
+        raise RuntimeError("LTJBE_DATABASE_URL is required to load RateHawk credentials")
+    return _to_sync_psycopg_url(url)
+
+
 def region_batch_size() -> int:
     return int(os.getenv("LTJBE_RATEHAWK_REGION_BATCH_SIZE", "3000"))
 
