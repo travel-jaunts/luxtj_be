@@ -274,11 +274,11 @@ class RateHawkHotelProvider(HotelCommon):
             try:
                 lat_f = float(lat)
                 lng_f = float(lng)
-            except (TypeError, ValueError):
+            except TypeError, ValueError:
                 return []
             try:
                 radius = int(search_data.get("radius") or 25000)
-            except (TypeError, ValueError):
+            except TypeError, ValueError:
                 radius = 25000
             radius = max(1, min(70000, radius))
             payload = {
@@ -393,7 +393,7 @@ class RateHawkHotelProvider(HotelCommon):
             try:
                 search_lat_f = float(search_lat) if search_lat is not None else None
                 search_lng_f = float(search_lng) if search_lng is not None else None
-            except (TypeError, ValueError):
+            except TypeError, ValueError:
                 search_lat_f = search_lng_f = None
 
             batch: list[dict[str, Any]] = []
@@ -407,11 +407,14 @@ class RateHawkHotelProvider(HotelCommon):
                 supplier_price = float((pt or {}).get("show_amount") or 0)
                 if supplier_price <= 0:
                     continue
-                show_currency = str(
-                    (pt or {}).get("show_currency_code")
-                    or (pt or {}).get("currency_code")
+                show_currency = (
+                    str(
+                        (pt or {}).get("show_currency_code")
+                        or (pt or {}).get("currency_code")
+                        or request_currency
+                    ).upper()[:3]
                     or request_currency
-                ).upper()[:3] or request_currency
+                )
                 converted = AdminCurrency.convert_amount_to_admin(supplier_price, show_currency)
                 price = float(converted["amount"])
                 conversion_rate = float(converted["rate"])
@@ -423,9 +426,10 @@ class RateHawkHotelProvider(HotelCommon):
                 meal_display = str(rate_norm.get("meal_display") or "")
                 allotment = int(rate_norm.get("available") or best_rate.get("allotment") or 0)
                 tax_breakdown = self.ratehawk_parse_payment_tax_breakdown(pt)
-                taxes_included = float(tax_breakdown.get("includedTaxesSum") or 0) > 0 or float(
-                    tax_breakdown.get("vatIncludedAmount") or 0
-                ) > 0
+                taxes_included = (
+                    float(tax_breakdown.get("includedTaxesSum") or 0) > 0
+                    or float(tax_breakdown.get("vatIncludedAmount") or 0) > 0
+                )
                 serp_filters = [
                     str(f)
                     for f in (best_rate.get("serp_filters") or api_hotel.get("serp_filters") or [])
@@ -451,7 +455,9 @@ class RateHawkHotelProvider(HotelCommon):
                 if not unique_key and name:
                     unique_key = self.compute_unique_key(name, star, token_region_id or hid)
                 if not unique_key:
-                    unique_key = __import__("hashlib").md5(f"{hid}|{token_region_id}".encode()).hexdigest()
+                    unique_key = (
+                        __import__("hashlib").md5(f"{hid}|{token_region_id}".encode()).hexdigest()
+                    )
 
                 rate_key = str(best_rate.get("match_hash") or "")
                 if not rate_key:
@@ -471,7 +477,8 @@ class RateHawkHotelProvider(HotelCommon):
                     meals.append(
                         {
                             "icon": icon,
-                            "text": meal_display or ("Breakfast included" if meal_included else "Meals included"),
+                            "text": meal_display
+                            or ("Breakfast included" if meal_included else "Meals included"),
                             "code": meal_code,
                         }
                     )
@@ -496,7 +503,10 @@ class RateHawkHotelProvider(HotelCommon):
                 )
                 address_parts = [
                     p
-                    for p in [str(crs.get("address_line1") or ""), str(crs.get("address_line2") or "")]
+                    for p in [
+                        str(crs.get("address_line1") or ""),
+                        str(crs.get("address_line2") or ""),
+                    ]
                     if p
                 ]
                 property_type = str(crs.get("accommodation_type") or "").strip()
@@ -581,7 +591,7 @@ class RateHawkHotelProvider(HotelCommon):
         pt = self.ratehawk_first_payment_type(rate)
         if pt is None:
             return None
-        before = ((pt.get("cancellation_penalties") or {}).get("free_cancellation_before"))
+        before = (pt.get("cancellation_penalties") or {}).get("free_cancellation_before")
         return str(before) if before else None
 
     # ── DETAILS / ROOMS / BLOCK ────────────────────────────────────────
@@ -603,15 +613,11 @@ class RateHawkHotelProvider(HotelCommon):
         )
         if crs is None:
             return {"status": False, "message": "Hotel not found in inventory"}
-        resolved_region = str(
-            (crs["hotel"].get("region_id") or inner.get("region_id") or "") or ""
-        )
+        resolved_region = str((crs["hotel"].get("region_id") or inner.get("region_id") or "") or "")
         list_inner = {**inner, "region_id": resolved_region}
         if not list_inner.get("guests"):
             list_inner["guests"] = self._build_guests_payload([])
-        list_token = self.encode_result_token(
-            token_data["booking_source"], json.dumps(list_inner)
-        )
+        list_token = self.encode_result_token(token_data["booking_source"], json.dumps(list_inner))
         data = await self._build_b2c_hotel_payload_from_crs(crs)
         data["ListToken"] = list_token
         return {"status": True, "data": data}
@@ -712,9 +718,7 @@ class RateHawkHotelProvider(HotelCommon):
                 hotel_crs_code = str(crs_hotel["hotel"].get("code") or "")
                 star = int(crs_hotel["hotel"].get("star_rating") or 0)
         room_names = [
-            str(r.get("room_name"))
-            for r in rates
-            if isinstance(r, dict) and r.get("room_name")
+            str(r.get("room_name")) for r in rates if isinstance(r, dict) and r.get("room_name")
         ]
         crs_room_map: dict[str, Any] = {}
         if self._crs_session is not None and hotel_crs_id:
@@ -760,7 +764,11 @@ class RateHawkHotelProvider(HotelCommon):
             first = bucket_rates[0]
             room_name = str(first.get("room_name") or "Room")
             static = crs_room_by_name.get(room_name) or {"images": [], "amenities": []}
-            rdt = first.get("room_data_trans") if isinstance(first.get("room_data_trans"), dict) else {}
+            rdt = (
+                first.get("room_data_trans")
+                if isinstance(first.get("room_data_trans"), dict)
+                else {}
+            )
             desc_parts = [
                 p
                 for p in [
@@ -854,7 +862,9 @@ class RateHawkHotelProvider(HotelCommon):
         book_hash = str(inner.get("rate_key") or "")
         if not book_hash:
             return {"status": False, "message": "Missing rate key"}
-        price_increase = max(0, min(100, int(self.config.get("prebook_price_increase_percent") or 20)))
+        price_increase = max(
+            0, min(100, int(self.config.get("prebook_price_increase_percent") or 20))
+        )
         meta = await self._send_request(
             "/b2b/v3/hotel/prebook/",
             "POST",
@@ -866,7 +876,10 @@ class RateHawkHotelProvider(HotelCommon):
         decoded = json.loads(meta["body"])
         if not isinstance(decoded, dict) or decoded.get("status") != "ok":
             err = decoded.get("error") if isinstance(decoded, dict) else "Prebook failed"
-            return {"status": False, "message": str(err) if isinstance(err, str) else "Prebook failed"}
+            return {
+                "status": False,
+                "message": str(err) if isinstance(err, str) else "Prebook failed",
+            }
         hotels = (decoded.get("data") or {}).get("hotels") or []
         rate = ((hotels[0].get("rates") or [None])[0]) if hotels else None
         if not isinstance(rate, dict):
@@ -882,9 +895,7 @@ class RateHawkHotelProvider(HotelCommon):
         )
         if crs is None:
             return {"status": False, "message": "Hotel not found in inventory"}
-        resolved_region = str(
-            (crs["hotel"].get("region_id") or inner.get("region_id") or "") or ""
-        )
+        resolved_region = str((crs["hotel"].get("region_id") or inner.get("region_id") or "") or "")
         norm = self.ratehawk_normalize_hp_rate_row(rate)
         pt = self.ratehawk_first_payment_type(rate)
         show_currency = str(
@@ -895,8 +906,12 @@ class RateHawkHotelProvider(HotelCommon):
             or AdminCurrency.code()
             or "USD"
         ).upper()[:3]
-        amount_admin = AdminCurrency.convert_amount_to_admin(float(norm["amount"] or 0), show_currency)
-        taxes_admin = AdminCurrency.convert_amount_to_admin(float(norm["taxes"] or 0), show_currency)
+        amount_admin = AdminCurrency.convert_amount_to_admin(
+            float(norm["amount"] or 0), show_currency
+        )
+        taxes_admin = AdminCurrency.convert_amount_to_admin(
+            float(norm["taxes"] or 0), show_currency
+        )
         base_admin = AdminCurrency.convert_amount_to_admin(
             float(norm.get("show_amount") or norm["amount"] or 0), show_currency
         )
@@ -919,9 +934,7 @@ class RateHawkHotelProvider(HotelCommon):
         }
         hotel_crs_room_code = str(static.get("supplier_room_code") or "")
         amenity_slugs = [
-            str(a.get("name") or "")
-            for a in (static.get("amenities") or [])
-            if a.get("name")
+            str(a.get("name") or "") for a in (static.get("amenities") or []) if a.get("name")
         ]
         api_amenities = [str(a) for a in (rate.get("amenities_data") or [])]
         amenities_combined = list(dict.fromkeys(amenity_slugs + api_amenities))
@@ -1011,7 +1024,9 @@ class RateHawkHotelProvider(HotelCommon):
         book_hash = str(inner.get("book_hash") or "")
         if not book_hash:
             return {"status": False, "message": "Missing book_hash in list token"}
-        passengers = request.get("Passengers") if isinstance(request.get("Passengers"), list) else []
+        passengers = (
+            request.get("Passengers") if isinstance(request.get("Passengers"), list) else []
+        )
         if not passengers:
             return {"status": False, "message": "Passenger details are required"}
         if not app_ref:
@@ -1065,7 +1080,10 @@ class RateHawkHotelProvider(HotelCommon):
             None,
         ) or next((pt for pt in payment_types if isinstance(pt, dict)), None)
         if chosen is None:
-            return {"status": False, "message": "RateHawk did not return any payment_types for this rate"}
+            return {
+                "status": False,
+                "message": "RateHawk did not return any payment_types for this rate",
+            }
         payment_type_finish = {
             "type": str(chosen.get("type") or ""),
             "amount": str(chosen.get("amount") or ""),
@@ -1076,7 +1094,10 @@ class RateHawkHotelProvider(HotelCommon):
             or not payment_type_finish["amount"]
             or len(payment_type_finish["currency_code"]) != 3
         ):
-            return {"status": False, "message": "Invalid payment_type from RateHawk (currency_code)"}
+            return {
+                "status": False,
+                "message": "Invalid payment_type from RateHawk (currency_code)",
+            }
 
         rooms = self._build_finish_rooms(
             passengers, inner.get("guests") if isinstance(inner.get("guests"), list) else []
@@ -1103,7 +1124,10 @@ class RateHawkHotelProvider(HotelCommon):
         )
 
         finish_payload = {
-            "user": {"email": guest_email, "phone": re_digits(str(lead.phone_code or ""), str(lead.phone or "")) or "00000"},
+            "user": {
+                "email": guest_email,
+                "phone": re_digits(str(lead.phone_code or ""), str(lead.phone or "")) or "00000",
+            },
             "supplier_data": {
                 k: v
                 for k, v in {
@@ -1334,9 +1358,7 @@ class RateHawkHotelProvider(HotelCommon):
             return "BOOKING_FAILED"
         return None
 
-    async def _fetch_order_info(
-        self, partner_order_id: str, order_id: Any
-    ) -> dict[str, Any]:
+    async def _fetch_order_info(self, partner_order_id: str, order_id: Any) -> dict[str, Any]:
         """POST hotel/order/info/ — confirmation ref + order row status."""
         out: dict[str, Any] = {
             "confirmation_reference": "",
@@ -1352,7 +1374,7 @@ class RateHawkHotelProvider(HotelCommon):
         if order_id is not None and order_id != "":
             try:
                 oid = int(order_id)
-            except (TypeError, ValueError):
+            except TypeError, ValueError:
                 oid = None
             if oid is not None and oid > 0:
                 searches.append({"order_ids": [oid]})
@@ -1365,9 +1387,7 @@ class RateHawkHotelProvider(HotelCommon):
                 "pagination": {"page_size": "10", "page_number": "1"},
                 "search": search,
             }
-            meta = await self._send_request(
-                "/b2b/v3/hotel/order/info/", "POST", payload, None
-            )
+            meta = await self._send_request("/b2b/v3/hotel/order/info/", "POST", payload, None)
             if meta.get("curl_errno") or not meta.get("body"):
                 continue
             try:
@@ -1401,9 +1421,7 @@ class RateHawkHotelProvider(HotelCommon):
         import asyncio
 
         ctx = context if isinstance(context, dict) else {}
-        partner_order_id = str(
-            ctx.get("partner_order_id") or booking_reference or ""
-        ).strip()
+        partner_order_id = str(ctx.get("partner_order_id") or booking_reference or "").strip()
         order_id = ctx.get("order_id")
         if order_id is None or order_id == "":
             order_id = booking_reference if str(booking_reference).strip().isdigit() else None
@@ -1441,18 +1459,14 @@ class RateHawkHotelProvider(HotelCommon):
                     }
                 if round_result["decision"] == "success":
                     finish_status_data = (
-                        round_result["data"]
-                        if isinstance(round_result.get("data"), dict)
-                        else {}
+                        round_result["data"] if isinstance(round_result.get("data"), dict) else {}
                     )
                     await asyncio.sleep(self.RATEHAWK_STATUS_POLL_INTERVAL_SEC)
 
         order_info = await self._fetch_order_info(partner_order_id, order_id)
         mapped = self._map_order_status(str(order_info.get("order_status") or ""))
         conf = str(order_info.get("confirmation_reference") or "").strip()
-        booking_ref = str(
-            order_info.get("order_id") or order_id or partner_order_id or ""
-        )
+        booking_ref = str(order_info.get("order_id") or order_id or partner_order_id or "")
 
         raw: dict[str, Any] = {
             "order_info": order_info.get("order_info_raw"),
@@ -1603,9 +1617,10 @@ class RateHawkHotelProvider(HotelCommon):
     def _write_region_cities_cache(self, dump_path: Path, cache_path: Path) -> int:
         count = 0
         try:
-            with dump_path.open("r", encoding="utf-8", errors="replace") as inp, cache_path.open(
-                "w", encoding="utf-8"
-            ) as out:
+            with (
+                dump_path.open("r", encoding="utf-8", errors="replace") as inp,
+                cache_path.open("w", encoding="utf-8") as out,
+            ):
                 for line in inp:
                     line = line.strip()
                     if not line:
@@ -1618,9 +1633,7 @@ class RateHawkHotelProvider(HotelCommon):
                         continue
                     name_obj = obj.get("name") if isinstance(obj.get("name"), dict) else {}
                     country_obj = (
-                        obj.get("country_name")
-                        if isinstance(obj.get("country_name"), dict)
-                        else {}
+                        obj.get("country_name") if isinstance(obj.get("country_name"), dict) else {}
                     )
                     row = {
                         "id": int(obj.get("id") or 0),
@@ -1751,8 +1764,11 @@ class RateHawkHotelProvider(HotelCommon):
                 if not isinstance(obj, dict):
                     continue
                 hotel = self.normalize_dump_hotel_payload(obj)
-                if obj.get("deleted") or obj.get("is_closed") or hotel.get("deleted") or hotel.get(
-                    "is_closed"
+                if (
+                    obj.get("deleted")
+                    or obj.get("is_closed")
+                    or hotel.get("deleted")
+                    or hotel.get("is_closed")
                 ):
                     continue
                 region = hotel.get("region") if isinstance(hotel.get("region"), dict) else None

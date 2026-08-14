@@ -48,7 +48,7 @@ def _dec(value: Any) -> float | None:
         return None
     try:
         return float(value)
-    except (TypeError, ValueError):
+    except TypeError, ValueError:
         return None
 
 
@@ -237,10 +237,14 @@ async def _booking_api_lookup(
     if not booking_source_ids:
         return {}
     rows = (
-        await main.execute(
-            select(BookingApiRow).where(BookingApiRow.id.in_(list(set(booking_source_ids))))
+        (
+            await main.execute(
+                select(BookingApiRow).where(BookingApiRow.id.in_(list(set(booking_source_ids))))
+            )
         )
-    ).scalars().all()
+        .scalars()
+        .all()
+    )
     return {
         row.id: {
             "id": row.id,
@@ -334,29 +338,37 @@ async def _hotel_images(crs: AsyncSession, hotel_id: str) -> list[dict[str, Any]
 
 async def _hotel_rooms_summary(crs: AsyncSession, hotel_id: str) -> list[dict[str, Any]]:
     rooms = (
-        await crs.execute(
-            select(HotelCrsRoomGroupRow)
-            .where(HotelCrsRoomGroupRow.hotel_id == hotel_id)
-            .order_by(HotelCrsRoomGroupRow.name.asc(), HotelCrsRoomGroupRow.id.asc())
+        (
+            await crs.execute(
+                select(HotelCrsRoomGroupRow)
+                .where(HotelCrsRoomGroupRow.hotel_id == hotel_id)
+                .order_by(HotelCrsRoomGroupRow.name.asc(), HotelCrsRoomGroupRow.id.asc())
+            )
         )
-    ).scalars().all()
+        .scalars()
+        .all()
+    )
     if not rooms:
         return []
 
     room_ids = [r.id for r in rooms]
     images_by_room: dict[str, list[str]] = {rid: [] for rid in room_ids}
-    image_counts: dict[str, int] = {rid: 0 for rid in room_ids}
+    image_counts: dict[str, int] = dict.fromkeys(room_ids, 0)
     img_rows = (
-        await crs.execute(
-            select(HotelCrsRoomImageRow)
-            .where(HotelCrsRoomImageRow.room_group_id.in_(room_ids))
-            .order_by(
-                HotelCrsRoomImageRow.room_group_id.asc(),
-                HotelCrsRoomImageRow.sort_order.asc(),
-                HotelCrsRoomImageRow.created_at.asc(),
+        (
+            await crs.execute(
+                select(HotelCrsRoomImageRow)
+                .where(HotelCrsRoomImageRow.room_group_id.in_(room_ids))
+                .order_by(
+                    HotelCrsRoomImageRow.room_group_id.asc(),
+                    HotelCrsRoomImageRow.sort_order.asc(),
+                    HotelCrsRoomImageRow.created_at.asc(),
+                )
             )
         )
-    ).scalars().all()
+        .scalars()
+        .all()
+    )
     for img in img_rows:
         image_counts[img.room_group_id] = image_counts.get(img.room_group_id, 0) + 1
         bucket = images_by_room.setdefault(img.room_group_id, [])
@@ -364,7 +376,7 @@ async def _hotel_rooms_summary(crs: AsyncSession, hotel_id: str) -> list[dict[st
             bucket.append(img.url)
 
     amenities_by_room: dict[str, list[str]] = {rid: [] for rid in room_ids}
-    amenity_counts: dict[str, int] = {rid: 0 for rid in room_ids}
+    amenity_counts: dict[str, int] = dict.fromkeys(room_ids, 0)
     amenity_rows = (
         await crs.execute(
             select(

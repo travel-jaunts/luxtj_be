@@ -32,9 +32,10 @@ def upgrade() -> None:
 
     # Backfill from distinct country currency metadata when present.
     conn = op.get_bind()
-    rows = conn.execute(
-        sa.text(
-            """
+    rows = (
+        conn.execute(
+            sa.text(
+                """
             SELECT
                 upper(trim(currency_code)) AS code,
                 min(currency_name) AS name,
@@ -44,8 +45,11 @@ def upgrade() -> None:
               AND length(trim(currency_code)) = 3
             GROUP BY upper(trim(currency_code))
             """
+            )
         )
-    ).mappings().all()
+        .mappings()
+        .all()
+    )
     now = datetime.now(UTC)
     if rows:
         op.bulk_insert(

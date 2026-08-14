@@ -47,7 +47,7 @@ class MarkupRuleSerializer(ApiSerializerBaseModel):
     @classmethod
     def from_row(
         cls, row: HotelMarkupRuleRow, *, region_name: str | None = None
-    ) -> "MarkupRuleSerializer":
+    ) -> MarkupRuleSerializer:
         return cls(
             id=row.id,
             name=row.name,
@@ -93,14 +93,16 @@ class RegionSerializer(ApiSerializerBaseModel):
     label: str
 
 
-async def _region_names(
-    crs_session: AsyncSession, region_ids: list[str]
-) -> dict[str, str]:
+async def _region_names(crs_session: AsyncSession, region_ids: list[str]) -> dict[str, str]:
     ids = [r for r in region_ids if r]
     if not ids:
         return {}
     rows = list(
-        (await crs_session.execute(select(NewCitiesNRegionRow).where(NewCitiesNRegionRow.id.in_(ids))))
+        (
+            await crs_session.execute(
+                select(NewCitiesNRegionRow).where(NewCitiesNRegionRow.id.in_(ids))
+            )
+        )
         .scalars()
         .all()
     )
@@ -130,15 +132,18 @@ async def list_rules(
     crs_session: Annotated[AsyncSession, Depends(crs_database_session_handle)],
 ) -> ApiSuccessResponse[list[MarkupRuleSerializer]]:
     rows = list(
-        (await session.execute(select(HotelMarkupRuleRow).order_by(HotelMarkupRuleRow.created_at.desc())))
+        (
+            await session.execute(
+                select(HotelMarkupRuleRow).order_by(HotelMarkupRuleRow.created_at.desc())
+            )
+        )
         .scalars()
         .all()
     )
     names = await _region_names(crs_session, [r.region_id or "" for r in rows])
     return ApiSuccessResponse(
         output=[
-            MarkupRuleSerializer.from_row(r, region_name=names.get(r.region_id or ""))
-            for r in rows
+            MarkupRuleSerializer.from_row(r, region_name=names.get(r.region_id or "")) for r in rows
         ]
     )
 
@@ -171,9 +176,7 @@ async def create_rule(
     await session.flush()
     names = await _region_names(crs_session, [row.region_id or ""])
     return ApiSuccessResponse(
-        output=MarkupRuleSerializer.from_row(
-            row, region_name=names.get(row.region_id or "")
-        )
+        output=MarkupRuleSerializer.from_row(row, region_name=names.get(row.region_id or ""))
     )
 
 
@@ -192,9 +195,7 @@ async def update_rule(
     await session.flush()
     names = await _region_names(crs_session, [row.region_id or ""])
     return ApiSuccessResponse(
-        output=MarkupRuleSerializer.from_row(
-            row, region_name=names.get(row.region_id or "")
-        )
+        output=MarkupRuleSerializer.from_row(row, region_name=names.get(row.region_id or ""))
     )
 
 

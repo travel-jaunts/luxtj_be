@@ -28,9 +28,7 @@ class PaymentGatewayTransactionRepository(Protocol):
         response_params: dict[str, Any] | list | None = None,
     ) -> None: ...
 
-    async def update_pg_reference_id(
-        self, transaction_id: str, pg_reference_id: str
-    ) -> None: ...
+    async def update_pg_reference_id(self, transaction_id: str, pg_reference_id: str) -> None: ...
 
     async def apply_refund(
         self,

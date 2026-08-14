@@ -35,9 +35,7 @@ public_currencies_router = APIRouter(prefix="/currencies", tags=["currencies"])
     response_model=ApiSuccessResponse[CurrencyListSerializer],
 )
 async def list_currencies(
-    _principal: Annotated[
-        AuthenticatedPrincipal, Depends(require_permission("currencies.view"))
-    ],
+    _principal: Annotated[AuthenticatedPrincipal, Depends(require_permission("currencies.view"))],
     service: Annotated[CurrencyActivationService, Depends(build_currency_activation_service)],
 ) -> ApiSuccessResponse[CurrencyListSerializer]:
     items = await service.list_currencies()
@@ -55,9 +53,7 @@ async def list_currencies(
 )
 async def activate_currency(
     body: Annotated[CurrencyCodeBody, Body(...)],
-    _principal: Annotated[
-        AuthenticatedPrincipal, Depends(require_permission("currencies.edit"))
-    ],
+    _principal: Annotated[AuthenticatedPrincipal, Depends(require_permission("currencies.edit"))],
     service: Annotated[CurrencyActivationService, Depends(build_currency_activation_service)],
 ) -> ApiSuccessResponse[CurrencyItemSerializer]:
     try:
@@ -73,15 +69,11 @@ async def activate_currency(
 )
 async def deactivate_currency(
     body: Annotated[CurrencyCodeBody, Body(...)],
-    _principal: Annotated[
-        AuthenticatedPrincipal, Depends(require_permission("currencies.edit"))
-    ],
+    _principal: Annotated[AuthenticatedPrincipal, Depends(require_permission("currencies.edit"))],
     service: Annotated[CurrencyActivationService, Depends(build_currency_activation_service)],
 ) -> ApiSuccessResponse[CurrencyItemSerializer]:
     try:
-        item = await service.deactivate(
-            DeactivateCurrencyCommand(currency_code=body.currency_code)
-        )
+        item = await service.deactivate(DeactivateCurrencyCommand(currency_code=body.currency_code))
     except CurrencyNotFoundError as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
     return ApiSuccessResponse(output=CurrencyItemSerializer.from_domain(item))
@@ -92,9 +84,7 @@ async def deactivate_currency(
     response_model=ApiSuccessResponse[dict],
 )
 async def refresh_currency_rates(
-    _principal: Annotated[
-        AuthenticatedPrincipal, Depends(require_permission("currencies.edit"))
-    ],
+    _principal: Annotated[AuthenticatedPrincipal, Depends(require_permission("currencies.edit"))],
     service: Annotated[CurrencyActivationService, Depends(build_currency_activation_service)],
 ) -> ApiSuccessResponse[dict]:
     from luxtj.contexts.currency.infrastructure.currency_conversion import get_currency_conversion

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Annotated, Literal
 
 from fastapi import APIRouter, Body, Depends, HTTPException
@@ -44,7 +44,7 @@ class PromoCodeSerializer(ApiSerializerBaseModel):
     status: str
 
     @classmethod
-    def from_row(cls, row: MarketingOfferRow, *, module: str) -> "PromoCodeSerializer":
+    def from_row(cls, row: MarketingOfferRow, *, module: str) -> PromoCodeSerializer:
         otype = str(row.type or "").lower()
         discount_type = (
             "percentage"
@@ -137,9 +137,9 @@ def _normalize_code(code: str) -> str:
 
 def _ensure_dates(start: datetime, end: datetime) -> tuple[datetime, datetime]:
     if start.tzinfo is None:
-        start = start.replace(tzinfo=timezone.utc)
+        start = start.replace(tzinfo=UTC)
     if end.tzinfo is None:
-        end = end.replace(tzinfo=timezone.utc)
+        end = end.replace(tzinfo=UTC)
     if end <= start:
         raise HTTPException(status_code=400, detail="validity_end must be after validity_start")
     return start, end
@@ -241,7 +241,11 @@ async def _update_module(
     body: PromoCodeBody,
 ) -> PromoCodeSerializer:
     row = await session.get(MarketingOfferRow, promo_id)
-    if row is None or str(row.status) == OfferStatusEnum.DELETED.value or not _applies_to(row, module):
+    if (
+        row is None
+        or str(row.status) == OfferStatusEnum.DELETED.value
+        or not _applies_to(row, module)
+    ):
         raise HTTPException(status_code=404, detail="Promo code not found")
 
     code = _normalize_code(body.code)
@@ -250,9 +254,7 @@ async def _update_module(
         raise HTTPException(status_code=400, detail="Percentage discount cannot exceed 100")
     start, end = _ensure_dates(body.validity_start, body.validity_end)
 
-    clash = await _find_code_clash(
-        session, code=code, module=module, exclude_id=promo_id
-    )
+    clash = await _find_code_clash(session, code=code, module=module, exclude_id=promo_id)
     if clash is not None:
         raise HTTPException(
             status_code=400,
@@ -281,7 +283,11 @@ async def _delete_module(
     promo_id: str,
 ) -> dict:
     row = await session.get(MarketingOfferRow, promo_id)
-    if row is None or str(row.status) == OfferStatusEnum.DELETED.value or not _applies_to(row, module):
+    if (
+        row is None
+        or str(row.status) == OfferStatusEnum.DELETED.value
+        or not _applies_to(row, module)
+    ):
         raise HTTPException(status_code=404, detail="Promo code not found")
     now = timeutils.datetime_now()
     row.status = OfferStatusEnum.DELETED.value

@@ -69,8 +69,9 @@ class HotelBlender:
             user_id=user_id,
             checkin_date=date.fromisoformat(str(checkin)[:10]),
             checkout_date=date.fromisoformat(str(checkout)[:10]),
-            nationality=str(search_data.get("nationality") or search_data.get("Nationality") or "US")
-            .upper()[:2],
+            nationality=str(
+                search_data.get("nationality") or search_data.get("Nationality") or "US"
+            ).upper()[:2],
             search_data=search_data,
             status="active",
             created_at=now,
@@ -123,9 +124,9 @@ class HotelBlender:
 
     def resolve_provider_by_source(self, source: str) -> HotelProvider | None:
         registry = get_integration_registry()
-        api = registry.resolve_booking_api(source, sub_module="HOTEL") or registry.resolve_booking_api(
-            source
-        )
+        api = registry.resolve_booking_api(
+            source, sub_module="HOTEL"
+        ) or registry.resolve_booking_api(source)
         if api is None:
             return None
         return self.resolve_provider(source, api.runtime_configuration(), str(api.id))
@@ -399,9 +400,7 @@ class HotelBlender:
         eval_result = await HotelPromo.evaluate(self._session, promo_code, promo_base_admin)
         discount_admin = float(eval_result.get("discount_amount_admin") or 0)
         # Booking/supplier currency amount for B2C UI (stay fare is not always admin).
-        discount_booking = (
-            round(discount_admin / rate, 2) if rate > 0 else round(discount_admin, 2)
-        )
+        discount_booking = round(discount_admin / rate, 2) if rate > 0 else round(discount_admin, 2)
         discount_booking = min(discount_booking, round(promo_base, 2))
         data = {
             **eval_result,
@@ -605,7 +604,9 @@ class HotelBlender:
         attrs["process_booking_failure"] = {
             "at": now.isoformat(),
             "message": str(message or "Supplier booking failed"),
-            "supplier": supplier if isinstance(supplier, (dict, list, str, int, float, bool)) else None,
+            "supplier": supplier
+            if isinstance(supplier, (dict, list, str, int, float, bool))
+            else None,
         }
         booking.attributes = attrs
 
@@ -713,9 +714,7 @@ class HotelBlender:
             not refresh.get("status")
             and "reference is missing" in str(refresh.get("message") or "").lower()
         ):
-            fail_msg = str(
-                refresh.get("message") or "Supplier booking reference is missing"
-            )
+            fail_msg = str(refresh.get("message") or "Supplier booking reference is missing")
             if status != "BOOKING_FAILED":
                 await self._persist_hotel_refresh(
                     app_ref,
@@ -910,9 +909,7 @@ class HotelBlender:
                     "total_children": booking.total_children,
                     "email": (pax[0].email if pax else None),
                     "phone": (
-                        f"{pax[0].phone_code or ''}{pax[0].phone or ''}".strip()
-                        if pax
-                        else None
+                        f"{pax[0].phone_code or ''}{pax[0].phone or ''}".strip() if pax else None
                     ),
                     "transaction": (
                         None
@@ -1027,6 +1024,8 @@ class HotelBlender:
             room = dict(room)
             room["roomVariations"] = new_vars
             amounts = [float(x.get("amount") or 0) for x in new_vars if isinstance(x, dict)]
-            room["TotalFare"] = round(min(amounts), 2) if amounts else float(room.get("TotalFare") or 0)
+            room["TotalFare"] = (
+                round(min(amounts), 2) if amounts else float(room.get("TotalFare") or 0)
+            )
             out.append(room)
         return out

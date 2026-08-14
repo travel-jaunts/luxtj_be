@@ -163,7 +163,9 @@ def upgrade() -> None:
 def downgrade() -> None:
     op.drop_index("ix_flight_pax_app_reference", table_name="flight_booking_passenger_details")
     op.drop_table("flight_booking_passenger_details")
-    op.drop_index("ix_flight_itinerary_app_reference", table_name="flight_booking_itinerary_details")
+    op.drop_index(
+        "ix_flight_itinerary_app_reference", table_name="flight_booking_itinerary_details"
+    )
     op.drop_table("flight_booking_itinerary_details")
     op.drop_index(
         "ix_flight_booking_txn_app_reference",

@@ -21,6 +21,7 @@ from helpers import (
     drop_column_if_exists,
     drop_index_if_exists,
 )
+
 revision: str = "20260807_crs_ratehawk_content"
 down_revision: str | None = "20260807_crs_inventory_indexes"
 branch_labels: str | Sequence[str] | None = None

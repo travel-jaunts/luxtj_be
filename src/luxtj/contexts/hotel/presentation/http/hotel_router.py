@@ -12,6 +12,7 @@ from fastapi.responses import JSONResponse, StreamingResponse
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from luxtj.contexts.crs.infrastructure.persistence.sqlalchemy_models import HotelCrsHotelRow
 from luxtj.contexts.currency.domain.admin_currency import AdminCurrency
 from luxtj.contexts.currency.domain.booking_money_for_client import BookingMoneyForClient
 from luxtj.contexts.hotel.application.blender import HotelBlender
@@ -25,7 +26,6 @@ from luxtj.contexts.hotel.infrastructure.persistence.sqlalchemy_models import (
     HotelBookingPaxDetailsRow,
     HotelBookingTransactionDetailsRow,
 )
-from luxtj.contexts.crs.infrastructure.persistence.sqlalchemy_models import HotelCrsHotelRow
 from luxtj.contexts.integration.infrastructure.registry_cache import get_integration_registry
 from luxtj.contexts.payment.application.service import PaymentGatewayService
 from luxtj.contexts.payment.infrastructure.persistence.sqlalchemy_repository import (
@@ -57,10 +57,7 @@ def _apply_hotel_snapshot_to_booking(
     if address and not booking.hotel_address:
         booking.hotel_address = address
     location = str(
-        hotel_snap.get("location")
-        or hotel_snap.get("CityName")
-        or hotel_snap.get("city")
-        or ""
+        hotel_snap.get("location") or hotel_snap.get("CityName") or hotel_snap.get("city") or ""
     ).strip()
     if location and not booking.hotel_location:
         booking.hotel_location = location[:255]
@@ -100,9 +97,7 @@ def _err(
     )
 
 
-def _blender(
-    session: AsyncSession, crs_session: AsyncSession, http_client: Any
-) -> HotelBlender:
+def _blender(session: AsyncSession, crs_session: AsyncSession, http_client: Any) -> HotelBlender:
     return HotelBlender(session, crs_session=crs_session, http_client=http_client)
 
 
@@ -176,14 +171,14 @@ async def _pre_search(
     country_code = str(body.get("countryCode") or body.get("country_code") or "").upper()[:2]
     try:
         radius = int(body.get("radius") or 25000)
-    except (TypeError, ValueError):
+    except TypeError, ValueError:
         radius = 25000
     radius = max(1, min(70000, radius))
 
     try:
         lat_f = float(lat)
         lng_f = float(lng)
-    except (TypeError, ValueError):
+    except TypeError, ValueError:
         return _err(
             "Destination location is required",
             {"lat": "Select a Google Maps destination with coordinates"},
@@ -369,9 +364,7 @@ async def _pre_book(
     if pg_model is None and registry.active_payment_gateways:
         pg_model = next(iter(registry.active_payment_gateways.values()))
 
-    quote = await HotelPreBookQuote.compute(
-        session, room, inner, promo_code or None, 0.0, pg_model
-    )
+    quote = await HotelPreBookQuote.compute(session, room, inner, promo_code or None, 0.0, pg_model)
     if promo_code and not quote.get("promo_code_applied"):
         return _err(
             quote.get("promo_message") or "Promo code is not valid",
@@ -383,9 +376,7 @@ async def _pre_book(
         )
     room_count, guest_adults, guest_children = HotelPreBookQuote.count_guests(room)
     fx = float(quote.get("currency_conversion_rate") or 1)
-    crs_hotel_code = str(
-        inner.get("hotel_crs_hotel_code") or inner.get("hotel_crs_hotel_id") or ""
-    )
+    crs_hotel_code = str(inner.get("hotel_crs_hotel_code") or inner.get("hotel_crs_hotel_id") or "")
     if not crs_hotel_code:
         return _err("Hotel session is invalid. Please select your room again.")
     crs_hotel = (
@@ -404,13 +395,17 @@ async def _pre_book(
     # Idempotent PreBook: reuse PENDING_PAYMENT for same list_token, but always
     # re-quote (promo / PG / convenience) and ensure payment amount matches.
     existing_rows = (
-        await session.execute(
-            select(HotelBookingDetailsRow).where(
-                HotelBookingDetailsRow.status == "PENDING_PAYMENT",
-                HotelBookingDetailsRow.deleted_at.is_(None),
+        (
+            await session.execute(
+                select(HotelBookingDetailsRow).where(
+                    HotelBookingDetailsRow.status == "PENDING_PAYMENT",
+                    HotelBookingDetailsRow.deleted_at.is_(None),
+                )
             )
         )
-    ).scalars().all()
+        .scalars()
+        .all()
+    )
     for row in existing_rows:
         attrs = row.attributes if isinstance(row.attributes, dict) else {}
         if str(attrs.get("list_token") or "") != list_token:
@@ -519,9 +514,7 @@ async def _pre_book(
                 firstname=lead_name,
                 email=email,
                 phone=phone or "",
-                productinfo=str(
-                    hotel_snap.get("name") or hotel_snap.get("HotelName") or "HOTEL"
-                ),
+                productinfo=str(hotel_snap.get("name") or hotel_snap.get("HotelName") or "HOTEL"),
             )
             if not payment.get("status"):
                 await session.rollback()
@@ -533,9 +526,7 @@ async def _pre_book(
             json.dumps({"app_reference": row.app_reference, "list_token": list_token}),
         )
         room_client = BookingMoneyForClient.strip_admin_markup_from_hotel_room(dict(room))
-        taxes_for_client = round(
-            float(quote["taxes_supplier"]) + float(quote["admin_markup"]), 2
-        )
+        taxes_for_client = round(float(quote["taxes_supplier"]) + float(quote["admin_markup"]), 2)
         return _ok(
             {
                 "ResultToken": pay_token,
@@ -577,9 +568,9 @@ async def _pre_book(
             app_reference=app_ref,
             booking_source=booking_source,
             status="PENDING_PAYMENT",
-            hotel_name=str(
-                hotel_snap.get("HotelName") or hotel_snap.get("name") or ""
-            ).strip()[:255],
+            hotel_name=str(hotel_snap.get("HotelName") or hotel_snap.get("name") or "").strip()[
+                :255
+            ],
             star_rating=int(hotel_snap.get("star") or hotel_snap.get("star_rating") or 0) or None,
             hotel_code=str(inner.get("hid") or ""),
             hotel_check_in=date.fromisoformat(str(inner.get("checkin") or now.date())[:10]),
@@ -600,9 +591,7 @@ async def _pre_book(
             hotel_address=str(hotel_snap.get("Address") or hotel_snap.get("address") or "").strip()
             or None,
             hotel_location=str(
-                hotel_snap.get("location")
-                or hotel_snap.get("CityName")
-                or ""
+                hotel_snap.get("location") or hotel_snap.get("CityName") or ""
             ).strip()[:255]
             or None,
             attributes={
@@ -692,9 +681,7 @@ async def _pre_book(
         repository=SqlAlchemyPaymentGatewayTransactionRepository(session),
         http_client=blender._http,
     )
-    lead_name = (
-        f"{lead.get('first_name') or ''} {lead.get('last_name') or ''}".strip() or "Guest"
-    )
+    lead_name = f"{lead.get('first_name') or ''} {lead.get('last_name') or ''}".strip() or "Guest"
     payment = await pay_svc.create_and_initiate_payment(
         app_reference=app_ref,
         pg_code=pg_model.code if pg_model else None,
@@ -715,9 +702,7 @@ async def _pre_book(
         json.dumps({"app_reference": app_ref, "list_token": list_token}),
     )
     room_client = BookingMoneyForClient.strip_admin_markup_from_hotel_room(dict(room))
-    taxes_for_client = round(
-        float(quote["taxes_supplier"]) + float(quote["admin_markup"]), 2
-    )
+    taxes_for_client = round(float(quote["taxes_supplier"]) + float(quote["admin_markup"]), 2)
     return _ok(
         {
             "ResultToken": pay_token,
@@ -740,8 +725,7 @@ async def _pre_book(
                 "RoomRateExclusive": quote["room_rate_exclusive_supplier"],
             },
             "payment_gateways": [
-                {"code": g.code, "name": g.name}
-                for g in registry.active_payment_gateways.values()
+                {"code": g.code, "name": g.name} for g in registry.active_payment_gateways.values()
             ],
         },
         "Pre Booking data Saved",
@@ -774,7 +758,9 @@ async def _process_booking(
     if not booking:
         return _err("Booking not found", status_code=404)
     if booking.status == "BOOKING_CONFIRMED":
-        return _ok({"app_reference": app_ref, "status": "BOOKING_CONFIRMED"}, "Booking already confirmed")
+        return _ok(
+            {"app_reference": app_ref, "status": "BOOKING_CONFIRMED"}, "Booking already confirmed"
+        )
     if booking.status == "BOOKING_AWAITING_CONFIRMATION":
         refreshed = await blender.refresh_booking_status(app_ref)
         if refreshed.get("status"):

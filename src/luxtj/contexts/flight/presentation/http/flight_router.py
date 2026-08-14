@@ -137,8 +137,7 @@ async def _search(
                     {
                         "success": True,
                         "message": chunk.get("message") or "Success",
-                        "data": chunk.get("data")
-                        or {"flights": [], "moreResults": False},
+                        "data": chunk.get("data") or {"flights": [], "moreResults": False},
                     }
                 )
                 + "\n"

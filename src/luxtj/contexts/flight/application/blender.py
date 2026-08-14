@@ -60,7 +60,9 @@ class FlightBlender:
         return round(float(amount), 2)
 
     @staticmethod
-    def _first_last_segments(flight: dict[str, Any]) -> tuple[dict[str, Any], dict[str, Any]] | None:
+    def _first_last_segments(
+        flight: dict[str, Any],
+    ) -> tuple[dict[str, Any], dict[str, Any]] | None:
         details = flight.get("FlightDetails")
         if not isinstance(details, list) or not details:
             return None
@@ -105,7 +107,14 @@ class FlightBlender:
         if not isinstance(price, dict):
             return 0.0
         # Avoid double-applying if the same Price dict is reused from cache.
-        if float(price.get("AdminMarkup") or (price.get("PriceBreakup") or {}).get("AdminMarkup") or 0) > 0:
+        if (
+            float(
+                price.get("AdminMarkup")
+                or (price.get("PriceBreakup") or {}).get("AdminMarkup")
+                or 0
+            )
+            > 0
+        ):
             pb0 = price.get("PriceBreakup") if isinstance(price.get("PriceBreakup"), dict) else {}
             return float(pb0.get("AdminMarkup") or price.get("AdminMarkup") or 0)
 
@@ -142,7 +151,9 @@ class FlightBlender:
             if not isinstance(pax, dict):
                 continue
             pax["Tax"] = self._round_amount(float(pax.get("Tax") or 0) + per_pax_markup)
-            pax["TotalPrice"] = self._round_amount(float(pax.get("BasePrice") or 0) + float(pax["Tax"]))
+            pax["TotalPrice"] = self._round_amount(
+                float(pax.get("BasePrice") or 0) + float(pax["Tax"])
+            )
 
         pb["AdminMarkup"] = markup_amount
         pb["Tax"] = self._round_amount(float(pb.get("Tax") or 0) + markup_amount)
@@ -159,9 +170,7 @@ class FlightBlender:
         await self.set_flight_markup(row)
         return BookingMoneyForClient.strip_admin_markup_from_flight_row(row)
 
-    async def _prepare_flights_for_client(
-        self, flights: list[Any]
-    ) -> list[dict[str, Any]]:
+    async def _prepare_flights_for_client(self, flights: list[Any]) -> list[dict[str, Any]]:
         out: list[dict[str, Any]] = []
         for flight in flights:
             if isinstance(flight, dict):
@@ -236,9 +245,9 @@ class FlightBlender:
 
     def resolve_provider_by_source(self, source: str) -> FlightProvider | None:
         registry = get_integration_registry()
-        api = registry.resolve_booking_api(source, sub_module="FLIGHT") or registry.resolve_booking_api(
-            source
-        )
+        api = registry.resolve_booking_api(
+            source, sub_module="FLIGHT"
+        ) or registry.resolve_booking_api(source)
         if api is None:
             return None
         return self.resolve_provider(source, api.runtime_configuration(), str(api.id))
@@ -501,11 +510,19 @@ class FlightBlender:
             }
 
         if not token or not isinstance(passengers_raw, list) or not passengers_raw:
-            return {"status": False, "message": "ResultToken and Passengers are required", "data": []}
+            return {
+                "status": False,
+                "message": "ResultToken and Passengers are required",
+                "data": [],
+            }
 
         passengers = [p for p in passengers_raw if isinstance(p, dict)]
         if not passengers:
-            return {"status": False, "message": "ResultToken and Passengers are required", "data": []}
+            return {
+                "status": False,
+                "message": "ResultToken and Passengers are required",
+                "data": [],
+            }
 
         title_err = FlightCommon.validate_passenger_titles_for_booking(passengers)
         if title_err:
@@ -529,7 +546,9 @@ class FlightBlender:
         search_data = quote.get("searchData") if isinstance(quote.get("searchData"), dict) else {}
         travel_start, travel_end = FlightCommon.journey_date_bounds_from_flight_details(
             quote.get("flightDetails"),
-            fallback_departure=str(search_data.get("depature") or search_data.get("departure") or ""),
+            fallback_departure=str(
+                search_data.get("depature") or search_data.get("departure") or ""
+            ),
         )
         dob_err = FlightCommon.validate_passenger_dobs_for_booking(passengers, travel_start)
         if dob_err:
@@ -545,14 +564,16 @@ class FlightBlender:
             return {"status": False, "message": doc_err, "data": []}
 
         app_reference = FlightCommon.generate_app_reference()
-        selected_services = request.get("SelectedServices") or request.get("selected_services") or []
+        selected_services = (
+            request.get("SelectedServices") or request.get("selected_services") or []
+        )
         selected_tariffs = request.get("SelectedTariffs") or request.get("selected_tariffs") or []
         if not isinstance(selected_services, list):
             selected_services = []
         if not isinstance(selected_tariffs, list):
             selected_tariffs = []
 
-        get_pre = getattr(provider, "get_pre_book_data")
+        get_pre = provider.get_pre_book_data
         try:
             result = await get_pre(
                 str(decoded["token"]),
@@ -719,7 +740,11 @@ class FlightBlender:
         token_data = token_data if isinstance(token_data, dict) else {}
         app_reference = str(token_data.get("app_reference") or "").strip()
         if not app_reference:
-            return {"status": False, "message": "Pre-book session missing app_reference", "data": []}
+            return {
+                "status": False,
+                "message": "Pre-book session missing app_reference",
+                "data": [],
+            }
 
         pay_svc = PaymentGatewayService(
             repository=SqlAlchemyPaymentGatewayTransactionRepository(self._session),
@@ -927,9 +952,7 @@ class FlightBlender:
             return {"status": False, "message": "Booking not found", "data": []}
 
         snapshot = (
-            dict(booking.details_snapshot)
-            if isinstance(booking.details_snapshot, dict)
-            else {}
+            dict(booking.details_snapshot) if isinstance(booking.details_snapshot, dict) else {}
         )
         txn = (
             await self._session.execute(
@@ -1054,9 +1077,7 @@ class FlightBlender:
             data["app_reference"] = app_ref
             # Merge into existing snapshot
             snap = (
-                dict(booking.details_snapshot)
-                if isinstance(booking.details_snapshot, dict)
-                else {}
+                dict(booking.details_snapshot) if isinstance(booking.details_snapshot, dict) else {}
             )
             merged = {**snap, **data}
             if isinstance(data.get("ticketing"), dict):
@@ -1163,11 +1184,7 @@ class FlightBlender:
         if booking is None:
             return
         booking.status = "BOOKING_CANCELLED"
-        snap = (
-            dict(booking.details_snapshot)
-            if isinstance(booking.details_snapshot, dict)
-            else {}
-        )
+        snap = dict(booking.details_snapshot) if isinstance(booking.details_snapshot, dict) else {}
         merged = {**snap, **supplier_data, "BookingStatus": "Cancelled", "cancelled": True}
         booking.details_snapshot = merged
         attrs = dict(booking.attributes or {}) if isinstance(booking.attributes, dict) else {}
@@ -1195,7 +1212,11 @@ class FlightBlender:
 
         provider = self.resolve_provider_from_token(token)
         if not provider:
-            return {"status": False, "message": "Invalid token or provider not available", "data": []}
+            return {
+                "status": False,
+                "message": "Invalid token or provider not available",
+                "data": [],
+            }
         decoded = FlightCommon.decode_result_token(token)
         if decoded is None:
             return {"status": False, "message": "Invalid ResultToken", "data": []}
@@ -1215,7 +1236,7 @@ class FlightBlender:
         price = row.get("Price") if isinstance(row.get("Price"), dict) else {}
         try:
             gross = float(price.get("TotalDisplayFare") or 0)
-        except (TypeError, ValueError):
+        except TypeError, ValueError:
             gross = 0.0
         # Admin discount rules not wired yet — promo base is fare + tax (incl. markup).
         admin_discount = 0.0

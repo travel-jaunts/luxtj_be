@@ -43,7 +43,7 @@ class TokenResponse(ApiSerializerBaseModel):
     token_type: str = "Bearer"
 
     @classmethod
-    def from_result(cls, result: AuthTokenResult) -> "TokenResponse":
+    def from_result(cls, result: AuthTokenResult) -> TokenResponse:
         return cls(
             access_token=result.access_token,
             refresh_token=result.refresh_token,
@@ -66,7 +66,7 @@ class RoleSummarySerializer(ApiSerializerBaseModel):
     permission_codes: list[str]
 
     @classmethod
-    def from_domain(cls, role: Role) -> "RoleSummarySerializer":
+    def from_domain(cls, role: Role) -> RoleSummarySerializer:
         return cls(
             id=str(role.id),
             name=role.name,
@@ -88,7 +88,7 @@ class UserSerializer(ApiSerializerBaseModel):
     updated_at: str
 
     @classmethod
-    def from_domain(cls, user: User) -> "UserSerializer":
+    def from_domain(cls, user: User) -> UserSerializer:
         return cls(
             id=str(user.id),
             email=user.email,
@@ -108,7 +108,7 @@ class MeResponse(ApiSerializerBaseModel):
     permissions: list[str]
 
     @classmethod
-    def from_result(cls, result: UserProfileResult) -> "MeResponse":
+    def from_result(cls, result: UserProfileResult) -> MeResponse:
         return cls(
             user=UserSerializer.from_domain(result.user),
             role=RoleSummarySerializer.from_domain(result.role) if result.role else None,
@@ -124,7 +124,7 @@ class PermissionSerializer(ApiSerializerBaseModel):
     action: str
 
     @classmethod
-    def from_domain(cls, permission: Permission) -> "PermissionSerializer":
+    def from_domain(cls, permission: Permission) -> PermissionSerializer:
         return cls(
             code=permission.code,
             name=permission.name,

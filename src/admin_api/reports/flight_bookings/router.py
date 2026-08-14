@@ -6,11 +6,12 @@ from typing import Annotated, Any
 
 from fastapi import APIRouter, Body, Depends, HTTPException
 from fastapi.responses import Response
+from pydantic import Field
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from admin_api.reports.flight_bookings.serializers import (
-    FlightBookingDetailSerializer,
     FlightBookingDetailsBody,
+    FlightBookingDetailSerializer,
     FlightBookingListFilters,
     FlightBookingListResultSerializer,
     FlightBookingRefreshBody,
@@ -27,7 +28,6 @@ from luxtj.shared_kernel.presentation.http.schemas import (
     ApiSuccessResponse,
     RequestProcessStatus,
 )
-from pydantic import Field
 
 flight_bookings_router = APIRouter(
     prefix="/flight-bookings",
@@ -45,7 +45,6 @@ class FlightBookingCancelResultSerializer(ApiSerializerBaseModel):
     status: str
     message: str
     already_cancelled: bool = False
-
 
 
 def _reports_service(

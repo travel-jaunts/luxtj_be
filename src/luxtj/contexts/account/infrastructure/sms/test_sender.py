@@ -37,8 +37,7 @@ class TelegramSmsOtpSender(SmsOtpSender):
         flow_type: AuthFlowType,
     ) -> None:
         sms_body: str = (
-            f"OTP delivery fallback sender | phone={phone_identity.e164_like} "
-            f"flow={flow_type.value} otp={otp}"
+            f"Your LuxTJ {flow_type.value} verification code is {otp}. This code expires soon."
         )
         print(sms_body)
 

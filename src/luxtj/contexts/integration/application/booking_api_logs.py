@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import json
 import re
-from datetime import date, datetime, time, timezone
+from datetime import UTC, date, datetime, time
 from typing import Any, Literal
 
 from sqlalchemy import func, select
@@ -26,11 +26,11 @@ _UNSAFE_FILENAME_RE = re.compile(r"[^A-Za-z0-9._-]+")
 
 
 def _day_start(d: date) -> datetime:
-    return datetime.combine(d, time.min, tzinfo=timezone.utc)
+    return datetime.combine(d, time.min, tzinfo=UTC)
 
 
 def _day_end(d: date) -> datetime:
-    return datetime.combine(d, time.max, tzinfo=timezone.utc)
+    return datetime.combine(d, time.max, tzinfo=UTC)
 
 
 def _truncate(value: str | None, limit: int = 240) -> str | None:
@@ -110,7 +110,7 @@ def _format_timestamp(value: str | None) -> str:
     if value:
         try:
             dt = datetime.fromisoformat(value.replace("Z", "+00:00"))
-            return dt.astimezone(timezone.utc).strftime("%Y%m%d-%H%M%S")
+            return dt.astimezone(UTC).strftime("%Y%m%d-%H%M%S")
         except ValueError:
             pass
     return timeutils.datetime_now().strftime("%Y%m%d-%H%M%S")
@@ -242,11 +242,7 @@ class BookingApiLogsService:
         if to_date:
             filters.append(BookingApiRequestResponseRow.created_at <= _day_end(to_date))
 
-        count_stmt = (
-            select(func.count())
-            .select_from(BookingApiRequestResponseRow)
-            .where(*filters)
-        )
+        count_stmt = select(func.count()).select_from(BookingApiRequestResponseRow).where(*filters)
         total = int((await self._session.execute(count_stmt)).scalar_one() or 0)
 
         stmt = (
@@ -317,9 +313,7 @@ class BookingApiLogsService:
             "updatedAt": row.updated_at.isoformat() if row.updated_at else None,
         }
 
-    async def download_part(
-        self, log_id: str, part: DownloadPart
-    ) -> dict[str, Any] | None:
+    async def download_part(self, log_id: str, part: DownloadPart) -> dict[str, Any] | None:
         """Return {content, filename, mediaType} for request | response | headers."""
         detail = await self.get_log(log_id)
         if detail is None:

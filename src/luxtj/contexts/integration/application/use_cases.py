@@ -56,9 +56,7 @@ class IntegrationRegistryService:
         if self._currency_repo is None:
             return
         known = {
-            m.code.upper()
-            for m in await self._currency_repo.list_currency_metadata()
-            if m.code
+            m.code.upper() for m in await self._currency_repo.list_currency_metadata() if m.code
         }
         if currency.upper() not in known:
             raise IntegrationValidationError(
@@ -181,8 +179,7 @@ class IntegrationRegistryService:
                 }
                 for api in booking_apis
                 if api.sub_module_id in sub_by_id
-                and api.code
-                in booking_catalog.get(sub_by_id[api.sub_module_id].name, {})
+                and api.code in booking_catalog.get(sub_by_id[api.sub_module_id].name, {})
             ],
             "paymentGateways": [
                 {
@@ -263,9 +260,7 @@ class IntegrationRegistryService:
         sub = await self._repo.get_sub_module(api.sub_module_id)
         catalog = SUB_MODULES_AND_BOOKING_APIS.get(sub.name if sub else "", {})
         if api.code not in catalog:
-            raise IntegrationValidationError(
-                f"Booking API '{api.code}' is no longer supported"
-            )
+            raise IntegrationValidationError(f"Booking API '{api.code}' is no longer supported")
         if command.api_type is not None and command.api_type not in {"test", "live"}:
             raise IntegrationValidationError("api_type must be test or live")
 
@@ -289,7 +284,9 @@ class IntegrationRegistryService:
 
         configs = None
         if command.configs is not None:
-            configs = {normalize_config_key(k) if " " in k else k: v for k, v in command.configs.items()}
+            configs = {
+                normalize_config_key(k) if " " in k else k: v for k, v in command.configs.items()
+            }
         api.update_settings(
             status=command.status,
             api_type=command.api_type,
@@ -327,15 +324,15 @@ class IntegrationRegistryService:
             currency = normalized
         will_be_active = gateway.status if command.status is None else command.status
         if will_be_active and not currency:
-            raise IntegrationValidationError(
-                "currency is required when enabling a payment gateway"
-            )
+            raise IntegrationValidationError("currency is required when enabling a payment gateway")
         if currency:
             await self._assert_currency_in_catalog(currency)
 
         configs = None
         if command.configs is not None:
-            configs = {normalize_config_key(k) if " " in k else k: v for k, v in command.configs.items()}
+            configs = {
+                normalize_config_key(k) if " " in k else k: v for k, v in command.configs.items()
+            }
         gateway.update_settings(
             status=command.status,
             api_type=command.api_type,
@@ -354,12 +351,12 @@ class IntegrationRegistryService:
         if other is None:
             raise IntegrationNotFoundError("Other API not found")
         if other.code not in OTHER_APIS:
-            raise IntegrationValidationError(
-                f"Other API '{other.code}' is no longer supported"
-            )
+            raise IntegrationValidationError(f"Other API '{other.code}' is no longer supported")
         configs = None
         if command.configs is not None:
-            configs = {normalize_config_key(k) if " " in k else k: v for k, v in command.configs.items()}
+            configs = {
+                normalize_config_key(k) if " " in k else k: v for k, v in command.configs.items()
+            }
         other.update_settings(status=command.status, configs=configs)
         await self._repo.save_other_api(other)
         await self.refresh_cache()

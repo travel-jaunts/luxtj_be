@@ -28,7 +28,7 @@ from luxtj.contexts.identity.application.ports import (
     RoleRepository,
     UserRepository,
 )
-from luxtj.contexts.identity.domain.enums import UserStatusEnum, UserTypeEnum
+from luxtj.contexts.identity.domain.enums import UserTypeEnum
 from luxtj.contexts.identity.domain.errors import (
     AuthenticationError,
     ConflictError,
@@ -161,10 +161,7 @@ class IdentityAuthService:
         if user is None:
             raise ValidationError("Invalid or expired reset token")
         now = self._clock.utcnow()
-        if (
-            user.password_reset_expires_at is None
-            or user.password_reset_expires_at < now
-        ):
+        if user.password_reset_expires_at is None or user.password_reset_expires_at < now:
             raise ValidationError("Invalid or expired reset token")
         user.set_password(self._passwords.hash(command.new_password), now=now)
         await self._users.save(user)
@@ -248,9 +245,7 @@ class RoleService:
         self._users = user_repository
         self._clock = clock
 
-    async def list_roles(
-        self, *, page: int, page_size: int
-    ) -> tuple[list[Role], PaginationMeta]:
+    async def list_roles(self, *, page: int, page_size: int) -> tuple[list[Role], PaginationMeta]:
         return await self._roles.list_roles(page=page, page_size=page_size)
 
     async def get_role(self, role_id: UUID) -> Role:
@@ -320,9 +315,7 @@ class AdminUserService:
         self._passwords = password_hasher
         self._clock = clock
 
-    async def list_users(
-        self, *, page: int, page_size: int
-    ) -> tuple[list[User], PaginationMeta]:
+    async def list_users(self, *, page: int, page_size: int) -> tuple[list[User], PaginationMeta]:
         return await self._users.list_admin_users(page=page, page_size=page_size)
 
     async def get_user(self, user_id: UUID) -> User:

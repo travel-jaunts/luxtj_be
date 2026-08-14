@@ -78,9 +78,7 @@ class FlightBookingTransactionDetailsRow(FlightBase):
     """Money ledger for a flight booking (admin currency amounts)."""
 
     __tablename__ = "flight_booking_transaction_details"
-    __table_args__ = (
-        Index("ix_flight_booking_txn_app_reference", "app_reference"),
-    )
+    __table_args__ = (Index("ix_flight_booking_txn_app_reference", "app_reference"),)
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True)
     app_reference: Mapped[str] = mapped_column(

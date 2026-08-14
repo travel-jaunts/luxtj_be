@@ -136,9 +136,7 @@ async def payment_post_path(
     transaction_id: str,
     service: Annotated[PaymentGatewayService, Depends(build_payment_gateway_service)],
 ) -> RedirectResponse | JSONResponse:
-    return await payment_post(
-        service, PaymentTransactionBody(transaction_id=transaction_id)
-    )
+    return await payment_post(service, PaymentTransactionBody(transaction_id=transaction_id))
 
 
 @payment_gateway_router.get(
@@ -187,9 +185,7 @@ async def payment_response_post(
         response["message"] = "Invalid Transaction Id"
         return _response_script(response)
 
-    check = await service.check_and_update_payment_status(
-        body.transaction_id, body.session_id
-    )
+    check = await service.check_and_update_payment_status(body.transaction_id, body.session_id)
     if check.get("status"):
         response = {
             "status": True,
@@ -302,9 +298,7 @@ async def payment_revalidate(
             transaction_id=result.get("transaction_id") or body.transaction_id,
             pg_code=result.get("pg_code"),
             paid_amount=(
-                float(result["paid_amount"])
-                if result.get("paid_amount") is not None
-                else None
+                float(result["paid_amount"]) if result.get("paid_amount") is not None else None
             ),
             message=str(result.get("message") or ""),
         ),

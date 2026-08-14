@@ -9,7 +9,7 @@ import re
 import secrets
 import time
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 from sqlalchemy import select
@@ -195,10 +195,7 @@ class HotelCommon:
             r = 6371.0
             dlat = radians(lat2 - lat1)
             dlng = radians(lng2 - lng1)
-            a = (
-                sin(dlat / 2) ** 2
-                + cos(radians(lat1)) * cos(radians(lat2)) * sin(dlng / 2) ** 2
-            )
+            a = sin(dlat / 2) ** 2 + cos(radians(lat1)) * cos(radians(lat2)) * sin(dlng / 2) ** 2
             return round(2 * r * asin(sqrt(a)), 1)
         except Exception:
             return None
@@ -390,7 +387,7 @@ class HotelCommon:
         if not v:
             return None
         try:
-            dt = datetime.fromisoformat(v.replace("Z", "+00:00")).astimezone(timezone.utc)
+            dt = datetime.fromisoformat(v.replace("Z", "+00:00")).astimezone(UTC)
             return dt.strftime("%Y-%m-%d %H:%M:%S") + " UTC"
         except Exception:
             return None
@@ -433,7 +430,7 @@ class HotelCommon:
     def ratehawk_free_cancellation_before_iso(pt: dict[str, Any] | None) -> str | None:
         if pt is None:
             return None
-        fcb = ((pt.get("cancellation_penalties") or {}).get("free_cancellation_before"))
+        fcb = (pt.get("cancellation_penalties") or {}).get("free_cancellation_before")
         if not isinstance(fcb, str) or not fcb:
             return None
         try:
@@ -472,7 +469,9 @@ class HotelCommon:
         meal_code = str(rate.get("meal") or "nomeal")
         meal_data = rate.get("meal_data") if isinstance(rate.get("meal_data"), dict) else {}
         breakfast_included = bool(meal_data.get("has_breakfast") or False)
-        child_meal_included = breakfast_included and not bool(meal_data.get("no_child_meal") or False)
+        child_meal_included = breakfast_included and not bool(
+            meal_data.get("no_child_meal") or False
+        )
         meal_display = HotelCommon.ratehawk_format_meal_display_name(meal_code)
         return {
             "amount": amount,
@@ -508,7 +507,7 @@ class HotelCommon:
                 return f"{label}: invalid room payload"
             try:
                 adults = int(room.get("adultCount") or room.get("adult_count") or 0)
-            except (TypeError, ValueError):
+            except TypeError, ValueError:
                 return f"{label}: adultCount must be a number"
             if adults < 1 or adults > 6:
                 return f"{label}: adultCount must be between 1 and 6"
@@ -523,12 +522,8 @@ class HotelCommon:
             if child_count_raw is None:
                 child_count_raw = room.get("child_count")
             try:
-                child_count = (
-                    int(child_count_raw)
-                    if child_count_raw is not None
-                    else len(ages_raw)
-                )
-            except (TypeError, ValueError):
+                child_count = int(child_count_raw) if child_count_raw is not None else len(ages_raw)
+            except TypeError, ValueError:
                 return f"{label}: childCount must be a number"
 
             if child_count < 0 or child_count > 4:
@@ -538,7 +533,7 @@ class HotelCommon:
             for age in ages_raw:
                 try:
                     ai = int(age)
-                except (TypeError, ValueError):
+                except TypeError, ValueError:
                     return f"{label}: each child age must be a number between 0 and 17"
                 if ai < 0 or ai > 17:
                     return f"{label}: each child age must be between 0 and 17"
@@ -557,7 +552,7 @@ class HotelCommon:
                 for a in ages_raw:
                     try:
                         ai = int(a)
-                    except (TypeError, ValueError):
+                    except TypeError, ValueError:
                         continue
                     if 0 <= ai <= 17:
                         child_ages.append(ai)
@@ -575,8 +570,8 @@ class HotelCommon:
     @staticmethod
     def hotel_stay_nights(checkin_ymd: str, checkout_ymd: str) -> int:
         try:
-            cin = datetime.strptime(checkin_ymd[:10], "%Y-%m-%d").replace(tzinfo=timezone.utc)
-            cout = datetime.strptime(checkout_ymd[:10], "%Y-%m-%d").replace(tzinfo=timezone.utc)
+            cin = datetime.strptime(checkin_ymd[:10], "%Y-%m-%d").replace(tzinfo=UTC)
+            cout = datetime.strptime(checkout_ymd[:10], "%Y-%m-%d").replace(tzinfo=UTC)
             if cout <= cin:
                 return 1
             return max(1, int(round((cout - cin).total_seconds() / 86400)))
@@ -600,7 +595,7 @@ class HotelCommon:
             return None
         s = re.sub(r"\s+UTC$", "", raw.strip(), flags=re.I)
         try:
-            return datetime.fromisoformat(s.replace("Z", "+00:00")).astimezone(timezone.utc)
+            return datetime.fromisoformat(s.replace("Z", "+00:00")).astimezone(UTC)
         except Exception:
             return None
 

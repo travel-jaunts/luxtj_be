@@ -97,7 +97,7 @@ def compress_audit_body(
     if fmt == "json":
         try:
             return _compress_json(text)
-        except (json.JSONDecodeError, TypeError, ValueError):
+        except json.JSONDecodeError, TypeError, ValueError:
             return text.strip()
     if fmt == "xml":
         return _compress_xml(text)
@@ -120,7 +120,7 @@ def prettify_audit_body(
     if fmt == "json":
         try:
             return _prettify_json(text)
-        except (json.JSONDecodeError, TypeError, ValueError):
+        except json.JSONDecodeError, TypeError, ValueError:
             return text
     if fmt == "xml":
         return _prettify_xml(text)

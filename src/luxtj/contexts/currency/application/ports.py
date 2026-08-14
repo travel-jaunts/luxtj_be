@@ -20,6 +20,4 @@ class ActiveCurrencyRepository(Protocol):
 
 
 class FxRateProvider(Protocol):
-    def fetch_rates(
-        self, pairs: list[tuple[str, str]]
-    ) -> list[dict[str, str | float | None]]: ...
+    def fetch_rates(self, pairs: list[tuple[str, str]]) -> list[dict[str, str | float | None]]: ...

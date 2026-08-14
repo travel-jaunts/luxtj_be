@@ -32,7 +32,9 @@ def fetch_dump_url(endpoint: str, method: str = "GET", body: dict | None = None)
             method.upper(),
             endpoint,
             headers=headers,
-            content=json.dumps(body if body is not None else {}) if method.upper() == "POST" else None,
+            content=json.dumps(body if body is not None else {})
+            if method.upper() == "POST"
+            else None,
         )
         resp.raise_for_status()
         payload = resp.json()
@@ -76,7 +78,9 @@ def download_to_file(
                 fh.write(chunk)
                 downloaded += len(chunk)
                 now = time.monotonic()
-                if on_progress and (now - last_tick >= progress_interval_sec or downloaded == total):
+                if on_progress and (
+                    now - last_tick >= progress_interval_sec or downloaded == total
+                ):
                     on_progress(downloaded, total)
                     last_tick = now
         if on_progress:

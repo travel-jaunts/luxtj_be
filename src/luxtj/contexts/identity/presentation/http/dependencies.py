@@ -30,8 +30,12 @@ class AuthenticatedPrincipal:
 
 def _token_issuer() -> JoseIdentityTokenIssuer:
     return JoseIdentityTokenIssuer(
-        secret=config.AUTH_JWT_SECRET,
-        algorithm=config.AUTH_JWT_ALGORITHM,
+        keys=config.AUTH_IDENTITY_JWT_KEYS,
+        active_kid=config.AUTH_IDENTITY_JWT_ACTIVE_KID,
+        algorithms=config.AUTH_JWT_ALLOWED_ALGORITHMS,
+        issuer=config.AUTH_IDENTITY_JWT_ISSUER,
+        audience=config.AUTH_IDENTITY_JWT_AUDIENCE,
+        clock_skew_seconds=config.AUTH_JWT_CLOCK_SKEW_SECONDS,
         access_ttl_seconds=config.AUTH_ACCESS_TOKEN_TTL_SECONDS,
         refresh_ttl_seconds=config.AUTH_REFRESH_TOKEN_TTL_SECONDS,
     )

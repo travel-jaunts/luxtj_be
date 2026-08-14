@@ -159,18 +159,16 @@ class HotelCrsService:
             stats["errors"] += 1
         return stats
 
-    async def batch_get_or_create_suppliers(
-        self, booking_sources: list[str]
-    ) -> dict[str, str]:
+    async def batch_get_or_create_suppliers(self, booking_sources: list[str]) -> dict[str, str]:
         supplier_map: dict[str, str] = {}
         if not booking_sources:
             return supplier_map
         registry = get_integration_registry()
         now = timeutils.datetime_now()
         for source in booking_sources:
-            api = registry.resolve_booking_api(source, sub_module="HOTEL") or registry.resolve_booking_api(
-                source
-            )
+            api = registry.resolve_booking_api(
+                source, sub_module="HOTEL"
+            ) or registry.resolve_booking_api(source)
             if api is None or not api.status:
                 logger.warning("HotelCrsService: BookingApi not found for source %s", source)
                 continue
@@ -274,7 +272,7 @@ class HotelCrsService:
                 unique_key_to_id[uk] = row["id"]
             await self._session.flush()
             for uk, hotel_id in list(unique_key_to_id.items()):
-                if uk in images_by_key and images_by_key[uk]:
+                if images_by_key.get(uk):
                     await self._insert_hotel_images(hotel_id, images_by_key[uk])
         return unique_key_to_id
 
@@ -325,9 +323,7 @@ class HotelCrsService:
                 )
             )
         ).all()
-        existing = {
-            f"{r[0]}|{r[1]}|{r[2]}": True for r in existing_rows
-        }
+        existing = {f"{r[0]}|{r[1]}|{r[2]}": True for r in existing_rows}
         now = timeutils.datetime_now()
         for data in hotel_code_map.values():
             if not data.get("crs_hotel_id") or not data.get("hotel_code"):
@@ -518,9 +514,7 @@ class HotelCrsService:
         existing_ids = list(
             (
                 await self._session.execute(
-                    select(HotelCrsRoomGroupRow.id).where(
-                        HotelCrsRoomGroupRow.hotel_id == hotel_id
-                    )
+                    select(HotelCrsRoomGroupRow.id).where(HotelCrsRoomGroupRow.hotel_id == hotel_id)
                 )
             )
             .scalars()
@@ -555,7 +549,9 @@ class HotelCrsService:
             supplier_room_code = str(room.get("room_group_id") or "")
             if not supplier_room_code or supplier_room_code in room_context_by_code:
                 continue
-            name_struct = room.get("name_struct") if isinstance(room.get("name_struct"), dict) else {}
+            name_struct = (
+                room.get("name_struct") if isinstance(room.get("name_struct"), dict) else {}
+            )
             rg_ext = room.get("rg_ext") if isinstance(room.get("rg_ext"), dict) else {}
             capacity = int(rg_ext["capacity"]) if rg_ext.get("capacity") is not None else None
             if capacity is not None and capacity <= 0:
@@ -692,7 +688,9 @@ class HotelCrsService:
             if not isinstance(block, dict):
                 continue
             title = str(block.get("title") or "").strip()
-            paragraphs = block.get("paragraphs") if isinstance(block.get("paragraphs"), list) else []
+            paragraphs = (
+                block.get("paragraphs") if isinstance(block.get("paragraphs"), list) else []
+            )
             paragraph_text = "\n".join(str(p) for p in paragraphs if p).strip()
             if title:
                 parts.append(title)
@@ -705,7 +703,11 @@ class HotelCrsService:
         return out or None
 
     def _build_hotel_policies_html(self, hotel: dict[str, Any]) -> str | None:
-        meta = hotel.get("metapolicy_struct") if isinstance(hotel.get("metapolicy_struct"), dict) else {}
+        meta = (
+            hotel.get("metapolicy_struct")
+            if isinstance(hotel.get("metapolicy_struct"), dict)
+            else {}
+        )
         points: list[str] = []
         # Keep a compact subset of policy lines (full PHP coverage is large; key categories)
         for item in self._to_policy_items(meta.get("deposit")):

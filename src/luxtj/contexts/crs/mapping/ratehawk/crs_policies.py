@@ -54,7 +54,9 @@ def build_policy_text(hotel: dict[str, Any]) -> str | None:
 
 
 def build_hotel_policies_html(hotel: dict[str, Any]) -> str | None:
-    meta = hotel.get("metapolicy_struct") if isinstance(hotel.get("metapolicy_struct"), dict) else {}
+    meta = (
+        hotel.get("metapolicy_struct") if isinstance(hotel.get("metapolicy_struct"), dict) else {}
+    )
     points: list[str] = []
 
     for item in _to_policy_items(meta.get("deposit")):

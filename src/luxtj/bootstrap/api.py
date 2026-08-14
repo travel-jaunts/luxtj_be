@@ -1,3 +1,4 @@
+import asyncio
 from contextlib import asynccontextmanager
 from datetime import datetime
 from typing import Annotated
@@ -14,11 +15,16 @@ from twilio.http.async_http_client import AsyncTwilioHttpClient
 from admin_api.audit_logs.router import audit_logs_router as admin_audit_logs_router
 from admin_api.customer.router import customer_router
 from admin_api.partner.router import partner_router
+from admin_api.promo_codes.router import promo_codes_router
 from admin_api.refund_queues.router import refund_queues_router
 from admin_api.reports.router import reports_router
-from admin_api.promo_codes.router import promo_codes_router
 from luxtj.bootstrap import config
 from luxtj.contexts.account.infrastructure.persistence.sqlalchemy_models import AccountAuthBase
+from luxtj.contexts.account.infrastructure.refresh_session_cleanup import (
+    refresh_session_cleanup_loop,
+)
+from luxtj.contexts.account.infrastructure.sms.registry_sender import RegistrySmsOtpSender
+from luxtj.contexts.account.presentation.http.dependencies import get_current_account_principal
 from luxtj.contexts.account.presentation.http.router import account_auth_router
 from luxtj.contexts.acquisition.infrastructure.persistence.sqlalchemy_models import AcquisitionBase
 from luxtj.contexts.acquisition.presentation.http.router import router as waitlist_router
@@ -50,11 +56,10 @@ from luxtj.contexts.customer.presentation.http.router import (
 )
 from luxtj.contexts.flight.infrastructure.persistence.sqlalchemy_models import FlightBase
 from luxtj.contexts.flight.presentation.http.flight_router import flight_router
+from luxtj.contexts.flight.presentation.http.markup_router import flight_markup_router
 from luxtj.contexts.hotel.infrastructure.persistence.sqlalchemy_models import HotelBase
 from luxtj.contexts.hotel.presentation.http.hotel_router import hotel_router
 from luxtj.contexts.hotel.presentation.http.markup_router import hotel_markup_router
-from luxtj.contexts.flight.presentation.http.markup_router import flight_markup_router
-from luxtj.contexts.maps.presentation.http.router import maps_router
 from luxtj.contexts.identity.bootstrap import build_identity_bootstrap_service
 from luxtj.contexts.identity.infrastructure.persistence.sqlalchemy_models import IdentityBase
 from luxtj.contexts.identity.presentation.http.router import (
@@ -68,6 +73,7 @@ from luxtj.contexts.integration.infrastructure.persistence.sqlalchemy_repository
 )
 from luxtj.contexts.integration.infrastructure.registry_cache import get_integration_registry
 from luxtj.contexts.integration.presentation.http.router import integrations_router
+from luxtj.contexts.maps.presentation.http.router import maps_router
 from luxtj.contexts.marketing.infrastructure.persistence.sqlalchemy_models import MarketingBase
 from luxtj.contexts.marketing.presentation.http.router import marketing_router
 from luxtj.contexts.payment.infrastructure.persistence.sqlalchemy_models import PaymentBase
@@ -214,11 +220,31 @@ async def init_app_state(fastapi_app: FastAPI):
         await seed_integrations(session_factory)
         await seed_currencies(session_factory)
 
+        refresh_cleanup_task = asyncio.create_task(
+            refresh_session_cleanup_loop(
+                session_factory,
+                interval_seconds=config.AUTH_REFRESH_SESSION_CLEANUP_INTERVAL_SECONDS,
+                retention_seconds=config.AUTH_REFRESH_SESSION_RETENTION_SECONDS,
+            )
+        )
+
         async with AsyncClient() as client, AsyncTwilioHttpClient() as async_http_client:
             fastapi_app.state.http_client = client
             fastapi_app.state.twilio_http_client = async_http_client
+            RegistrySmsOtpSender(
+                twilio_http_client=async_http_client,
+                http_client=client,
+                allow_test_sender=(
+                    config.AUTH_OTP_ALLOW_TEST_SENDER
+                    and config.ENVIRONMENT in {"development", "test"}
+                ),
+            ).validate_configuration()
             yield
     finally:
+        refresh_cleanup_task = locals().get("refresh_cleanup_task")
+        if refresh_cleanup_task is not None:
+            refresh_cleanup_task.cancel()
+            await asyncio.gather(refresh_cleanup_task, return_exceptions=True)
         await print_subscriber.stop()
         crs_engine = fastapi_app.state.crs_database_engine
         main_engine = fastapi_app.state.database_engine
@@ -262,6 +288,7 @@ async def api_application_lifespan(app: FastAPI):
 
 
 def server_factory() -> FastAPI:
+    config.validate_jwt_configuration()
     api_application = FastAPI(
         title="LuxTJ Public API",
         description="API for Customer applications",
@@ -291,13 +318,18 @@ def server_factory() -> FastAPI:
     public_router.include_router(public_auth_router)
     public_router.include_router(waitlist_router)
     public_router.include_router(account_auth_router)
-    public_router.include_router(customer_bucket_list_router)
-    public_router.include_router(customer_personal_calendar_router)
     public_router.include_router(public_currencies_router)
     public_router.include_router(payment_gateway_router)
     public_router.include_router(hotel_router)
     public_router.include_router(flight_router)
     public_router.include_router(maps_router)
+
+    protected_router = APIRouter(
+        dependencies=[Depends(get_current_account_principal)],
+    )
+    protected_router.include_router(customer_bucket_list_router)
+    protected_router.include_router(customer_personal_calendar_router)
+    public_router.include_router(protected_router)
     api_application.include_router(public_router)
 
     @api_application.post("/ping", tags=["ops"])

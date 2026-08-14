@@ -86,7 +86,11 @@ async def places_autocomplete(
         place_id = str(p.get("place_id") or "").strip()
         if not place_id:
             continue
-        structured = p.get("structured_formatting") if isinstance(p.get("structured_formatting"), dict) else {}
+        structured = (
+            p.get("structured_formatting")
+            if isinstance(p.get("structured_formatting"), dict)
+            else {}
+        )
         out.append(
             {
                 "placeId": place_id,

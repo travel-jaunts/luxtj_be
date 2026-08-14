@@ -77,7 +77,9 @@ class PaymentGatewayTransactionRow(PaymentBase):
             refunded_amount=entity.refunded_amount or Decimal("0"),
             refund_remark=entity.refund_remark,
             refund_mode=entity.refund_mode,
-            refund_details=entity.refund_details if isinstance(entity.refund_details, dict) else None,
+            refund_details=entity.refund_details
+            if isinstance(entity.refund_details, dict)
+            else None,
             refunded_at=entity.refunded_at,
             created_at=entity.created_at,
             updated_at=entity.updated_at,

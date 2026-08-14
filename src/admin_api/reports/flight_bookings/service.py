@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import csv
 import io
-from datetime import date, datetime, time, timezone
+from datetime import UTC, date, datetime, time
 from decimal import Decimal
 from typing import Any
 
@@ -38,11 +38,11 @@ STATUS_ALL = "all"
 
 
 def _as_utc_start(d: date) -> datetime:
-    return datetime.combine(d, time.min, tzinfo=timezone.utc)
+    return datetime.combine(d, time.min, tzinfo=UTC)
 
 
 def _as_utc_end(d: date) -> datetime:
-    return datetime.combine(d, time.max, tzinfo=timezone.utc)
+    return datetime.combine(d, time.max, tzinfo=UTC)
 
 
 def _money(value: Decimal | float | int | None) -> float:
@@ -94,7 +94,9 @@ def _build_journeys(
     return out
 
 
-def _route_summary(journeys: list[JourneySummarySerializer], booking: FlightBookingDetailsRow) -> str:
+def _route_summary(
+    journeys: list[JourneySummarySerializer], booking: FlightBookingDetailsRow
+) -> str:
     if not journeys:
         o = booking.origin or "?"
         d = booking.destination or "?"
@@ -150,7 +152,7 @@ def _extract_extras(
                 price_raw = item.get("price") or item.get("Price") or item.get("Amount")
                 try:
                     price = float(price_raw) if price_raw is not None else None
-                except (TypeError, ValueError):
+                except TypeError, ValueError:
                     price = None
                 lines.append(
                     ExtraServiceLineSerializer(
@@ -222,9 +224,7 @@ class FlightBookingReportsService:
         base = self._filtered_select(filters)
         total = int(
             (
-                await self._session.execute(
-                    select(func.count()).select_from(base.subquery())
-                )
+                await self._session.execute(select(func.count()).select_from(base.subquery()))
             ).scalar_one()
         )
         page = filters.page
@@ -351,9 +351,7 @@ class FlightBookingReportsService:
         ref = app_reference.strip()
         booking = (
             await self._session.execute(
-                select(FlightBookingDetailsRow).where(
-                    FlightBookingDetailsRow.app_reference == ref
-                )
+                select(FlightBookingDetailsRow).where(FlightBookingDetailsRow.app_reference == ref)
             )
         ).scalar_one_or_none()
         if booking is None:
@@ -448,11 +446,13 @@ class FlightBookingReportsService:
 
             baggage_total = None
             attrs = booking.attributes if isinstance(booking.attributes, dict) else {}
-            quote = attrs.get("pricing_quote") if isinstance(attrs.get("pricing_quote"), dict) else {}
+            quote = (
+                attrs.get("pricing_quote") if isinstance(attrs.get("pricing_quote"), dict) else {}
+            )
             if quote.get("baggage_selection_total") is not None:
                 try:
                     baggage_total = float(quote["baggage_selection_total"])
-                except (TypeError, ValueError):
+                except TypeError, ValueError:
                     baggage_total = None
 
             total_admin = _money(txn.total_fare)

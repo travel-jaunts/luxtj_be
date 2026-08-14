@@ -5,7 +5,6 @@ import json
 import re
 from typing import Any
 
-
 RATEHAWK_IMAGE_SIZE = "1024x768"
 
 # RateHawk rg_ext code → human label (docs: architecture-docs/ratehawk-hotel.md)
@@ -194,7 +193,7 @@ def _int_or_none(value: Any) -> int | None:
         return None
     try:
         return int(value)
-    except (TypeError, ValueError):
+    except TypeError, ValueError:
         return None
 
 
@@ -375,22 +374,18 @@ def parse_for_staging(
     serp_filters = (
         hotel.get("serp_filters") if isinstance(hotel.get("serp_filters"), list) else None
     )
-    keys_pickup = (
-        hotel.get("keys_pickup") if isinstance(hotel.get("keys_pickup"), dict) else None
-    )
+    keys_pickup = hotel.get("keys_pickup") if isinstance(hotel.get("keys_pickup"), dict) else None
     star_certificate = (
-        hotel.get("star_certificate")
-        if isinstance(hotel.get("star_certificate"), dict)
-        else None
+        hotel.get("star_certificate") if isinstance(hotel.get("star_certificate"), dict) else None
     )
     giata_code = _clip(hotel.get("giata_code"), 50) or None
     is_closed = bool(hotel.get("is_closed")) if hotel.get("is_closed") is not None else False
     is_gender = hotel.get("is_gender_specification_required")
-    is_gender_specification_required = (
-        bool(is_gender) if is_gender is not None else None
-    )
+    is_gender_specification_required = bool(is_gender) if is_gender is not None else None
     # RateHawk legacy string id when present
-    supplier_slug = _clip(hotel.get("id") if not isinstance(hotel.get("id"), (int, float)) else "", 255) or None
+    supplier_slug = (
+        _clip(hotel.get("id") if not isinstance(hotel.get("id"), (int, float)) else "", 255) or None
+    )
 
     content_payload = {
         "accommodation_type": kind or None,
@@ -454,7 +449,9 @@ def parse_for_staging(
 
 
 def staging_to_blender(staging: dict[str, Any]) -> dict[str, Any]:
-    content = staging.get("content_payload") if isinstance(staging.get("content_payload"), dict) else {}
+    content = (
+        staging.get("content_payload") if isinstance(staging.get("content_payload"), dict) else {}
+    )
     amenity_entries = content.get("amenity_entries")
     if isinstance(amenity_entries, list) and amenity_entries:
         amenities = [
@@ -492,7 +489,9 @@ def staging_to_blender(staging: dict[str, Any]) -> dict[str, Any]:
 
     line1 = staging.get("address_line1") or ""
     line2 = staging.get("address_line2") or ""
-    policy = staging.get("policy_payload") if isinstance(staging.get("policy_payload"), dict) else {}
+    policy = (
+        staging.get("policy_payload") if isinstance(staging.get("policy_payload"), dict) else {}
+    )
 
     check_in = staging.get("check_in_time") or content.get("check_in_time")
     check_out = staging.get("check_out_time") or content.get("check_out_time")
@@ -523,7 +522,8 @@ def staging_to_blender(staging: dict[str, Any]) -> dict[str, Any]:
         "check_in_time_end": staging.get("check_in_time_end"),
         "front_desk_time_start": staging.get("front_desk_time_start"),
         "front_desk_time_end": staging.get("front_desk_time_end"),
-        "accommodation_type": staging.get("accommodation_type") or content.get("accommodation_type"),
+        "accommodation_type": staging.get("accommodation_type")
+        or content.get("accommodation_type"),
         "hotel_chain": staging.get("hotel_chain") or content.get("hotel_chain"),
         "giata_code": content.get("giata_code"),
         "is_closed": content.get("is_closed"),

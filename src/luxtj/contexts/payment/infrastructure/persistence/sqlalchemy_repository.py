@@ -19,9 +19,7 @@ class SqlAlchemyPaymentGatewayTransactionRepository:
         # Session factory uses autoflush=False — flush so follow-up reads/initiate see the row.
         await self._session.flush()
 
-    async def get_by_transaction_id(
-        self, transaction_id: str
-    ) -> PaymentGatewayTransaction | None:
+    async def get_by_transaction_id(self, transaction_id: str) -> PaymentGatewayTransaction | None:
         row = await self._session.scalar(
             select(PaymentGatewayTransactionRow).where(
                 PaymentGatewayTransactionRow.transaction_id == transaction_id
@@ -37,9 +35,7 @@ class SqlAlchemyPaymentGatewayTransactionRepository:
         )
         return int(result or 0)
 
-    async def list_by_app_reference(
-        self, app_reference: str
-    ) -> list[PaymentGatewayTransaction]:
+    async def list_by_app_reference(self, app_reference: str) -> list[PaymentGatewayTransaction]:
         rows = (
             await self._session.scalars(
                 select(PaymentGatewayTransactionRow).where(

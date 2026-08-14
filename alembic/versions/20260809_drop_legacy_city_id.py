@@ -18,9 +18,7 @@ depends_on: str | Sequence[str] | None = None
 
 def upgrade() -> None:
     op.execute("DROP INDEX IF EXISTS ix_hotel_searches_city_checkin_checkout")
-    op.execute(
-        "ALTER TABLE hotel_searches DROP CONSTRAINT IF EXISTS hotel_searches_city_id_fkey"
-    )
+    op.execute("ALTER TABLE hotel_searches DROP CONSTRAINT IF EXISTS hotel_searches_city_id_fkey")
     op.drop_column("hotel_searches", "city_id")
     op.create_index(
         "ix_hotel_searches_checkin_checkout",

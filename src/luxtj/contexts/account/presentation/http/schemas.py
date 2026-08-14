@@ -1,6 +1,7 @@
 from pydantic import Field
 
 from luxtj.contexts.account.application.use_cases import AuthTokenPairDTO
+from luxtj.contexts.account.domain.enums import AccountStatus
 from luxtj.shared_kernel.presentation.http.schemas import ApiSerializerBaseModel
 
 
@@ -17,6 +18,10 @@ class VerifyOtpBody(ApiSerializerBaseModel):
     email: str | None = Field(None, max_length=320)
 
 
+class RefreshTokenBody(ApiSerializerBaseModel):
+    refresh_token: str = Field(..., min_length=1)
+
+
 class RequestOtpResultSerializer(ApiSerializerBaseModel):
     message: str
 
@@ -31,3 +36,7 @@ class TokenPairSerializer(ApiSerializerBaseModel):
             access_token=dto.access_token,
             refresh_token=dto.refresh_token,
         )
+
+
+class AccountStatusSerializer(ApiSerializerBaseModel):
+    status: AccountStatus

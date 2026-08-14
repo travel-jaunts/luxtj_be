@@ -6,7 +6,8 @@ so Postgres stays responsive and FKs never need to be disabled.
 
 from __future__ import annotations
 
-from typing import Any, Callable
+from collections.abc import Callable
+from typing import Any
 
 from . import db
 
@@ -123,10 +124,7 @@ def _delete_supplier_hotel_maps(
             )
             deleted = len(map_ids)
             stats["supplierMappingsDeleted"] += deleted
-        _log(
-            f"supplier_hotel_map deleted batch={deleted} "
-            f"total={stats['supplierMappingsDeleted']}"
-        )
+        _log(f"supplier_hotel_map deleted batch={deleted} total={stats['supplierMappingsDeleted']}")
         if on_progress:
             on_progress("supplier_maps", stats)
 

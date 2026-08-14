@@ -20,7 +20,7 @@ class ActiveCurrency:
     updated_at: datetime
 
     @classmethod
-    def create(cls, *, currency_code: str, now: datetime | None = None) -> "ActiveCurrency":
+    def create(cls, *, currency_code: str, now: datetime | None = None) -> ActiveCurrency:
         ts = now or timeutils.datetime_now()
         return cls(
             id=uuid4(),

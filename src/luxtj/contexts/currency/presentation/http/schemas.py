@@ -15,7 +15,7 @@ class CurrencyItemSerializer(ApiSerializerBaseModel):
     active: bool
 
     @classmethod
-    def from_domain(cls, item: CurrencyListItem) -> "CurrencyItemSerializer":
+    def from_domain(cls, item: CurrencyListItem) -> CurrencyItemSerializer:
         return cls(
             code=item.code,
             currency_name=item.currency_name,

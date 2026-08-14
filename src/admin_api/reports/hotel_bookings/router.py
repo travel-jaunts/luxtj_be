@@ -10,8 +10,8 @@ from pydantic import Field
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from admin_api.reports.hotel_bookings.serializers import (
-    HotelBookingDetailSerializer,
     HotelBookingDetailsBody,
+    HotelBookingDetailSerializer,
     HotelBookingListFilters,
     HotelBookingListResultSerializer,
     HotelBookingRefreshBody,

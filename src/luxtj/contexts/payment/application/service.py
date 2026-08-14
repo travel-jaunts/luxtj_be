@@ -229,9 +229,7 @@ class PaymentGatewayService:
             },
         }
 
-    async def read_payment_record(
-        self, transaction_id: str
-    ) -> PaymentGatewayTransaction | None:
+    async def read_payment_record(self, transaction_id: str) -> PaymentGatewayTransaction | None:
         return await self._repo.get_by_transaction_id(transaction_id)
 
     async def update_payment_record_status(
@@ -321,14 +319,9 @@ class PaymentGatewayService:
                 "paid": True,
             }
 
-        pg_reference_id = (
-            pg_reference_id_from_request
-            or record.pg_reference_id
-            or transaction_id
-        )
-        if (
-            pg_reference_id_from_request
-            and pg_reference_id_from_request != (record.pg_reference_id or "")
+        pg_reference_id = pg_reference_id_from_request or record.pg_reference_id or transaction_id
+        if pg_reference_id_from_request and pg_reference_id_from_request != (
+            record.pg_reference_id or ""
         ):
             await self.update_pg_reference_id(transaction_id, pg_reference_id_from_request)
 
@@ -379,12 +372,16 @@ class PaymentGatewayService:
         message = str(pg_response.get("message") or "Payment failed")
         # Keep row pending when gateway still reports unpaid (same order can be retried).
         # Decline on hard failures / bad signature / explicit failed statuses.
-        hard_fail = payment_status in {
-            "failed",
-            "cancelled",
-            "canceled",
-            "refunded",
-        } or "signature" in message.lower()
+        hard_fail = (
+            payment_status
+            in {
+                "failed",
+                "cancelled",
+                "canceled",
+                "refunded",
+            }
+            or "signature" in message.lower()
+        )
         if hard_fail:
             await self.update_payment_record_status(
                 transaction_id, "declined", pg_response.get("data") or {}
@@ -544,7 +541,7 @@ class PaymentGatewayService:
             try:
                 if api_result.get("amount") is not None:
                     amount = Decimal(str(api_result["amount"]))
-            except Exception:  # noqa: BLE001
+            except Exception:
                 pass
         else:
             if not manual_clean:

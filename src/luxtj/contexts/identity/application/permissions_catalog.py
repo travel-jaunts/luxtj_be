@@ -41,7 +41,11 @@ PERMISSION_DEFINITIONS: tuple[PermissionDefinition, ...] = (
     _p("customers.view", "View customers", "Access customer list"),
     _p("customers.bookings.view", "View customer bookings", "Access customer bookings"),
     _p("customers.payments.view", "View customer payments", "Access customer payments and refunds"),
-    _p("customers.pricing.view", "View customer pricing", "Access customer pricing, offers and discounts"),
+    _p(
+        "customers.pricing.view",
+        "View customer pricing",
+        "Access customer pricing, offers and discounts",
+    ),
     _p("customers.support.view", "View customer support", "Access customer support tickets"),
     # Partners
     _p("partners.property.view", "View property partners", "Access property partners"),
@@ -50,8 +54,16 @@ PERMISSION_DEFINITIONS: tuple[PermissionDefinition, ...] = (
     _p("partners.affiliates.view", "View affiliates", "Access affiliates"),
     _p("partners.approvals.view", "View partner approvals", "Access partner approval APIs"),
     _p("partners.approvals.kyc.view", "View KYC approvals", "Access partner KYC approvals"),
-    _p("partners.approvals.content.view", "View content approvals", "Access partner content approvals"),
-    _p("partners.pricing.view", "View partner pricing", "Access partner pricing, offers and discounts"),
+    _p(
+        "partners.approvals.content.view",
+        "View content approvals",
+        "Access partner content approvals",
+    ),
+    _p(
+        "partners.pricing.view",
+        "View partner pricing",
+        "Access partner pricing, offers and discounts",
+    ),
     _p("partners.payments.view", "View partner payments", "Access partner payments and refunds"),
     # Pricing
     _p("pricing.base.view", "View base pricing", "Access base pricing"),
@@ -134,7 +146,9 @@ PERMISSION_DEFINITIONS: tuple[PermissionDefinition, ...] = (
     _p("integrations.view", "View integrations", "View integration registry settings"),
     _p("integrations.edit", "Edit integrations", "Activate integrations and save credentials"),
     # Booking API logs (supplier HTTP audit)
-    _p("booking_api_logs.view", "View booking API logs", "Access booking API request/response logs"),
+    _p(
+        "booking_api_logs.view", "View booking API logs", "Access booking API request/response logs"
+    ),
     _p("booking_api_logs.hotel.view", "View hotel API logs", "Access hotel booking API logs"),
     _p(
         "booking_api_logs.hotel.ratehawk.view",

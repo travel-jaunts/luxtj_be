@@ -8,6 +8,7 @@ from twilio.rest import Client
 
 from luxtj.contexts.account.application.ports import SmsOtpSender
 from luxtj.contexts.account.domain.enums import AuthFlowType
+from luxtj.contexts.account.domain.errors import OtpDeliveryUnavailableError
 from luxtj.contexts.account.domain.value_objects import PhoneIdentity
 from luxtj.contexts.account.infrastructure.sms.null_sender import NullSmsOtpSender
 from luxtj.contexts.account.infrastructure.sms.test_sender import TelegramSmsOtpSender
@@ -20,7 +21,7 @@ logger = get_logger_handle(__name__)
 
 
 class RegistrySmsOtpSender(SmsOtpSender):
-    """Prefer active Twilio, else active Telegram; else no-op.
+    """Prefer active Twilio, else active Telegram; never silently discard OTPs.
 
     Credentials and activation come from `other_apis` (admin Integrations), not env.
     """
@@ -30,10 +31,21 @@ class RegistrySmsOtpSender(SmsOtpSender):
         *,
         twilio_http_client: AsyncTwilioHttpClient,
         http_client: AsyncClient,
+        allow_test_sender: bool = False,
     ) -> None:
         self._twilio_http = twilio_http_client
         self._http = http_client
+        self._allow_test_sender = allow_test_sender
         self._null = NullSmsOtpSender()
+
+    def validate_configuration(self) -> bool:
+        if self._twilio_sender() is not None or self._telegram_sender() is not None:
+            return True
+        if self._allow_test_sender:
+            logger.warning("OTP test sender is enabled for this environment")
+            return True
+        logger.error("No approved SMS OTP provider is configured at startup")
+        return False
 
     def _twilio_sender(self) -> TwilioSmsOtpSender | None:
         other = get_integration_registry().resolve_other_api("twilio")
@@ -76,19 +88,15 @@ class RegistrySmsOtpSender(SmsOtpSender):
     ) -> None:
         twilio = self._twilio_sender()
         if twilio is not None:
-            await twilio.send_otp(
-                phone_identity=phone_identity, otp=otp, flow_type=flow_type
-            )
+            await twilio.send_otp(phone_identity=phone_identity, otp=otp, flow_type=flow_type)
             return
         telegram = self._telegram_sender()
         if telegram is not None:
-            await telegram.send_otp(
-                phone_identity=phone_identity, otp=otp, flow_type=flow_type
-            )
+            await telegram.send_otp(phone_identity=phone_identity, otp=otp, flow_type=flow_type)
             return
-        logger.warning(
-            "No active SMS OTP integration (twilio/telegram); OTP not delivered externally"
-        )
-        await self._null.send_otp(
-            phone_identity=phone_identity, otp=otp, flow_type=flow_type
-        )
+        if self._allow_test_sender:
+            logger.warning("Using explicitly enabled OTP test sender")
+            await self._null.send_otp(phone_identity=phone_identity, otp=otp, flow_type=flow_type)
+            return
+        logger.error("No approved SMS OTP provider is configured")
+        raise OtpDeliveryUnavailableError("OTP delivery is temporarily unavailable")

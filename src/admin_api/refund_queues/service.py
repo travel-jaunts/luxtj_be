@@ -108,8 +108,7 @@ class FlightRefundQueueService:
             select(FlightBookingDetailsRow, PaymentGatewayTransactionRow)
             .join(
                 PaymentGatewayTransactionRow,
-                PaymentGatewayTransactionRow.app_reference
-                == FlightBookingDetailsRow.app_reference,
+                PaymentGatewayTransactionRow.app_reference == FlightBookingDetailsRow.app_reference,
             )
             .where(
                 FlightBookingDetailsRow.status.in_(statuses),
@@ -255,8 +254,7 @@ class HotelRefundQueueService:
             select(HotelBookingDetailsRow, PaymentGatewayTransactionRow)
             .join(
                 PaymentGatewayTransactionRow,
-                PaymentGatewayTransactionRow.app_reference
-                == HotelBookingDetailsRow.app_reference,
+                PaymentGatewayTransactionRow.app_reference == HotelBookingDetailsRow.app_reference,
             )
             .where(
                 HotelBookingDetailsRow.status.in_(statuses),
@@ -333,9 +331,7 @@ class HotelRefundQueueService:
                     lead_guest_name=_pax_name(lead),
                     hotel_name=booking.hotel_name,
                     hotel_location=booking.hotel_location,
-                    check_in=booking.hotel_check_in.isoformat()
-                    if booking.hotel_check_in
-                    else None,
+                    check_in=booking.hotel_check_in.isoformat() if booking.hotel_check_in else None,
                     check_out=booking.hotel_check_out.isoformat()
                     if booking.hotel_check_out
                     else None,

@@ -79,9 +79,7 @@ class BookingSourceRegionMapRow(CrsBase):
 
 class RegionMappingRunRow(CrsBase):
     __tablename__ = "region_mapping_runs"
-    __table_args__ = (
-        Index("ix_region_mapping_runs_source_status", "booking_source_id", "status"),
-    )
+    __table_args__ = (Index("ix_region_mapping_runs_source_status", "booking_source_id", "status"),)
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True)
     booking_source_id: Mapped[str] = mapped_column(String(36), nullable=False)
@@ -115,9 +113,7 @@ class RegionMappingRunRow(CrsBase):
 
 class HotelMappingRunRow(CrsBase):
     __tablename__ = "hotel_mapping_runs"
-    __table_args__ = (
-        Index("ix_hotel_mapping_runs_source_status", "booking_source_id", "status"),
-    )
+    __table_args__ = (Index("ix_hotel_mapping_runs_source_status", "booking_source_id", "status"),)
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True)
     booking_source_id: Mapped[str] = mapped_column(String(36), nullable=False)
@@ -495,9 +491,7 @@ class HotelCrsRoomGroupRow(CrsBase):
 
 class HotelCrsHotelDescriptionSectionRow(CrsBase):
     __tablename__ = "hotel_crs_hotel_description_sections"
-    __table_args__ = (
-        Index("ix_hotel_crs_hotel_description_sections_hotel_id", "hotel_id"),
-    )
+    __table_args__ = (Index("ix_hotel_crs_hotel_description_sections_hotel_id", "hotel_id"),)
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True)
     hotel_id: Mapped[str] = mapped_column(
@@ -515,9 +509,7 @@ class HotelCrsHotelDescriptionSectionRow(CrsBase):
 class HotelCrsHotelPaymentMethodRow(CrsBase):
     __tablename__ = "hotel_crs_hotel_payment_methods"
     __table_args__ = (
-        UniqueConstraint(
-            "hotel_id", "method_code", name="uq_hotel_crs_hotel_payment_methods"
-        ),
+        UniqueConstraint("hotel_id", "method_code", name="uq_hotel_crs_hotel_payment_methods"),
         Index("ix_hotel_crs_hotel_payment_methods_hotel_id", "hotel_id"),
     )
 
@@ -612,9 +604,7 @@ class HotelCrsHotelPolicyItemAttrRow(CrsBase):
 
 class HotelCrsHotelRegisterRoomCategoryRow(CrsBase):
     __tablename__ = "hotel_crs_hotel_register_room_categories"
-    __table_args__ = (
-        Index("ix_hotel_crs_hotel_register_room_categories_hotel_id", "hotel_id"),
-    )
+    __table_args__ = (Index("ix_hotel_crs_hotel_register_room_categories_hotel_id", "hotel_id"),)
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True)
     hotel_id: Mapped[str] = mapped_column(

@@ -32,9 +32,10 @@ def _to_sync_psycopg_url(url: str) -> str:
 
 def database_url() -> str:
     """CRS / regions database used by RateHawk mapping workers."""
-    url = os.getenv("LTJBE_CRS_DATABASE_URL", "").strip() or os.getenv(
-        "LTJBE_DATABASE_URL", ""
-    ).strip()
+    url = (
+        os.getenv("LTJBE_CRS_DATABASE_URL", "").strip()
+        or os.getenv("LTJBE_DATABASE_URL", "").strip()
+    )
     if not url:
         raise RuntimeError(
             "LTJBE_CRS_DATABASE_URL (or LTJBE_DATABASE_URL) is required for RateHawk mapping workers"

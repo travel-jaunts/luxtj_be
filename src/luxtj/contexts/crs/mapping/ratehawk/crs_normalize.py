@@ -7,7 +7,6 @@ from __future__ import annotations
 
 from typing import Any
 
-
 _VIEW_LABELS: dict[int, str] = {
     1: "bay",
     2: "bosphorus",
@@ -111,7 +110,7 @@ def _int_or_none(value: Any) -> int | None:
         return None
     try:
         n = int(value)
-    except (TypeError, ValueError):
+    except TypeError, ValueError:
         return None
     return n if n != 0 else None
 
@@ -177,9 +176,7 @@ def flatten_hotel_content(hotel: dict[str, Any]) -> dict[str, Any]:
         if not isinstance(block, dict):
             continue
         paragraphs = block.get("paragraphs") or []
-        body = "\n\n".join(
-            str(p).strip() for p in paragraphs if isinstance(p, str) and p.strip()
-        )
+        body = "\n\n".join(str(p).strip() for p in paragraphs if isinstance(p, str) and p.strip())
         if not body and not block.get("title"):
             continue
         policy_sections.append(
@@ -202,7 +199,9 @@ def flatten_hotel_content(hotel: dict[str, Any]) -> dict[str, Any]:
         )
 
     policy_items: list[dict[str, Any]] = []
-    meta = hotel.get("metapolicy_struct") if isinstance(hotel.get("metapolicy_struct"), dict) else {}
+    meta = (
+        hotel.get("metapolicy_struct") if isinstance(hotel.get("metapolicy_struct"), dict) else {}
+    )
     for category, value in meta.items():
         items: list[Any]
         if isinstance(value, list):
@@ -265,9 +264,7 @@ def flatten_hotel_content(hotel: dict[str, Any]) -> dict[str, Any]:
         "register_address": _clip(register.get("address"), 500),
         "register_status_end_date": _clip(register.get("status_end_date"), 40),
         "register_taxpayer_number": _clip(register.get("taxpayer_number"), 30),
-        "register_state_registration_number": _clip(
-            register.get("state_registration_number"), 30
-        ),
+        "register_state_registration_number": _clip(register.get("state_registration_number"), 30),
         "register_work_time": _clip(register.get("work_time"), 255),
         "external_code": _clip(hotel.get("supplier_slug") or hotel.get("id"), 255)
         if not isinstance(hotel.get("id"), (int, float))
@@ -313,7 +310,7 @@ def flatten_room_group(rg: dict[str, Any]) -> dict[str, Any]:
     if rg.get("size") is not None and rg.get("size") != "":
         try:
             size = float(rg["size"])
-        except (TypeError, ValueError):
+        except TypeError, ValueError:
             size = None
 
     main_name = str(rg.get("main_name") or name_struct.get("main_name") or "").strip() or None

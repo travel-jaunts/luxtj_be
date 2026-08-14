@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import csv
 import io
-from datetime import date, datetime, time, timezone
+from datetime import UTC, date, datetime, time
 from decimal import Decimal
 from typing import Any
 
@@ -41,11 +41,11 @@ STATUS_ALL = "all"
 
 
 def _as_utc_start(d: date) -> datetime:
-    return datetime.combine(d, time.min, tzinfo=timezone.utc)
+    return datetime.combine(d, time.min, tzinfo=UTC)
 
 
 def _as_utc_end(d: date) -> datetime:
-    return datetime.combine(d, time.max, tzinfo=timezone.utc)
+    return datetime.combine(d, time.max, tzinfo=UTC)
 
 
 def _money(value: Decimal | float | int | None) -> float:
@@ -114,8 +114,7 @@ class HotelBookingReportsService:
             pax_exists = (
                 select(HotelBookingPaxDetailsRow.id)
                 .where(
-                    HotelBookingPaxDetailsRow.app_reference
-                    == HotelBookingDetailsRow.app_reference,
+                    HotelBookingPaxDetailsRow.app_reference == HotelBookingDetailsRow.app_reference,
                     HotelBookingPaxDetailsRow.email.ilike(f"%{email}%"),
                 )
                 .exists()
@@ -293,9 +292,7 @@ class HotelBookingReportsService:
             )
         return items
 
-    async def _lookup_crs_hotel(
-        self, booking: HotelBookingDetailsRow
-    ) -> HotelCrsHotelRow | None:
+    async def _lookup_crs_hotel(self, booking: HotelBookingDetailsRow) -> HotelCrsHotelRow | None:
         if self._crs_session is None:
             return None
 

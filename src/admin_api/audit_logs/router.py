@@ -4,13 +4,12 @@ from fastapi import APIRouter, Depends, HTTPException
 
 from admin_api.audit_logs.serializers import AuditLogEvent
 from admin_api.audit_logs.service import AuditLogService
+from luxtj.contexts.identity.presentation.http.dependencies import require_permission
 from luxtj.shared_kernel.presentation.http.schemas import (
     ApiSuccessResponse,
     RequestProcessStatus,
     SearchFilterParams,
 )
-
-from luxtj.contexts.identity.presentation.http.dependencies import require_permission
 
 audit_logs_router = APIRouter(
     prefix="/audit-logs",

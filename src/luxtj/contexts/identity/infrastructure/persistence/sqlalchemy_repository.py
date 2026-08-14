@@ -69,9 +69,7 @@ class SqlAlchemyUserRepository:
         self, *, page: int, page_size: int
     ) -> tuple[list[User], PaginationMeta]:
         filters = UserRow.user_type == UserTypeEnum.ADMIN.value
-        total = await self._session.scalar(
-            select(func.count()).select_from(UserRow).where(filters)
-        )
+        total = await self._session.scalar(select(func.count()).select_from(UserRow).where(filters))
         result = await self._session.execute(
             select(UserRow)
             .where(filters)
@@ -114,9 +112,7 @@ class SqlAlchemyRoleRepository:
         await self._session.flush()
 
     async def save(self, role: Role) -> None:
-        result = await self._session.execute(
-            select(RoleRow).where(RoleRow.id == str(role.id))
-        )
+        result = await self._session.execute(select(RoleRow).where(RoleRow.id == str(role.id)))
         row = result.scalar_one_or_none()
         if row is None:
             await self.add(role)
@@ -138,22 +134,16 @@ class SqlAlchemyRoleRepository:
         await self._session.flush()
 
     async def get_by_id(self, role_id: UUID) -> Role | None:
-        result = await self._session.execute(
-            select(RoleRow).where(RoleRow.id == str(role_id))
-        )
+        result = await self._session.execute(select(RoleRow).where(RoleRow.id == str(role_id)))
         row = result.scalar_one_or_none()
         return row.to_domain() if row else None
 
     async def get_by_name(self, name: str) -> Role | None:
-        result = await self._session.execute(
-            select(RoleRow).where(RoleRow.name == name.strip())
-        )
+        result = await self._session.execute(select(RoleRow).where(RoleRow.name == name.strip()))
         row = result.scalar_one_or_none()
         return row.to_domain() if row else None
 
-    async def list_roles(
-        self, *, page: int, page_size: int
-    ) -> tuple[list[Role], PaginationMeta]:
+    async def list_roles(self, *, page: int, page_size: int) -> tuple[list[Role], PaginationMeta]:
         total = await self._session.scalar(select(func.count()).select_from(RoleRow))
         result = await self._session.execute(
             select(RoleRow)

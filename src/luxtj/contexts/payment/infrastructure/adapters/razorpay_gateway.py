@@ -102,13 +102,13 @@ class RazorpayPaymentGateway:
                 auth=self._auth(),
                 timeout=30.0,
             )
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             return {"status": False, "message": f"Razorpay order create failed: {exc}"}
 
         body: dict[str, Any]
         try:
             body = res.json() if res.content else {}
-        except Exception:  # noqa: BLE001
+        except Exception:
             body = {}
         if res.status_code >= 400 or not isinstance(body, dict) or not body.get("id"):
             message = (
@@ -159,7 +159,7 @@ class RazorpayPaymentGateway:
             return False
         digest = hmac.new(
             self._api_secret.encode("utf-8"),
-            f"{order_id}|{payment_id}".encode("utf-8"),
+            f"{order_id}|{payment_id}".encode(),
             hashlib.sha256,
         ).hexdigest()
         return hmac.compare_digest(digest, signature)
@@ -179,16 +179,10 @@ class RazorpayPaymentGateway:
 
         gw = gateway_response if isinstance(gateway_response, dict) else {}
         payment_id = str(
-            gw.get("razorpay_payment_id")
-            or gw.get("payment_id")
-            or gw.get("pg_payment_id")
-            or ""
+            gw.get("razorpay_payment_id") or gw.get("payment_id") or gw.get("pg_payment_id") or ""
         ).strip()
         order_id = str(
-            gw.get("razorpay_order_id")
-            or gw.get("order_id")
-            or pg_reference_id
-            or ""
+            gw.get("razorpay_order_id") or gw.get("order_id") or pg_reference_id or ""
         ).strip()
         signature = str(
             gw.get("razorpay_signature") or gw.get("signature") or gw.get("pg_signature") or ""
@@ -248,11 +242,11 @@ class RazorpayPaymentGateway:
                 auth=self._auth(),
                 timeout=30.0,
             )
-        except Exception:  # noqa: BLE001
+        except Exception:
             return None
         try:
             body = res.json() if res.content else {}
-        except Exception:  # noqa: BLE001
+        except Exception:
             return None
         if res.status_code >= 400 or not isinstance(body, dict):
             return None
@@ -291,13 +285,13 @@ class RazorpayPaymentGateway:
                 auth=self._auth(),
                 timeout=45.0,
             )
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             return {"status": False, "message": f"Razorpay refund failed: {exc}"}
 
         body: dict[str, Any]
         try:
             body = res.json() if res.content else {}
-        except Exception:  # noqa: BLE001
+        except Exception:
             body = {}
 
         if res.status_code >= 400 or not isinstance(body, dict) or not body.get("id"):
@@ -311,14 +305,14 @@ class RazorpayPaymentGateway:
                 if not message:
                     try:
                         message = json.dumps(err, default=str)
-                    except Exception:  # noqa: BLE001
+                    except Exception:
                         message = str(err)
             elif isinstance(err, str) and err.strip():
                 message = err.strip()
             elif isinstance(body, dict) and body:
                 try:
                     message = json.dumps(body, default=str)
-                except Exception:  # noqa: BLE001
+                except Exception:
                     message = str(body)
             return {
                 "status": False,
@@ -335,20 +329,18 @@ class RazorpayPaymentGateway:
             "data": {"request": payload, "response": body},
         }
 
-    async def _fetch_captured_payment_for_order(
-        self, order_id: str
-    ) -> dict[str, Any] | None:
+    async def _fetch_captured_payment_for_order(self, order_id: str) -> dict[str, Any] | None:
         try:
             res = await self._http.get(
                 f"{_RAZORPAY_API}/orders/{order_id}/payments",
                 auth=self._auth(),
                 timeout=30.0,
             )
-        except Exception:  # noqa: BLE001
+        except Exception:
             return None
         try:
             body = res.json() if res.content else {}
-        except Exception:  # noqa: BLE001
+        except Exception:
             return None
         if res.status_code >= 400 or not isinstance(body, dict):
             return None
