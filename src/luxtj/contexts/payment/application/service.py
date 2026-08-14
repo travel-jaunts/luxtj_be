@@ -174,7 +174,11 @@ class PaymentGatewayService:
         productinfo: str,
         flight_booking_details_id: str | None = None,
     ) -> dict[str, Any]:
-        """Create a pending txn row then create the gateway order/session."""
+        """Create a pending txn row then create the gateway order/session.
+
+        When ``LTJBE_BYPASS_PAYMENT`` is set, the ledger row is accepted locally and
+        Razorpay (or any PG) is never called.
+        """
         created = await self.create_payment_record(
             app_reference=app_reference,
             pg_code=pg_code,
@@ -259,6 +263,28 @@ class PaymentGatewayService:
         if record is None:
             return {"status": False, "message": "Invalid transaction"}
 
+        if config.BYPASS_PAYMENT:
+            await self.update_payment_record_status(
+                transaction_id,
+                "accepted",
+                {"bypass": True, "reason": "LTJBE_BYPASS_PAYMENT"},
+            )
+            pg_ref = str(record.pg_reference_id or transaction_id)
+            return {
+                "status": True,
+                "message": "Payment bypassed",
+                "data": {
+                    "pg_reference_id": pg_ref,
+                    "payment_data": {
+                        "mode": "bypass",
+                        "pg_code": record.pg_code,
+                        "bypassed": True,
+                        "amount": float(record.amount),
+                        "currency": record.currency,
+                    },
+                },
+            }
+
         gateway = self.get_gateway_by_code(record.pg_code)
         if gateway is None:
             return {"status": False, "message": "Payment gateway not available"}
@@ -314,6 +340,22 @@ class PaymentGatewayService:
             return {
                 "status": True,
                 "message": "Already paid",
+                "paid_amount": float(record.amount),
+                "app_reference": record.app_reference,
+                "transaction_id": transaction_id,
+                "pg_code": record.pg_code,
+                "paid": True,
+            }
+
+        if config.BYPASS_PAYMENT:
+            await self.update_payment_record_status(
+                transaction_id,
+                "accepted",
+                {"bypass": True, "reason": "LTJBE_BYPASS_PAYMENT"},
+            )
+            return {
+                "status": True,
+                "message": "Payment bypassed",
                 "paid_amount": float(record.amount),
                 "app_reference": record.app_reference,
                 "transaction_id": transaction_id,

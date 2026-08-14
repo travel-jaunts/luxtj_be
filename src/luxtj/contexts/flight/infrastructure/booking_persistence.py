@@ -192,15 +192,37 @@ async def persist_pre_book(
         )
 
     pb = price.get("PriceBreakup") if isinstance(price.get("PriceBreakup"), dict) else {}
+    pax_breakup = (
+        price.get("PassengerBreakup") if isinstance(price.get("PassengerBreakup"), dict) else {}
+    )
     admin_markup = max(0.0, float(pb.get("AdminMarkup") or 0))
-    # PriceBreakup.Tax is client-facing (airline tax + embedded markup). Persist separately.
-    tax_with_markup = float(pb.get("Tax") or 0)
-    airline_tax = max(0.0, round(tax_with_markup - admin_markup, 2))
+    total_display = float(price.get("TotalDisplayFare") or 0)
+    # PassengerBreakup is per-pax; BasicFare must be BasePrice × count (not a single AdultPrice).
+    basic_fare = 0.0
+    for row in pax_breakup.values():
+        if isinstance(row, dict):
+            basic_fare += float(row.get("BasePrice") or 0) * int(row.get("PassengerCount") or 0)
+    basic_fare = round(basic_fare, 2)
+    if basic_fare <= 0:
+        basic_fare = float(pb.get("BasicFare") or 0)
+    # PriceBreakup.Tax may include embedded markup; airline tax is remainder after basic + markup.
+    if total_display > 0:
+        airline_tax = max(0.0, round(total_display - basic_fare - admin_markup, 2))
+    else:
+        tax_with_markup = float(pb.get("Tax") or 0)
+        airline_tax = max(0.0, round(tax_with_markup - admin_markup, 2))
+    fx_rate = token_data.get("currency_conversion_rate") or (price.get("currency_conversion_rate") if isinstance(price, dict) else None)
+    try:
+        fx_dec = Decimal(str(fx_rate)) if fx_rate not in (None, "") else Decimal("1")
+        if fx_dec <= 0:
+            fx_dec = Decimal("1")
+    except Exception:
+        fx_dec = Decimal("1")
     session.add(
         FlightBookingTransactionDetailsRow(
             id=str(uuid.uuid4()),
             app_reference=app_reference,
-            basic_fare=Decimal(str(pb.get("BasicFare") or 0)),
+            basic_fare=Decimal(str(round(basic_fare, 2))),
             airline_tax=Decimal(str(airline_tax)),
             admin_markup=Decimal(str(round(admin_markup, 2))),
             admin_discount=Decimal(str(charge_quote.get("admin_discount") or 0)),
@@ -209,7 +231,7 @@ async def persist_pre_book(
             convenience_fee=Decimal(str(charge_quote.get("convenience_fee_amount") or 0)),
             total_fare=Decimal(str(charge_quote.get("final_total_fare") or 0)),
             currency=AdminCurrency.code()[:3],
-            currency_conversion_rate=Decimal("1"),
+            currency_conversion_rate=fx_dec,
             payment_mode=(payment_gateway_code or "").lower() or None,
             pax_wise_fare_breakdown=_airline_only_passenger_breakup(
                 price.get("PassengerBreakup")

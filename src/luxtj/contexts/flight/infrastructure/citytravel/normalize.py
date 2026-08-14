@@ -107,11 +107,13 @@ def extract_confirm_book_result(parsed: dict[str, Any] | None) -> dict[str, Any]
     if not result:
         return {}
     order = result.get("OrderInfoData")
-    if isinstance(order, dict):
+    if isinstance(order, dict) and not _is_xsi_nil(order):
         merged = dict(order)
-        if "Success" in result:
-            merged["Success"] = result.get("Success")
+        for key in ("Success", "ErrorCode", "ErrorString", "Currency"):
+            if key in result and key not in merged:
+                merged[key] = result.get(key)
         return merged
+    # Success=false often returns OrderInfoData i:nil — keep envelope error fields.
     return result
 
 
@@ -125,12 +127,29 @@ def extract_order_info_result(parsed: dict[str, Any] | None) -> dict[str, Any]:
     if not result:
         return {}
     order = result.get("OrderInfoData")
-    if isinstance(order, dict):
+    if isinstance(order, dict) and not _is_xsi_nil(order):
         merged = dict(order)
-        if "Success" in result:
-            merged["Success"] = result.get("Success")
+        for key in ("Success", "ErrorCode", "ErrorString", "Currency"):
+            if key in result and key not in merged:
+                merged[key] = result.get(key)
         return merged
     return result
+
+
+def _is_xsi_nil(value: Any) -> bool:
+    """True for SOAP nillable empties (None or {@attributes: {nil: true}})."""
+    if value is None:
+        return True
+    if not isinstance(value, dict):
+        return False
+    attrs = value.get("@attributes")
+    if not isinstance(attrs, dict):
+        attrs = value.get("@attr") if isinstance(value.get("@attr"), dict) else {}
+    for k, v in attrs.items():
+        if "nil" in str(k).lower() and str(v).strip().lower() in {"true", "1"}:
+            return True
+    keys = {str(k) for k in value.keys()}
+    return bool(keys) and keys <= {"@attributes", "@attr"}
 
 
 def extract_annulate_book_result(parsed: dict[str, Any] | None) -> dict[str, Any]:
@@ -174,13 +193,24 @@ def first_pnr_from_offers(book_or_order: dict[str, Any]) -> str:
         candidates.extend(force_list(gates.get("OfferInfo") or gates))
     else:
         candidates.extend(force_list(gates))
+
+    def _clean(raw: Any) -> str:
+        if _is_xsi_nil(raw):
+            return ""
+        text = str(raw or "").strip()
+        if not text or text.lower() in {"none", "null"}:
+            return ""
+        if text.startswith("{") and "nil" in text.lower():
+            return ""
+        return text
+
     for offer in candidates:
         if not isinstance(offer, dict):
             continue
-        origin = str(offer.get("OriginPnr") or "").strip()
+        origin = _clean(offer.get("OriginPnr"))
         if origin:
             return origin
-        pnr = str(offer.get("PNR") or "").strip()
+        pnr = _clean(offer.get("PNR"))
         if pnr:
             return pnr
     return ""
@@ -200,8 +230,13 @@ def ticket_passengers_from_order(order: dict[str, Any]) -> list[dict[str, Any]]:
         ):
             if not isinstance(pax, dict):
                 continue
-            ticket = str(pax.get("TicketNumber") or "").strip()
-            if not ticket:
+            raw_ticket = pax.get("TicketNumber")
+            if _is_xsi_nil(raw_ticket):
+                continue
+            ticket = str(raw_ticket or "").strip()
+            if not ticket or ticket.lower() in {"none", "null"}:
+                continue
+            if ticket.startswith("{") and "nil" in ticket.lower():
                 continue
             out.append(
                 {
@@ -518,6 +553,42 @@ def _tariff_info(flight_data: dict[str, Any]) -> dict[str, Any]:
     return raw if isinstance(raw, dict) else {}
 
 
+def _pax_counts(search_data: dict[str, Any] | None) -> tuple[int, int, int]:
+    sd = search_data or {}
+    adults = int(sd.get("adult_config") or sd.get("AdultCount") or 1)
+    children = int(sd.get("child_config") or sd.get("ChildCount") or 0)
+    infants = int(sd.get("infant_config") or sd.get("InfantCount") or 0)
+    return max(adults, 0), max(children, 0), max(infants, 0)
+
+
+def basic_and_tax_from_passenger_breakup(
+    breakup: dict[str, Any] | None,
+    total_admin: float,
+) -> tuple[float, float]:
+    """City Travel Adult/Child/Infant prices are **per passenger**.
+
+    PassengerBreakup.BasePrice / Tax are per pax; BasicFare must multiply by count.
+    """
+    base = 0.0
+    if isinstance(breakup, dict):
+        for row in breakup.values():
+            if not isinstance(row, dict):
+                continue
+            count = int(row.get("PassengerCount") or 0)
+            if count <= 0:
+                continue
+            base += float(row.get("BasePrice") or 0) * count
+    base = round(base, 2)
+    total = round(float(total_admin or 0), 2)
+    if base <= 0:
+        tax = round(total * 0.15, 2) if total > 0 else 0.0
+        return round(total - tax, 2), tax
+    tax = round(total - base, 2) if total > 0 else 0.0
+    if tax < 0:
+        return total if total > 0 else base, 0.0
+    return base, tax
+
+
 def build_baggage_allowance(
     flight_data: dict[str, Any],
     *,
@@ -569,9 +640,7 @@ def build_price_block(
     infant_total = _as_float(tariff.get("InfantPrice") or flight_data.get("InfantPrice"))
     infant_base = _as_float(tariff.get("InfantBasePrice"))
 
-    adults = int((search_data or {}).get("adult_config") or 1)
-    children = int((search_data or {}).get("child_config") or 0)
-    infants = int((search_data or {}).get("infant_config") or 0)
+    adults, children, infants = _pax_counts(search_data)
 
     def to_admin(amount: float) -> float:
         return round(amount * conversion_rate, 2)
@@ -585,6 +654,9 @@ def build_price_block(
             # Fallback split only when TariffInfo base is missing
             tax = round(total * 0.15, 2)
             base = round(total - tax, 2)
+        if tax < 0:
+            tax = 0.0
+            base = total
         return {
             "PassengerCount": count,
             "BasePrice": base,
@@ -611,17 +683,8 @@ def build_price_block(
             2,
         )
 
-    # Prefer TariffInfo bases for BasicFare when present (amounts are totals for that pax type)
-    if adult_base > 0:
-        base_admin = to_admin(adult_base)
-        if child_base > 0 and children > 0:
-            base_admin = round(base_admin + to_admin(child_base), 2)
-        if infant_base > 0 and infants > 0:
-            base_admin = round(base_admin + to_admin(infant_base), 2)
-        tax_admin = round(total_admin - base_admin, 2)
-    else:
-        tax_admin = round(total_admin * 0.15, 2)
-        base_admin = round(total_admin - tax_admin, 2)
+    # TariffInfo Adult/Child/Infant prices are per passenger (vendor §2.1.2).
+    base_admin, tax_admin = basic_and_tax_from_passenger_breakup(breakup, total_admin)
 
     return {
         "Fare_Type": "Publish",
@@ -680,8 +743,23 @@ def build_price_block_from_total(
     search_data: dict[str, Any] | None,
     conversion_rate: float,
     prior_price: dict[str, Any] | None = None,
+    tariff: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
-    """Admin Price from locked prebook total; scale prior breakup when available."""
+    """Admin Price from locked prebook/book total; scale prior breakup when available."""
+    if isinstance(tariff, dict) and tariff:
+        synthetic = {
+            "TotalPrice": total_supplier,
+            "TariffInfo": tariff,
+            "AdultPrice": tariff.get("AdultPrice"),
+            "ChildPrice": tariff.get("ChildPrice"),
+            "InfantPrice": tariff.get("InfantPrice"),
+        }
+        return build_price_block(
+            synthetic,
+            search_data=search_data,
+            conversion_rate=conversion_rate,
+        )
+
     total_admin = round(float(total_supplier) * conversion_rate, 2)
     prior = prior_price if isinstance(prior_price, dict) else {}
     prior_total = _as_float(prior.get("TotalDisplayFare"))
@@ -700,9 +778,7 @@ def build_price_block_from_total(
                 "TotalPrice": round(_as_float(row.get("TotalPrice")) * scale, 2),
                 "Penalties": list(row.get("Penalties") or []),
             }
-        prior_pb = prior.get("PriceBreakup") if isinstance(prior.get("PriceBreakup"), dict) else {}
-        base_admin = round(_as_float(prior_pb.get("BasicFare")) * scale, 2)
-        tax_admin = round(total_admin - base_admin, 2)
+        base_admin, tax_admin = basic_and_tax_from_passenger_breakup(breakup, total_admin)
         return {
             "Fare_Type": prior.get("Fare_Type") or "Publish",
             "PassengerBreakup": breakup,
@@ -710,23 +786,42 @@ def build_price_block_from_total(
             "PriceBreakup": {"Tax": tax_admin, "BasicFare": base_admin},
         }
 
-    adults = int((search_data or {}).get("adult_config") or 1)
+    adults, children, infants = _pax_counts(search_data)
+    pax_total = max(adults + children + infants, 1)
     tax_admin = round(total_admin * 0.15, 2)
     base_admin = round(total_admin - tax_admin, 2)
-    per_total = round(total_admin / max(adults, 1), 2)
-    per_base = round(base_admin / max(adults, 1), 2)
+    per_total = round(total_admin / pax_total, 2)
+    per_base = round(base_admin / pax_total, 2)
     per_tax = round(per_total - per_base, 2)
+    breakup = {}
+    if adults > 0:
+        breakup["ADT"] = {
+            "PassengerCount": adults,
+            "BasePrice": per_base,
+            "Tax": per_tax,
+            "TotalPrice": per_total,
+            "Penalties": [],
+        }
+    if children > 0:
+        breakup["CHD"] = {
+            "PassengerCount": children,
+            "BasePrice": per_base,
+            "Tax": per_tax,
+            "TotalPrice": per_total,
+            "Penalties": [],
+        }
+    if infants > 0:
+        breakup["INF"] = {
+            "PassengerCount": infants,
+            "BasePrice": per_base,
+            "Tax": per_tax,
+            "TotalPrice": per_total,
+            "Penalties": [],
+        }
+    base_admin, tax_admin = basic_and_tax_from_passenger_breakup(breakup, total_admin)
     return {
         "Fare_Type": "Publish",
-        "PassengerBreakup": {
-            "ADT": {
-                "PassengerCount": adults,
-                "BasePrice": per_base,
-                "Tax": per_tax,
-                "TotalPrice": per_total,
-                "Penalties": [],
-            }
-        },
+        "PassengerBreakup": breakup,
         "TotalDisplayFare": total_admin,
         "PriceBreakup": {"Tax": tax_admin, "BasicFare": base_admin},
     }

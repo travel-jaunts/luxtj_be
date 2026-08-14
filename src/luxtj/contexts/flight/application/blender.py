@@ -686,17 +686,29 @@ class FlightBlender:
         # City Travel happy path: hold then issue. Skip if already ticketed / deferred / pending.
         if not idempotent and not confirmation_pending and not already_ticketed:
             result = await self._maybe_auto_issue_after_hold(request, result)
+            if not result.get("status"):
+                return result
             data = result.get("data") if isinstance(result.get("data"), dict) else {}
             confirmation_pending = bool(
-                (data.get("Attr") or {}).get("confirmationPending")
-                if isinstance(data.get("Attr"), dict)
-                else False
+                data.get("confirmation_pending")
+                or (
+                    (data.get("Attr") or {}).get("confirmationPending")
+                    if isinstance(data.get("Attr"), dict)
+                    else False
+                )
+                or str(data.get("BookingStatus") or "").lower()
+                in {"waittobooking", "wait_to_booking", "wait"}
             )
 
         if confirmation_pending:
             data["confirmation_pending"] = True
             data["status"] = data.get("status") or "BOOKING_CONFIRMATION_PENDING"
-            result["message"] = result.get("message") or "Booking in progress"
+            supplier_wait = str(data.get("BookingStatus") or "").strip()
+            if not supplier_wait:
+                data["BookingStatus"] = "WaitToBooking"
+            result["message"] = (
+                "Booking held — WaitToBooking (send bookId to vendor to process)"
+            )
         elif idempotent:
             data["status"] = data.get("status") or "BOOKING_CONFIRMED"
             result["message"] = result.get("message") or "Booking already confirmed"
@@ -777,19 +789,61 @@ class FlightBlender:
                 booking_id,
                 issue.get("message"),
             )
+            issue_data = issue.get("data") if isinstance(issue.get("data"), dict) else {}
+            attr = data.get("Attr") if isinstance(data.get("Attr"), dict) else {}
+            data["Attr"] = {
+                **attr,
+                "ticketingFailed": True,
+                "ticketingError": str(issue.get("message") or "ConfirmBook failed"),
+            }
+            data["ticketingFailed"] = True
+            data["status"] = "BOOKING_FAILED"
+            if issue_data.get("cancelled") or str(issue_data.get("BookingStatus") or "").lower() in {
+                "cancelled",
+                "canceled",
+            }:
+                data["cancelled"] = True
+                data["BookingStatus"] = str(issue_data.get("BookingStatus") or "Cancelled")
+                data["status"] = "BOOKING_CANCELLED"
+            elif issue_data.get("BookingStatus"):
+                data["BookingStatus"] = issue_data["BookingStatus"]
+            if issue_data.get("RawConfirm") is not None:
+                data["RawConfirm"] = issue_data["RawConfirm"]
+            hold_response["status"] = False
+            hold_response["message"] = str(
+                issue.get("message") or "ConfirmBook failed — tickets cannot be issued"
+            )
+            hold_response["data"] = data
+            await self._persist_booking_snapshot_after_hold(data)
             return hold_response
 
         issue_data = issue.get("data") if isinstance(issue.get("data"), dict) else {}
         attr = data.get("Attr") if isinstance(data.get("Attr"), dict) else {}
         if issue_data.get("confirmationPending"):
             data["Attr"] = {**attr, "confirmationPending": True}
+            data["confirmation_pending"] = True
+            data["ticketing"] = {
+                "Passengers": issue_data.get("Passengers") or [],
+                "BookingStatus": issue_data.get("BookingStatus") or "WaitToBooking",
+                "confirmationPending": True,
+                "auto_issued": True,
+            }
             if issue_data.get("gdspnr"):
                 data["gdspnr"] = issue_data["gdspnr"]
+            if issue_data.get("BookingStatus"):
+                data["BookingStatus"] = issue_data["BookingStatus"]
+            elif not data.get("BookingStatus"):
+                data["BookingStatus"] = "WaitToBooking"
+            if issue_data.get("bookingId"):
+                data["bookingId"] = issue_data["bookingId"]
+                data["booking_id"] = issue_data["bookingId"]
             hold_response["data"] = data
         else:
             data["ticketing"] = {**issue_data, "auto_issued": True}
             if issue_data.get("gdspnr"):
                 data["gdspnr"] = issue_data["gdspnr"]
+            if issue_data.get("BookingStatus"):
+                data["BookingStatus"] = issue_data["BookingStatus"]
             hold_response["data"] = data
 
         await self._persist_booking_snapshot_after_hold(hold_response["data"])
@@ -866,19 +920,31 @@ class FlightBlender:
             booking.book_guid = book_guid
 
         attr = data.get("Attr") if isinstance(data.get("Attr"), dict) else {}
+        supplier_status = str(data.get("BookingStatus") or "").strip().lower()
         pending = bool(attr.get("confirmationPending")) or bool(
             ticketing.get("confirmationPending")
-        )
+        ) or bool(data.get("confirmation_pending")) or supplier_status in {
+            "waittobooking",
+            "wait_to_booking",
+            "wait",
+        }
         has_tickets = bool(
             isinstance(ticketing.get("Passengers"), list) and ticketing.get("Passengers")
         )
-        supplier_status = str(data.get("BookingStatus") or "").strip().lower()
+        ticketing_failed = bool(
+            data.get("ticketingFailed")
+            or attr.get("ticketingFailed")
+            or str(data.get("status") or "").upper() == "BOOKING_FAILED"
+        )
         if supplier_status in {"cancelled", "canceled"} or data.get("cancelled"):
             booking.status = "BOOKING_CANCELLED"
-        elif pending and not has_tickets:
-            booking.status = "BOOKING_CONFIRMATION_PENDING"
-        elif has_tickets or gdspnr or booking_id:
+        elif ticketing_failed:
+            booking.status = "BOOKING_FAILED"
+        elif has_tickets and not pending:
             booking.status = "BOOKING_CONFIRMED"
+        elif pending or booking_id or gdspnr:
+            # WaitToBooking / held without tickets — Confirmation Pending (not Confirmed).
+            booking.status = "BOOKING_CONFIRMATION_PENDING"
         else:
             booking.status = "BOOKING_CONFIRMATION_PENDING"
 
@@ -888,9 +954,16 @@ class FlightBlender:
             "book_guid": book_guid,
             "gdspnr": gdspnr,
             "status": booking.status,
+            "supplier_status": str(data.get("BookingStatus") or ""),
         }
         if pending:
             attrs["confirmation_pending"] = True
+            data["confirmation_pending"] = True
+        if ticketing_failed:
+            attrs["ticketing_failed"] = True
+            if attr.get("ticketingError"):
+                attrs["ticketing_error"] = attr.get("ticketingError")
+            attrs.pop("confirmation_pending", None)
         booking.attributes = attrs
         booking.details_snapshot = data
         booking.updated_at = timeutils.datetime_now()
@@ -1014,6 +1087,30 @@ class FlightBlender:
                 "payment_mode": txn.payment_mode,
             },
         }
+        attrs = booking.attributes if isinstance(booking.attributes, dict) else {}
+        pending = bool(
+            booking.status == "BOOKING_CONFIRMATION_PENDING"
+            or attrs.get("confirmation_pending")
+            or data.get("confirmation_pending")
+            or (
+                (data.get("Attr") or {}).get("confirmationPending")
+                if isinstance(data.get("Attr"), dict)
+                else False
+            )
+            or str(data.get("BookingStatus") or "").lower()
+            in {"waittobooking", "wait_to_booking", "wait"}
+        )
+        data["confirmation_pending"] = pending
+        data["bookingId"] = data.get("bookingId") or booking.booking_id
+        data["bookId"] = data.get("bookId") or booking.booking_id
+        if not data.get("BookingStatus") and pending:
+            data["BookingStatus"] = "WaitToBooking"
+        # Handoff fields: GDS PNR vs OriginPnr (often nil while Wait).
+        if not data.get("gdspnr") and booking.gdspnr:
+            data["gdspnr"] = booking.gdspnr
+        data["PNR"] = str(data.get("OriginPnr") or data.get("gdspnr") or booking.gdspnr or "")
+        if "OriginPnr" not in data:
+            data["OriginPnr"] = ""
         data = BookingMoneyForClient.strip_admin_markup_from_flight_row(data)
         return {"status": True, "data": data, "message": "Success"}
 

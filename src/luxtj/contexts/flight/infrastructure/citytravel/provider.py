@@ -312,6 +312,10 @@ class CityTravelFlightProvider:
             CACHE_TTL_TOKEN,
         )
 
+        if isinstance(price, dict):
+            price["currency_conversion_rate"] = conversion_rate
+            price["supplier_currency"] = supplier_currency
+
         return {
             "FlightDetails": details,
             "Price": price,
@@ -436,11 +440,16 @@ class CityTravelFlightProvider:
         if not details:
             return None
 
+        tariff = result.get("TariffInfo") if isinstance(result.get("TariffInfo"), dict) else {}
+        if not tariff:
+            first_offer = (ct_norm.offer_infos(result) or [{}])[0]
+            tariff = first_offer.get("TariffInfo") if isinstance(first_offer.get("TariffInfo"), dict) else {}
         price = ct_norm.build_price_block_from_total(
             total_supplier,
             search_data=search_data,
             conversion_rate=rate,
             prior_price=offer_cache.get("price") if isinstance(offer_cache.get("price"), dict) else None,
+            tariff=tariff or None,
         )
         baggage = ct_norm.build_baggage_allowance(result, search_data=search_data)
         if not baggage and isinstance(offer_cache.get("baggageAllowance"), dict):
@@ -488,6 +497,10 @@ class CityTravelFlightProvider:
             },
             CACHE_TTL_TOKEN,
         )
+
+        if isinstance(price, dict):
+            price["currency_conversion_rate"] = rate
+            price["supplier_currency"] = supplier_ccy
 
         return {
             "FlightDetails": details,
@@ -804,10 +817,13 @@ class CityTravelFlightProvider:
         ).upper()[:3]
         rate = AdminCurrency.rate_to_admin_or_one(supplier_ccy)
         if full_price > 0:
+            tariff = result.get("TariffInfo") if isinstance(result.get("TariffInfo"), dict) else {}
             price = ct_norm.build_price_block_from_total(
                 full_price,
                 search_data=pre.get("searchData") if isinstance(pre.get("searchData"), dict) else {},
                 conversion_rate=rate,
+                prior_price=pre.get("price") if isinstance(pre.get("price"), dict) else None,
+                tariff=tariff or None,
             )
 
         hold_data = {
@@ -909,7 +925,44 @@ class CityTravelFlightProvider:
         if not order:
             return {"status": False, "data": [], "message": "ConfirmBook failed"}
 
+        # ConfirmBook may return Success=false with nil OrderInfoData (no tickets issued).
+        err_code = str(order.get("ErrorCode") or "").strip()
+        err_msg = str(order.get("ErrorString") or order.get("Error") or "").strip()
+        try:
+            err_code_n = int(float(err_code)) if err_code not in {"", None} else 0
+        except (TypeError, ValueError):
+            err_code_n = 0
+        success_present = "Success" in order and order.get("Success") is not None
+        success_ok = (not success_present) or ct_norm.soap_flag_true(order.get("Success"))
+        # Vendor: ErrorCode >= 1000 is a business error (e.g. airline did not confirm).
+        if not success_ok or err_code_n >= 1000:
+            return {
+                "status": False,
+                "data": {
+                    "bookingId": book_id,
+                    "book_guid": book_guid,
+                    "RawConfirm": order,
+                    "ticketingFailed": True,
+                    "ErrorCode": err_code_n or err_code,
+                    "ErrorString": err_msg,
+                },
+                "message": err_msg or "ConfirmBook failed — tickets cannot be issued",
+            }
+
         booking_status = str(order.get("BookingStatus") or "").strip()
+        # Nil / empty OrderInfoData yields no BookingStatus after a "success" shell — treat as fail.
+        if not booking_status and not ct_norm.ticket_passengers_from_order(order):
+            return {
+                "status": False,
+                "data": {
+                    "bookingId": book_id,
+                    "book_guid": book_guid,
+                    "RawConfirm": order,
+                    "ticketingFailed": True,
+                },
+                "message": err_msg or "ConfirmBook returned no order data",
+            }
+
         gdspnr = ct_norm.first_pnr_from_offers(order) or str(cached.get("gdspnr") or "")
         tickets = ct_norm.ticket_passengers_from_order(order)
         pending = booking_status.lower() in {"waittobooking", "wait_to_booking"}
@@ -918,7 +971,14 @@ class CityTravelFlightProvider:
         if cancelled:
             return {
                 "status": False,
-                "data": {"bookingId": book_id, "gdspnr": gdspnr, "RawConfirm": order},
+                "data": {
+                    "bookingId": book_id,
+                    "gdspnr": gdspnr,
+                    "RawConfirm": order,
+                    "BookingStatus": booking_status,
+                    "cancelled": True,
+                    "ticketingFailed": True,
+                },
                 "message": "Ticketing cancelled by supplier",
             }
 
