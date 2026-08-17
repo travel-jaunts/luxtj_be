@@ -1,18 +1,28 @@
 from datetime import datetime
 from uuid import UUID
 
-from sqlalchemy import delete, desc, select, update
+from sqlalchemy import delete, desc, func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from luxtj.contexts.account.application.ports import PiiCipher
 from luxtj.contexts.account.domain.account import Account
+from luxtj.contexts.account.domain.album import Album
 from luxtj.contexts.account.domain.enums import AuthFlowType
+from luxtj.contexts.account.domain.frequent_traveller import FrequentTraveller
+from luxtj.contexts.account.domain.gallery_enums import AlbumKind, AlbumVisibility
+from luxtj.contexts.account.domain.gallery_image import GalleryImage
 from luxtj.contexts.account.domain.otp_challenge import OtpChallenge
+from luxtj.contexts.account.domain.profile import AccountProfile
 from luxtj.contexts.account.domain.refresh_session import RefreshSession
 from luxtj.contexts.account.domain.status_change import AccountStatusChange
 from luxtj.contexts.account.domain.value_objects import PhoneIdentity
 from luxtj.contexts.account.infrastructure.persistence.sqlalchemy_models import (
+    AccountAlbumRow,
+    AccountGalleryImageRow,
+    AccountProfileRow,
     AccountRow,
     AccountStatusChangeRow,
+    FrequentTravellerRow,
     OtpChallengeRow,
     RefreshSessionRow,
 )
@@ -182,3 +192,219 @@ class SqlAlchemyAccountStatusChangeRepository:
 
     async def add(self, change: AccountStatusChange) -> None:
         self._session.add(AccountStatusChangeRow.from_domain(change))
+
+
+class SqlAlchemyAccountProfileRepository:
+    def __init__(self, session: AsyncSession) -> None:
+        self._session = session
+
+    async def get(self, account_id: UUID) -> AccountProfile | None:
+        row = await self._session.scalar(
+            select(AccountProfileRow).where(AccountProfileRow.account_id == str(account_id))
+        )
+        return row.to_domain() if row is not None else None
+
+    async def save(self, profile: AccountProfile) -> None:
+        row = await self._session.scalar(
+            select(AccountProfileRow).where(AccountProfileRow.account_id == str(profile.account_id))
+        )
+        if row is None:
+            self._session.add(AccountProfileRow.from_domain(profile))
+            return
+        row.update_from_domain(profile)
+
+
+class SqlAlchemyFrequentTravellerRepository:
+    def __init__(self, session: AsyncSession, cipher: PiiCipher) -> None:
+        self._session = session
+        self._cipher = cipher
+
+    def _encrypted(self, traveller: FrequentTraveller) -> str | None:
+        if not traveller.passport_number:
+            return None
+        return self._cipher.encrypt(traveller.passport_number)
+
+    def _to_domain(self, row: FrequentTravellerRow) -> FrequentTraveller:
+        passport_number = (
+            self._cipher.decrypt(row.passport_number_encrypted)
+            if row.passport_number_encrypted
+            else None
+        )
+        return row.to_domain(passport_number=passport_number)
+
+    async def add(self, traveller: FrequentTraveller) -> None:
+        self._session.add(
+            FrequentTravellerRow.from_domain(
+                traveller, passport_encrypted=self._encrypted(traveller)
+            )
+        )
+
+    async def get(self, *, account_id: UUID, traveller_id: UUID) -> FrequentTraveller | None:
+        row = await self._session.scalar(
+            select(FrequentTravellerRow).where(
+                FrequentTravellerRow.id == str(traveller_id),
+                FrequentTravellerRow.account_id == str(account_id),
+            )
+        )
+        return self._to_domain(row) if row is not None else None
+
+    async def list_for_account(self, account_id: UUID) -> list[FrequentTraveller]:
+        rows = await self._session.scalars(
+            select(FrequentTravellerRow)
+            .where(FrequentTravellerRow.account_id == str(account_id))
+            .order_by(FrequentTravellerRow.created_at)
+        )
+        return [self._to_domain(row) for row in rows]
+
+    async def save(self, traveller: FrequentTraveller) -> None:
+        row = await self._session.scalar(
+            select(FrequentTravellerRow).where(
+                FrequentTravellerRow.id == str(traveller.id),
+                FrequentTravellerRow.account_id == str(traveller.account_id),
+            )
+        )
+        if row is None:
+            return
+        row.update_from_domain(traveller, passport_encrypted=self._encrypted(traveller))
+
+    async def remove(self, *, account_id: UUID, traveller_id: UUID) -> bool:
+        result = await self._session.execute(
+            delete(FrequentTravellerRow).where(
+                FrequentTravellerRow.id == str(traveller_id),
+                FrequentTravellerRow.account_id == str(account_id),
+            )
+        )
+        return bool(result.rowcount)
+
+
+class SqlAlchemyAlbumRepository:
+    def __init__(self, session: AsyncSession) -> None:
+        self._session = session
+
+    async def add(self, album: Album) -> None:
+        self._session.add(AccountAlbumRow.from_domain(album))
+
+    async def get(self, *, account_id: UUID, album_id: UUID) -> Album | None:
+        row = await self._session.scalar(
+            select(AccountAlbumRow).where(
+                AccountAlbumRow.id == str(album_id),
+                AccountAlbumRow.account_id == str(account_id),
+                AccountAlbumRow.deleted_at.is_(None),
+            )
+        )
+        return row.to_domain() if row is not None else None
+
+    async def get_system(self, *, account_id: UUID, kind: AlbumKind) -> Album | None:
+        row = await self._session.scalar(
+            select(AccountAlbumRow).where(
+                AccountAlbumRow.account_id == str(account_id),
+                AccountAlbumRow.kind == kind.value,
+                AccountAlbumRow.deleted_at.is_(None),
+            )
+        )
+        return row.to_domain() if row is not None else None
+
+    async def list_for_account(self, account_id: UUID) -> list[Album]:
+        rows = await self._session.scalars(
+            select(AccountAlbumRow)
+            .where(
+                AccountAlbumRow.account_id == str(account_id),
+                AccountAlbumRow.deleted_at.is_(None),
+            )
+            .order_by(AccountAlbumRow.created_at)
+        )
+        return [row.to_domain() for row in rows]
+
+    async def list_public_for_account(self, account_id: UUID) -> list[Album]:
+        rows = await self._session.scalars(
+            select(AccountAlbumRow)
+            .where(
+                AccountAlbumRow.account_id == str(account_id),
+                AccountAlbumRow.visibility == AlbumVisibility.PUBLIC.value,
+                AccountAlbumRow.deleted_at.is_(None),
+            )
+            .order_by(AccountAlbumRow.created_at)
+        )
+        return [row.to_domain() for row in rows]
+
+    async def save(self, album: Album) -> None:
+        row = await self._session.scalar(
+            select(AccountAlbumRow).where(
+                AccountAlbumRow.id == str(album.id),
+                AccountAlbumRow.account_id == str(album.account_id),
+            )
+        )
+        if row is None:
+            return
+        row.update_from_domain(album)
+
+    async def clear_cover_image(self, *, account_id: UUID, image_id: UUID) -> None:
+        await self._session.execute(
+            update(AccountAlbumRow)
+            .where(
+                AccountAlbumRow.account_id == str(account_id),
+                AccountAlbumRow.cover_image_id == str(image_id),
+            )
+            .values(cover_image_id=None)
+        )
+
+
+class SqlAlchemyGalleryImageRepository:
+    def __init__(self, session: AsyncSession) -> None:
+        self._session = session
+
+    async def add(self, image: GalleryImage) -> None:
+        self._session.add(AccountGalleryImageRow.from_domain(image))
+
+    async def get(self, *, account_id: UUID, image_id: UUID) -> GalleryImage | None:
+        row = await self._session.scalar(
+            select(AccountGalleryImageRow).where(
+                AccountGalleryImageRow.id == str(image_id),
+                AccountGalleryImageRow.account_id == str(account_id),
+                AccountGalleryImageRow.deleted_at.is_(None),
+            )
+        )
+        return row.to_domain() if row is not None else None
+
+    async def list_for_album(self, *, album_id: UUID) -> list[GalleryImage]:
+        rows = await self._session.scalars(
+            select(AccountGalleryImageRow)
+            .where(
+                AccountGalleryImageRow.album_id == str(album_id),
+                AccountGalleryImageRow.deleted_at.is_(None),
+            )
+            .order_by(AccountGalleryImageRow.sort_order, AccountGalleryImageRow.created_at)
+        )
+        return [row.to_domain() for row in rows]
+
+    async def count_for_album(self, *, album_id: UUID) -> int:
+        total = await self._session.scalar(
+            select(func.count())
+            .select_from(AccountGalleryImageRow)
+            .where(
+                AccountGalleryImageRow.album_id == str(album_id),
+                AccountGalleryImageRow.deleted_at.is_(None),
+            )
+        )
+        return int(total or 0)
+
+    async def save(self, image: GalleryImage) -> None:
+        row = await self._session.scalar(
+            select(AccountGalleryImageRow).where(
+                AccountGalleryImageRow.id == str(image.id),
+                AccountGalleryImageRow.account_id == str(image.account_id),
+            )
+        )
+        if row is None:
+            return
+        row.update_from_domain(image)
+
+    async def soft_delete_for_album(self, *, album_id: UUID, now: datetime) -> None:
+        await self._session.execute(
+            update(AccountGalleryImageRow)
+            .where(
+                AccountGalleryImageRow.album_id == str(album_id),
+                AccountGalleryImageRow.deleted_at.is_(None),
+            )
+            .values(deleted_at=now, updated_at=now)
+        )

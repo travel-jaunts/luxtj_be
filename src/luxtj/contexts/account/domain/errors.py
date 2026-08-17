@@ -32,3 +32,35 @@ class OtpConsumedError(AccountAuthError):
 
 class OtpAttemptsExceededError(AccountAuthError):
     pass
+
+
+class AccountProfileError(Exception):
+    pass
+
+
+class ProfileNotFoundError(AccountProfileError):
+    pass
+
+
+class FrequentTravellerNotFoundError(AccountProfileError):
+    pass
+
+
+class InvalidProfileFieldError(AccountProfileError):
+    pass
+
+
+class AlbumNotFoundError(AccountProfileError):
+    pass
+
+
+class ImageNotFoundError(AccountProfileError):
+    pass
+
+
+class SystemAlbumImmutableError(AccountProfileError):
+    pass
+
+
+class InvalidProfilePictureError(AccountProfileError):
+    pass

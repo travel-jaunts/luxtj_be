@@ -1,15 +1,48 @@
-from datetime import datetime
+from datetime import date, datetime
 from uuid import UUID
 
-from sqlalchemy import DateTime, Index, Integer, String, Text, UniqueConstraint
+from sqlalchemy import (
+    JSON,
+    Boolean,
+    Date,
+    DateTime,
+    Float,
+    Index,
+    Integer,
+    String,
+    Text,
+    UniqueConstraint,
+    text,
+)
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 from luxtj.contexts.account.domain.account import Account
+from luxtj.contexts.account.domain.album import Album
 from luxtj.contexts.account.domain.enums import AccountStatus, AuthFlowType
+from luxtj.contexts.account.domain.frequent_traveller import FrequentTraveller
+from luxtj.contexts.account.domain.gallery_enums import AlbumKind, AlbumVisibility, ImageStatus
+from luxtj.contexts.account.domain.gallery_image import GalleryImage
 from luxtj.contexts.account.domain.otp_challenge import OtpChallenge
+from luxtj.contexts.account.domain.profile import AccountProfile
+from luxtj.contexts.account.domain.profile_enums import (
+    BaggageStyle,
+    FlightClass,
+    FlightPriority,
+    Gender,
+    PreferredContactMethod,
+    TripPace,
+)
+from luxtj.contexts.account.domain.profile_value_objects import (
+    CityLocation,
+    EmergencyContact,
+    PreferredDestinations,
+    SocialLinks,
+    TravelPreferences,
+)
 from luxtj.contexts.account.domain.refresh_session import RefreshSession
 from luxtj.contexts.account.domain.status_change import AccountStatusChange
 from luxtj.contexts.account.domain.value_objects import PhoneIdentity
+from luxtj.contexts.customer.domain.enums import CustomerTierEnum
 
 
 class AccountAuthBase(DeclarativeBase):
@@ -186,4 +219,353 @@ class AccountStatusChangeRow(AccountAuthBase):
             from_status=change.from_status.value,
             to_status=change.to_status.value,
             changed_at=change.changed_at,
+        )
+
+
+class AccountProfileRow(AccountAuthBase):
+    __tablename__ = "account_profiles"
+
+    account_id: Mapped[str] = mapped_column(String(36), primary_key=True)
+    first_name: Mapped[str | None] = mapped_column(String(120), nullable=True)
+    last_name: Mapped[str | None] = mapped_column(String(120), nullable=True)
+    gender: Mapped[str | None] = mapped_column(String(20), nullable=True)
+    date_of_birth: Mapped[date | None] = mapped_column(Date, nullable=True)
+    nationality: Mapped[str | None] = mapped_column(String(120), nullable=True)
+    city_name: Mapped[str | None] = mapped_column(String(200), nullable=True)
+    country_code: Mapped[str | None] = mapped_column(String(8), nullable=True)
+    latitude: Mapped[float | None] = mapped_column(Float, nullable=True)
+    longitude: Mapped[float | None] = mapped_column(Float, nullable=True)
+    language: Mapped[str] = mapped_column(String(16), nullable=False, default="en")
+    description: Mapped[str] = mapped_column(Text, nullable=False, default="")
+    facebook_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    instagram_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    linkedin_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    alt_dial_code: Mapped[str | None] = mapped_column(String(8), nullable=True)
+    alt_phone_number: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    preferred_contact_method: Mapped[str] = mapped_column(String(16), nullable=False)
+    emergency_contact_first_name: Mapped[str | None] = mapped_column(String(120), nullable=True)
+    emergency_contact_dial_code: Mapped[str | None] = mapped_column(String(8), nullable=True)
+    emergency_contact_phone_number: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    stay_hotels: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    stay_villas: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    stay_resorts: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    stay_boutique_hotels: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    stay_cruises: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    flight_class: Mapped[str] = mapped_column(String(24), nullable=False)
+    flight_priority: Mapped[str] = mapped_column(String(24), nullable=False)
+    trip_pace: Mapped[str] = mapped_column(String(24), nullable=False)
+    baggage_style: Mapped[str] = mapped_column(String(24), nullable=False)
+    countries_visited: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    indian_states_visited: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    places_loved: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    places_recommended: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    travel_moments_enjoyed: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    tier: Mapped[str] = mapped_column(String(16), nullable=False, default=CustomerTierEnum.NOVUS)
+    badges: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    profile_picture_image_id: Mapped[str | None] = mapped_column(String(36), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+
+    @classmethod
+    def from_domain(cls, profile: AccountProfile) -> AccountProfileRow:
+        row = cls(account_id=str(profile.account_id), created_at=profile.created_at)
+        row.update_from_domain(profile)
+        return row
+
+    def update_from_domain(self, profile: AccountProfile) -> None:
+        self.first_name = profile.first_name
+        self.last_name = profile.last_name
+        self.gender = profile.gender.value if profile.gender else None
+        self.date_of_birth = profile.date_of_birth
+        self.nationality = profile.nationality
+        self.city_name = profile.location.city_name if profile.location else None
+        self.country_code = profile.location.country_code if profile.location else None
+        self.latitude = profile.location.latitude if profile.location else None
+        self.longitude = profile.location.longitude if profile.location else None
+        self.language = profile.language
+        self.description = profile.description
+        self.facebook_url = profile.social_links.facebook
+        self.instagram_url = profile.social_links.instagram
+        self.linkedin_url = profile.social_links.linkedin
+        self.alt_dial_code = (
+            profile.alternative_phone.dial_code if profile.alternative_phone else None
+        )
+        self.alt_phone_number = (
+            profile.alternative_phone.phone_number if profile.alternative_phone else None
+        )
+        self.preferred_contact_method = profile.preferred_contact_method.value
+        emergency = profile.emergency_contact
+        self.emergency_contact_first_name = emergency.first_name if emergency else None
+        self.emergency_contact_dial_code = emergency.dial_code if emergency else None
+        self.emergency_contact_phone_number = emergency.phone_number if emergency else None
+        preferences = profile.preferences
+        self.stay_hotels = preferences.stay_hotels
+        self.stay_villas = preferences.stay_villas
+        self.stay_resorts = preferences.stay_resorts
+        self.stay_boutique_hotels = preferences.stay_boutique_hotels
+        self.stay_cruises = preferences.stay_cruises
+        self.flight_class = preferences.flight_class.value
+        self.flight_priority = preferences.flight_priority.value
+        self.trip_pace = preferences.trip_pace.value
+        self.baggage_style = preferences.baggage_style.value
+        destinations = profile.destinations
+        self.countries_visited = list(destinations.countries_visited)
+        self.indian_states_visited = list(destinations.indian_states_visited)
+        self.places_loved = list(destinations.places_loved)
+        self.places_recommended = list(destinations.places_recommended)
+        self.travel_moments_enjoyed = list(destinations.travel_moments_enjoyed)
+        self.tier = profile.tier.value
+        self.badges = list(profile.badges)
+        self.profile_picture_image_id = (
+            str(profile.profile_picture_image_id) if profile.profile_picture_image_id else None
+        )
+        self.updated_at = profile.updated_at
+
+    def to_domain(self) -> AccountProfile:
+        return AccountProfile(
+            account_id=UUID(self.account_id),
+            first_name=self.first_name,
+            last_name=self.last_name,
+            gender=Gender(self.gender) if self.gender else None,
+            date_of_birth=self.date_of_birth,
+            nationality=self.nationality,
+            location=(
+                CityLocation(
+                    city_name=self.city_name,
+                    country_code=self.country_code,
+                    latitude=self.latitude,
+                    longitude=self.longitude,
+                )
+                if self.city_name
+                else None
+            ),
+            language=self.language,
+            description=self.description,
+            social_links=SocialLinks(
+                facebook=self.facebook_url,
+                instagram=self.instagram_url,
+                linkedin=self.linkedin_url,
+            ),
+            alternative_phone=(
+                PhoneIdentity(self.alt_dial_code, self.alt_phone_number)
+                if self.alt_dial_code and self.alt_phone_number
+                else None
+            ),
+            preferred_contact_method=PreferredContactMethod(self.preferred_contact_method),
+            emergency_contact=(
+                EmergencyContact(
+                    first_name=self.emergency_contact_first_name,
+                    dial_code=self.emergency_contact_dial_code,
+                    phone_number=self.emergency_contact_phone_number,
+                )
+                if self.emergency_contact_first_name
+                and self.emergency_contact_dial_code
+                and self.emergency_contact_phone_number
+                else None
+            ),
+            preferences=TravelPreferences(
+                stay_hotels=self.stay_hotels,
+                stay_villas=self.stay_villas,
+                stay_resorts=self.stay_resorts,
+                stay_boutique_hotels=self.stay_boutique_hotels,
+                stay_cruises=self.stay_cruises,
+                flight_class=FlightClass(self.flight_class),
+                flight_priority=FlightPriority(self.flight_priority),
+                trip_pace=TripPace(self.trip_pace),
+                baggage_style=BaggageStyle(self.baggage_style),
+            ),
+            destinations=PreferredDestinations(
+                countries_visited=tuple(self.countries_visited),
+                indian_states_visited=tuple(self.indian_states_visited),
+                places_loved=tuple(self.places_loved),
+                places_recommended=tuple(self.places_recommended),
+                travel_moments_enjoyed=tuple(self.travel_moments_enjoyed),
+            ),
+            tier=CustomerTierEnum(self.tier),
+            badges=tuple(self.badges),
+            profile_picture_image_id=(
+                UUID(self.profile_picture_image_id) if self.profile_picture_image_id else None
+            ),
+            created_at=self.created_at,
+            updated_at=self.updated_at,
+        )
+
+
+class FrequentTravellerRow(AccountAuthBase):
+    __tablename__ = "account_profile_travellers"
+    __table_args__ = (Index("ix_account_profile_traveller_account", "account_id"),)
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True)
+    account_id: Mapped[str] = mapped_column(String(36), nullable=False)
+    first_name: Mapped[str] = mapped_column(String(120), nullable=False)
+    last_name: Mapped[str | None] = mapped_column(String(120), nullable=True)
+    relationship: Mapped[str | None] = mapped_column(String(60), nullable=True)
+    nationality: Mapped[str | None] = mapped_column(String(120), nullable=True)
+    gender: Mapped[str | None] = mapped_column(String(20), nullable=True)
+    date_of_birth: Mapped[date | None] = mapped_column(Date, nullable=True)
+    passport_number_encrypted: Mapped[str | None] = mapped_column(Text, nullable=True)
+    passport_last4: Mapped[str | None] = mapped_column(String(4), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+
+    @classmethod
+    def from_domain(
+        cls, traveller: FrequentTraveller, *, passport_encrypted: str | None
+    ) -> FrequentTravellerRow:
+        row = cls(id=str(traveller.id), account_id=str(traveller.account_id))
+        row.created_at = traveller.created_at
+        row.update_from_domain(traveller, passport_encrypted=passport_encrypted)
+        return row
+
+    def update_from_domain(
+        self, traveller: FrequentTraveller, *, passport_encrypted: str | None
+    ) -> None:
+        self.first_name = traveller.first_name
+        self.last_name = traveller.last_name
+        self.relationship = traveller.relationship
+        self.nationality = traveller.nationality
+        self.gender = traveller.gender.value if traveller.gender else None
+        self.date_of_birth = traveller.date_of_birth
+        self.passport_number_encrypted = passport_encrypted
+        self.passport_last4 = traveller.passport_number[-4:] if traveller.passport_number else None
+        self.updated_at = traveller.updated_at
+
+    def to_domain(self, *, passport_number: str | None) -> FrequentTraveller:
+        return FrequentTraveller(
+            id=UUID(self.id),
+            account_id=UUID(self.account_id),
+            first_name=self.first_name,
+            last_name=self.last_name,
+            relationship=self.relationship,
+            nationality=self.nationality,
+            gender=Gender(self.gender) if self.gender else None,
+            date_of_birth=self.date_of_birth,
+            passport_number=passport_number,
+            created_at=self.created_at,
+            updated_at=self.updated_at,
+        )
+
+
+class AccountAlbumRow(AccountAuthBase):
+    __tablename__ = "account_albums"
+    __table_args__ = (
+        Index("ix_account_album_account", "account_id"),
+        # Only one album per system kind; user albums are unconstrained.
+        Index(
+            "uq_account_album_system_kind",
+            "account_id",
+            "kind",
+            unique=True,
+            postgresql_where=text("kind <> 'user'"),
+            sqlite_where=text("kind <> 'user'"),
+        ),
+    )
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True)
+    account_id: Mapped[str] = mapped_column(String(36), nullable=False)
+    name: Mapped[str] = mapped_column(String(200), nullable=False)
+    description: Mapped[str] = mapped_column(Text, nullable=False, default="")
+    kind: Mapped[str] = mapped_column(String(16), nullable=False)
+    visibility: Mapped[str] = mapped_column(String(16), nullable=False)
+    cover_image_id: Mapped[str | None] = mapped_column(String(36), nullable=True)
+    deleted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+
+    @classmethod
+    def from_domain(cls, album: Album) -> AccountAlbumRow:
+        row = cls(id=str(album.id), account_id=str(album.account_id), created_at=album.created_at)
+        row.update_from_domain(album)
+        return row
+
+    def update_from_domain(self, album: Album) -> None:
+        self.name = album.name
+        self.description = album.description
+        self.kind = album.kind.value
+        self.visibility = album.visibility.value
+        self.cover_image_id = str(album.cover_image_id) if album.cover_image_id else None
+        self.deleted_at = album.deleted_at
+        self.updated_at = album.updated_at
+
+    def to_domain(self) -> Album:
+        return Album(
+            id=UUID(self.id),
+            account_id=UUID(self.account_id),
+            name=self.name,
+            description=self.description,
+            kind=AlbumKind(self.kind),
+            visibility=AlbumVisibility(self.visibility),
+            cover_image_id=UUID(self.cover_image_id) if self.cover_image_id else None,
+            deleted_at=self.deleted_at,
+            created_at=self.created_at,
+            updated_at=self.updated_at,
+        )
+
+
+class AccountGalleryImageRow(AccountAuthBase):
+    __tablename__ = "account_gallery_images"
+    __table_args__ = (
+        Index("ix_account_gallery_image_account", "account_id"),
+        Index("ix_account_gallery_image_album", "album_id"),
+    )
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True)
+    account_id: Mapped[str] = mapped_column(String(36), nullable=False)
+    album_id: Mapped[str] = mapped_column(String(36), nullable=False)
+    object_key: Mapped[str] = mapped_column(String(500), nullable=False)
+    status: Mapped[str] = mapped_column(String(16), nullable=False)
+    content_type: Mapped[str] = mapped_column(String(64), nullable=False)
+    size_bytes: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    width: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    height: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    caption: Mapped[str | None] = mapped_column(Text, nullable=True)
+    city_name: Mapped[str | None] = mapped_column(String(200), nullable=True)
+    latitude: Mapped[float | None] = mapped_column(Float, nullable=True)
+    longitude: Mapped[float | None] = mapped_column(Float, nullable=True)
+    sort_order: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    deleted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+
+    @classmethod
+    def from_domain(cls, image: GalleryImage) -> AccountGalleryImageRow:
+        row = cls(id=str(image.id), account_id=str(image.account_id), created_at=image.created_at)
+        row.update_from_domain(image)
+        return row
+
+    def update_from_domain(self, image: GalleryImage) -> None:
+        self.album_id = str(image.album_id)
+        self.object_key = image.object_key
+        self.status = image.status.value
+        self.content_type = image.content_type
+        self.size_bytes = image.size_bytes
+        self.width = image.width
+        self.height = image.height
+        self.caption = image.caption
+        self.city_name = image.city_name
+        self.latitude = image.latitude
+        self.longitude = image.longitude
+        self.sort_order = image.sort_order
+        self.deleted_at = image.deleted_at
+        self.updated_at = image.updated_at
+
+    def to_domain(self) -> GalleryImage:
+        return GalleryImage(
+            id=UUID(self.id),
+            account_id=UUID(self.account_id),
+            album_id=UUID(self.album_id),
+            object_key=self.object_key,
+            status=ImageStatus(self.status),
+            content_type=self.content_type,
+            size_bytes=self.size_bytes,
+            width=self.width,
+            height=self.height,
+            caption=self.caption,
+            city_name=self.city_name,
+            latitude=self.latitude,
+            longitude=self.longitude,
+            sort_order=self.sort_order,
+            deleted_at=self.deleted_at,
+            created_at=self.created_at,
+            updated_at=self.updated_at,
         )

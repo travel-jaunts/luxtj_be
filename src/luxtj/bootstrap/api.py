@@ -25,6 +25,8 @@ from luxtj.contexts.account.infrastructure.refresh_session_cleanup import (
 )
 from luxtj.contexts.account.infrastructure.sms.registry_sender import RegistrySmsOtpSender
 from luxtj.contexts.account.presentation.http.dependencies import get_current_account_principal
+from luxtj.contexts.account.presentation.http.gallery_router import account_gallery_router
+from luxtj.contexts.account.presentation.http.profile_router import account_profile_router
 from luxtj.contexts.account.presentation.http.router import account_auth_router
 from luxtj.contexts.acquisition.infrastructure.persistence.sqlalchemy_models import AcquisitionBase
 from luxtj.contexts.acquisition.presentation.http.router import router as waitlist_router
@@ -289,6 +291,7 @@ async def api_application_lifespan(app: FastAPI):
 
 def server_factory() -> FastAPI:
     config.validate_jwt_configuration()
+    config.validate_pii_encryption_configuration()
     api_application = FastAPI(
         title="LuxTJ Public API",
         description="API for Customer applications",
@@ -329,6 +332,8 @@ def server_factory() -> FastAPI:
     )
     protected_router.include_router(customer_bucket_list_router)
     protected_router.include_router(customer_personal_calendar_router)
+    protected_router.include_router(account_profile_router)
+    protected_router.include_router(account_gallery_router)
     public_router.include_router(protected_router)
     api_application.include_router(public_router)
 

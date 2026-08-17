@@ -64,3 +64,7 @@ class Account:
         self.email = normalized_email
         self.updated_at = now
         return True
+
+    def change_email(self, email: str | None, *, now: datetime) -> None:
+        self.email = email.strip().lower() if email and email.strip() else None
+        self.updated_at = now

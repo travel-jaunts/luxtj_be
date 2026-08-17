@@ -1,3 +1,4 @@
+import base64
 import json
 import os
 
@@ -104,6 +105,29 @@ AUTH_OTP_MAX_ATTEMPTS: int = int(os.getenv("LTJBE_AUTH_OTP_MAX_ATTEMPTS", "5"))
 AUTH_OTP_ALLOW_TEST_SENDER: bool = (
     os.getenv("LTJBE_AUTH_OTP_ALLOW_TEST_SENDER", "false").lower() == "true"
 )
+
+# Fernet keys for PII at rest. First key encrypts; the rest only decrypt, enabling rotation.
+_PII_DEV_KEY: str = base64.urlsafe_b64encode(b"luxtj-insecure-dev-pii-key-00000").decode()
+PII_ENCRYPTION_KEYS: list[str] = [
+    key.strip() for key in os.getenv("LTJBE_PII_ENCRYPTION_KEYS", "").split(",") if key.strip()
+] or [_PII_DEV_KEY]
+
+
+def validate_pii_encryption_configuration() -> None:
+    if ENVIRONMENT not in {"production", "prod"}:
+        return
+    if _PII_DEV_KEY in PII_ENCRYPTION_KEYS:
+        raise RuntimeError("Production PII encryption keys must not use the development default")
+
+
+S3_ENDPOINT_URL: str = os.getenv("LTJBE_S3_ENDPOINT_URL", "").strip()
+S3_REGION: str = os.getenv("LTJBE_S3_REGION", "us-east-1")
+S3_BUCKET: str = os.getenv("LTJBE_S3_BUCKET", "luxtj-dev")
+S3_ACCESS_KEY_ID: str = os.getenv("LTJBE_S3_ACCESS_KEY_ID", "")
+S3_SECRET_ACCESS_KEY: str = os.getenv("LTJBE_S3_SECRET_ACCESS_KEY", "")
+S3_UPLOAD_URL_TTL_SECONDS: int = int(os.getenv("LTJBE_S3_UPLOAD_URL_TTL_SECONDS", "900"))
+S3_DOWNLOAD_URL_TTL_SECONDS: int = int(os.getenv("LTJBE_S3_DOWNLOAD_URL_TTL_SECONDS", "900"))
+
 
 # Bootstrapped on first startup if missing (not configurable via env).
 SUPERADMIN_EMAIL: str = "superadmin@luxtj.in"
