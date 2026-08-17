@@ -32,7 +32,9 @@ def upgrade() -> None:
         sa.Column("updated_at", sa.DateTime(timezone=True), nullable=False),
         sa.UniqueConstraint("dedupe_key", name="uq_new_cities_n_regions_dedupe_key"),
     )
-    op.create_index("ix_new_cities_n_regions_country_code", "new_cities_n_regions", ["country_code"])
+    op.create_index(
+        "ix_new_cities_n_regions_country_code", "new_cities_n_regions", ["country_code"]
+    )
     op.create_index("ix_new_cities_n_regions_name", "new_cities_n_regions", ["name"])
 
     op.create_table(
@@ -43,9 +45,7 @@ def upgrade() -> None:
         sa.Column("booking_source_region_code", sa.String(length=64), nullable=False),
         sa.Column("created_at", sa.DateTime(timezone=True), nullable=False),
         sa.Column("updated_at", sa.DateTime(timezone=True), nullable=False),
-        sa.ForeignKeyConstraint(
-            ["booking_source_id"], ["booking_apis.id"], ondelete="CASCADE"
-        ),
+        sa.ForeignKeyConstraint(["booking_source_id"], ["booking_apis.id"], ondelete="CASCADE"),
         sa.ForeignKeyConstraint(
             ["new_cities_n_region_id"], ["new_cities_n_regions.id"], ondelete="RESTRICT"
         ),
@@ -84,9 +84,7 @@ def upgrade() -> None:
         sa.Column("finished_at", sa.DateTime(timezone=True), nullable=True),
         sa.Column("created_at", sa.DateTime(timezone=True), nullable=False),
         sa.Column("updated_at", sa.DateTime(timezone=True), nullable=False),
-        sa.ForeignKeyConstraint(
-            ["booking_source_id"], ["booking_apis.id"], ondelete="CASCADE"
-        ),
+        sa.ForeignKeyConstraint(["booking_source_id"], ["booking_apis.id"], ondelete="CASCADE"),
     )
     op.create_index(
         "ix_region_mapping_runs_source_status",
@@ -110,12 +108,8 @@ def upgrade() -> None:
         sa.Column("finished_at", sa.DateTime(timezone=True), nullable=True),
         sa.Column("created_at", sa.DateTime(timezone=True), nullable=False),
         sa.Column("updated_at", sa.DateTime(timezone=True), nullable=False),
-        sa.ForeignKeyConstraint(
-            ["booking_source_id"], ["booking_apis.id"], ondelete="CASCADE"
-        ),
-        sa.ForeignKeyConstraint(
-            ["parent_run_id"], ["hotel_mapping_runs.id"], ondelete="SET NULL"
-        ),
+        sa.ForeignKeyConstraint(["booking_source_id"], ["booking_apis.id"], ondelete="CASCADE"),
+        sa.ForeignKeyConstraint(["parent_run_id"], ["hotel_mapping_runs.id"], ondelete="SET NULL"),
     )
     op.create_index(
         "ix_hotel_mapping_runs_source_status",
@@ -154,12 +148,8 @@ def upgrade() -> None:
         sa.Column("extras_claimed_at", sa.DateTime(timezone=True), nullable=True),
         sa.Column("created_at", sa.DateTime(timezone=True), nullable=False),
         sa.Column("updated_at", sa.DateTime(timezone=True), nullable=False),
-        sa.ForeignKeyConstraint(
-            ["mapping_run_id"], ["hotel_mapping_runs.id"], ondelete="CASCADE"
-        ),
-        sa.ForeignKeyConstraint(
-            ["region_id"], ["new_cities_n_regions.id"], ondelete="SET NULL"
-        ),
+        sa.ForeignKeyConstraint(["mapping_run_id"], ["hotel_mapping_runs.id"], ondelete="CASCADE"),
+        sa.ForeignKeyConstraint(["region_id"], ["new_cities_n_regions.id"], ondelete="SET NULL"),
     )
     op.create_index(
         "ix_staging_hotels_run_promote",
@@ -185,9 +175,7 @@ def upgrade() -> None:
         sa.Column("image_urls", sa.JSON(), nullable=True),
         sa.Column("created_at", sa.DateTime(timezone=True), nullable=False),
         sa.Column("updated_at", sa.DateTime(timezone=True), nullable=False),
-        sa.ForeignKeyConstraint(
-            ["mapping_run_id"], ["hotel_mapping_runs.id"], ondelete="CASCADE"
-        ),
+        sa.ForeignKeyConstraint(["mapping_run_id"], ["hotel_mapping_runs.id"], ondelete="CASCADE"),
         sa.UniqueConstraint(
             "mapping_run_id",
             "supplier_hotel_code",

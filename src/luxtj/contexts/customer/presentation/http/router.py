@@ -3,6 +3,7 @@ from uuid import UUID
 
 from fastapi import APIRouter, Body, Depends
 
+from luxtj.contexts.account.presentation.http.dependencies import require_account_owner
 from luxtj.contexts.customer.application.commands import (
     AddBucketListItemCommand,
     AddPersonalCalendarEventCommand,
@@ -99,6 +100,7 @@ async def suggest_destinations(
 
 @customer_bucket_list_router.post(
     "/{account_id}/items/add",
+    dependencies=[Depends(require_account_owner)],
     response_model=ApiSuccessResponse[BucketListItemSerializer] | ApiErrorResponse,
     status_code=200,
 )
@@ -130,6 +132,7 @@ async def add_bucket_list_item(
 
 @customer_bucket_list_router.post(
     "/{account_id}/items/{item_id}/update",
+    dependencies=[Depends(require_account_owner)],
     response_model=ApiSuccessResponse[BucketListItemSerializer] | ApiErrorResponse,
     status_code=200,
 )
@@ -160,6 +163,7 @@ async def update_bucket_list_item(
 
 @customer_bucket_list_router.post(
     "/{account_id}/items/{item_id}/delete",
+    dependencies=[Depends(require_account_owner)],
     response_model=ApiSuccessResponse[BucketListItemSerializer] | ApiErrorResponse,
     status_code=200,
 )
@@ -186,6 +190,7 @@ async def delete_bucket_list_item(
 
 @customer_bucket_list_router.post(
     "/{account_id}/view",
+    dependencies=[Depends(require_account_owner)],
     response_model=ApiSuccessResponse[BucketListSerializer],
     status_code=200,
 )
@@ -202,6 +207,7 @@ async def view_bucket_list(
 
 @customer_personal_calendar_router.post(
     "/{account_id}/events/add",
+    dependencies=[Depends(require_account_owner)],
     response_model=ApiSuccessResponse[PersonalCalendarEventItemSerializer] | ApiErrorResponse,
     status_code=200,
 )
@@ -236,6 +242,7 @@ async def add_personal_calendar_event(
 
 @customer_personal_calendar_router.post(
     "/{account_id}/periods/add",
+    dependencies=[Depends(require_account_owner)],
     response_model=ApiSuccessResponse[PersonalCalendarPeriodItemSerializer] | ApiErrorResponse,
     status_code=200,
 )
@@ -266,6 +273,7 @@ async def add_personal_calendar_period(
 
 @customer_personal_calendar_router.post(
     "/{account_id}/events/{item_id}/delete",
+    dependencies=[Depends(require_account_owner)],
     response_model=ApiSuccessResponse[PersonalCalendarEventItemSerializer] | ApiErrorResponse,
     status_code=200,
 )
@@ -295,6 +303,7 @@ async def delete_personal_calendar_event(
 
 @customer_personal_calendar_router.post(
     "/{account_id}/periods/{item_id}/delete",
+    dependencies=[Depends(require_account_owner)],
     response_model=ApiSuccessResponse[PersonalCalendarPeriodItemSerializer] | ApiErrorResponse,
     status_code=200,
 )
@@ -342,6 +351,7 @@ async def view_personal_calendar_holiday_types(
 
 @customer_personal_calendar_router.post(
     "/{account_id}/view",
+    dependencies=[Depends(require_account_owner)],
     response_model=ApiSuccessResponse[PersonalCalendarConsolidatedViewSerializer],
     status_code=200,
 )

@@ -27,9 +27,7 @@ def build_currency_repository(
 
 
 def build_currency_activation_service(
-    repository: Annotated[
-        SqlAlchemyActiveCurrencyRepository, Depends(build_currency_repository)
-    ],
+    repository: Annotated[SqlAlchemyActiveCurrencyRepository, Depends(build_currency_repository)],
 ) -> CurrencyActivationService:
     return CurrencyActivationService(
         repository=repository,

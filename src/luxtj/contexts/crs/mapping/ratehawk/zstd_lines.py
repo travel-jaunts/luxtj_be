@@ -44,7 +44,7 @@ def iter_zst_lines_range(
                 return
             try:
                 pos = int(fh.tell())
-            except Exception:  # noqa: BLE001
+            except Exception:
                 return
             on_compressed_progress(pos, compressed_total)
 
@@ -91,7 +91,9 @@ class ZstLineReader:
     Not thread-safe: callers must serialize access with their own lock.
     """
 
-    def __init__(self, zst_path: str | Path, *, on_compressed_progress: ProgressCb | None = None) -> None:
+    def __init__(
+        self, zst_path: str | Path, *, on_compressed_progress: ProgressCb | None = None
+    ) -> None:
         self.path = Path(zst_path)
         if not self.path.is_file():
             raise FileNotFoundError(f"zst file not found: {self.path}")
@@ -116,7 +118,7 @@ class ZstLineReader:
             if handle is not None:
                 try:
                     handle.close()
-                except Exception:  # noqa: BLE001
+                except Exception:
                     pass
         self._reader = None
         self._fh = None
@@ -128,7 +130,7 @@ class ZstLineReader:
             return
         try:
             pos = int(self._fh.tell())
-        except Exception:  # noqa: BLE001
+        except Exception:
             return
         self.on_compressed_progress(pos, self.compressed_total)
 

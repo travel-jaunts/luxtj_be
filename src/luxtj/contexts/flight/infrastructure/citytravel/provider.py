@@ -8,9 +8,9 @@ import json
 import logging
 from typing import Any
 
+from luxtj.contexts.country import get_country_service
 from luxtj.contexts.currency.domain.admin_currency import AdminCurrency
 from luxtj.contexts.flight.domain.common import FlightCommon
-from luxtj.contexts.country import get_country_service
 from luxtj.contexts.flight.infrastructure.citytravel import normalize as ct_norm
 from luxtj.contexts.flight.infrastructure.citytravel.soap import CityTravelSoap
 from luxtj.contexts.flight.infrastructure.token_cache import cache_get, cache_put
@@ -50,8 +50,7 @@ class CityTravelFlightProvider:
         self.api_login = credential_value(self.config, "ApiLogin")
         self.api_password = credential_value(self.config, "ApiPassword")
         self.token_guid = (
-            credential_value(self.config, "TokenGuid")
-            or "00000000-0000-0000-0000-000000000000"
+            credential_value(self.config, "TokenGuid") or "00000000-0000-0000-0000-000000000000"
         )
         self.device_id = credential_value(self.config, "DeviceId") or "test"
         self.endpoint_url = credential_value(self.config, "EndPointUrl").rstrip("/")
@@ -198,7 +197,9 @@ class CityTravelFlightProvider:
         if isinstance(raw_response, dict):
             parsed = raw_response
         else:
-            raw = raw_response if isinstance(raw_response, (str, bytes)) else str(raw_response or "")
+            raw = (
+                raw_response if isinstance(raw_response, (str, bytes)) else str(raw_response or "")
+            )
             if not raw:
                 return {"status": False, "data": [], "message": "Empty City Travel search response"}
             parsed = CityTravelSoap.parse_response(raw)
@@ -241,9 +242,7 @@ class CityTravelFlightProvider:
                     tier_rows.append(row)
             if not tier_rows:
                 continue
-            tier_rows.sort(
-                key=lambda r: float((r.get("Price") or {}).get("TotalDisplayFare") or 0)
-            )
+            tier_rows.sort(key=lambda r: float((r.get("Price") or {}).get("TotalDisplayFare") or 0))
             group_key = f"citytravel_group_{FlightCommon.generate_uuid()}"
             cache_put(
                 group_key,
@@ -281,9 +280,7 @@ class CityTravelFlightProvider:
         offer_code = str(flight_data.get("OfferCode") or "").strip()
         if not offer_code:
             return None
-        details = ct_norm.build_flight_details(
-            flight_data, airports=airports, airlines=airlines
-        )
+        details = ct_norm.build_flight_details(flight_data, airports=airports, airlines=airlines)
         if not details:
             return None
 
@@ -336,7 +333,9 @@ class CityTravelFlightProvider:
             return {"status": False, "data": [], "message": "Invalid or expired token"}
         return {"status": True, "data": rows}
 
-    def get_aero_prebook_request(self, offer_code: str, search_guid: str) -> HandleDescriptor | None:
+    def get_aero_prebook_request(
+        self, offer_code: str, search_guid: str
+    ) -> HandleDescriptor | None:
         if not self.credentials_ready():
             return None
         args = {
@@ -416,9 +415,13 @@ class CityTravelFlightProvider:
         if success in {"false", "0"}:
             return None
 
-        search_data = offer_cache.get("searchData") if isinstance(offer_cache.get("searchData"), dict) else {}
+        search_data = (
+            offer_cache.get("searchData") if isinstance(offer_cache.get("searchData"), dict) else {}
+        )
         supplier_ccy = str(
-            result.get("Currency") or offer_cache.get("supplier_currency") or self.supplier_currency()
+            result.get("Currency")
+            or offer_cache.get("supplier_currency")
+            or self.supplier_currency()
         ).upper()[:3]
         rate = AdminCurrency.rate_to_admin_or_one(supplier_ccy)
         total_supplier = ct_norm.prebook_supplier_total(result)
@@ -432,7 +435,11 @@ class CityTravelFlightProvider:
 
         details = ct_norm.build_flight_details(result)
         if not details:
-            details = offer_cache.get("flightDetails") if isinstance(offer_cache.get("flightDetails"), list) else []
+            details = (
+                offer_cache.get("flightDetails")
+                if isinstance(offer_cache.get("flightDetails"), list)
+                else []
+            )
         if not details:
             return None
 
@@ -440,7 +447,9 @@ class CityTravelFlightProvider:
             total_supplier,
             search_data=search_data,
             conversion_rate=rate,
-            prior_price=offer_cache.get("price") if isinstance(offer_cache.get("price"), dict) else None,
+            prior_price=offer_cache.get("price")
+            if isinstance(offer_cache.get("price"), dict)
+            else None,
         )
         baggage = ct_norm.build_baggage_allowance(result, search_data=search_data)
         if not baggage and isinstance(offer_cache.get("baggageAllowance"), dict):
@@ -554,18 +563,26 @@ class CityTravelFlightProvider:
 
         baggage = cached.get("baggageAllowance")
         if not isinstance(baggage, dict):
-            baggage = cached.get("BaggageAllowance") if isinstance(cached.get("BaggageAllowance"), dict) else {}
+            baggage = (
+                cached.get("BaggageAllowance")
+                if isinstance(cached.get("BaggageAllowance"), dict)
+                else {}
+            )
 
-        attrs = cached.get("Attributes") if isinstance(cached.get("Attributes"), dict) else {
-            "IsRefundable": False,
-            "BrandName": "Published",
-            "fareAttributes": [],
-            "fareNotes": [],
-            "LatNames": bool(cached.get("LatNames")),
-            "DocumentsRequired": bool(cached.get("DocumentsRequired")),
-            "DocumentExDateRequired": bool(cached.get("DocumentExDateRequired")),
-            "MiddleNameRequired": bool(cached.get("MiddleNameRequired")),
-        }
+        attrs = (
+            cached.get("Attributes")
+            if isinstance(cached.get("Attributes"), dict)
+            else {
+                "IsRefundable": False,
+                "BrandName": "Published",
+                "fareAttributes": [],
+                "fareNotes": [],
+                "LatNames": bool(cached.get("LatNames")),
+                "DocumentsRequired": bool(cached.get("DocumentsRequired")),
+                "DocumentExDateRequired": bool(cached.get("DocumentExDateRequired")),
+                "MiddleNameRequired": bool(cached.get("MiddleNameRequired")),
+            }
+        )
 
         return {
             "status": True,
@@ -620,7 +637,11 @@ class CityTravelFlightProvider:
         middle_required = bool(quote.get("MiddleNameRequired"))
         for idx, pax in enumerate(passengers):
             if not isinstance(pax, dict):
-                return {"status": False, "data": [], "message": f"Invalid passenger at position {idx + 1}"}
+                return {
+                    "status": False,
+                    "data": [],
+                    "message": f"Invalid passenger at position {idx + 1}",
+                }
             if docs_required:
                 doc = str(
                     pax.get("PassportNumber")
@@ -666,7 +687,9 @@ class CityTravelFlightProvider:
             "DocumentExDateRequired": doc_ex_required,
             "MiddleNameRequired": middle_required,
         }
-        baggage = quote.get("baggageAllowance") if isinstance(quote.get("baggageAllowance"), dict) else {}
+        baggage = (
+            quote.get("baggageAllowance") if isinstance(quote.get("baggageAllowance"), dict) else {}
+        )
 
         pre_book_key = f"citytravel_pre_book_{FlightCommon.generate_uuid()}"
         cache_put(
@@ -715,7 +738,9 @@ class CityTravelFlightProvider:
             return {"status": False, "data": [], "message": "Pre-book session is incomplete"}
 
         pax_details = pre.get("pax_details") if isinstance(pre.get("pax_details"), dict) else {}
-        passengers = pax_details.get("Passengers") if isinstance(pax_details.get("Passengers"), list) else []
+        passengers = (
+            pax_details.get("Passengers") if isinstance(pax_details.get("Passengers"), list) else []
+        )
         if not passengers:
             return {"status": False, "data": [], "message": "Passenger details are required"}
 
@@ -729,8 +754,12 @@ class CityTravelFlightProvider:
                 "message": "Lead passenger email and phone are required",
             }
 
-        selected_services = pre.get("SelectedServices") if isinstance(pre.get("SelectedServices"), list) else []
-        selected_tariffs = pre.get("SelectedTariffs") if isinstance(pre.get("SelectedTariffs"), list) else []
+        selected_services = (
+            pre.get("SelectedServices") if isinstance(pre.get("SelectedServices"), list) else []
+        )
+        selected_tariffs = (
+            pre.get("SelectedTariffs") if isinstance(pre.get("SelectedTariffs"), list) else []
+        )
         if isinstance(request.get("SelectedServices"), list):
             selected_services = request["SelectedServices"]
         if isinstance(request.get("SelectedTariffs"), list):
@@ -773,9 +802,7 @@ class CityTravelFlightProvider:
             return {"status": False, "data": [], "message": "Failed to build AeroBook request"}
 
         raw = await self._execute_raw(handle)
-        result = ct_norm.extract_aero_book_result(
-            CityTravelSoap.parse_response(raw) if raw else {}
-        )
+        result = ct_norm.extract_aero_book_result(CityTravelSoap.parse_response(raw) if raw else {})
         success = str(result.get("Success") or "").lower()
         if not result or success in {"false", "0"}:
             # Timeout / ambiguous failure — recover via ClientReference.
@@ -806,7 +833,9 @@ class CityTravelFlightProvider:
         if full_price > 0:
             price = ct_norm.build_price_block_from_total(
                 full_price,
-                search_data=pre.get("searchData") if isinstance(pre.get("searchData"), dict) else {},
+                search_data=pre.get("searchData")
+                if isinstance(pre.get("searchData"), dict)
+                else {},
                 conversion_rate=rate,
             )
 
@@ -939,7 +968,11 @@ class CityTravelFlightProvider:
             {**cached, "ticketing": data, "RawConfirm": order, "gdspnr": gdspnr},
             CACHE_TTL_TOKEN,
         )
-        return {"status": True, "data": data, "message": "Ticketed" if not pending else "Ticketing pending"}
+        return {
+            "status": True,
+            "data": data,
+            "message": "Ticketed" if not pending else "Ticketing pending",
+        }
 
     async def refresh_booking_from_supplier(
         self, locator: str, context: dict[str, Any] | None = None
@@ -950,12 +983,11 @@ class CityTravelFlightProvider:
         cached = cache_get(f"citytravel_booking_{book_id}") if book_id else None
         cached = cached if isinstance(cached, dict) else {}
         book_guid = str(
-            context.get("book_guid")
-            or cached.get("book_guid")
-            or cached.get("BookGuid")
-            or ""
+            context.get("book_guid") or cached.get("book_guid") or cached.get("BookGuid") or ""
         ).strip()
-        app_reference = str(context.get("app_reference") or cached.get("app_reference") or "").strip()
+        app_reference = str(
+            context.get("app_reference") or cached.get("app_reference") or ""
+        ).strip()
 
         if not self.credentials_ready():
             return {
@@ -1005,9 +1037,7 @@ class CityTravelFlightProvider:
             }
 
         raw = await self._execute_raw(handle)
-        order = ct_norm.extract_order_info_result(
-            CityTravelSoap.parse_response(raw) if raw else {}
-        )
+        order = ct_norm.extract_order_info_result(CityTravelSoap.parse_response(raw) if raw else {})
         if not order:
             return {
                 "status": False,
@@ -1104,7 +1134,11 @@ class CityTravelFlightProvider:
         order = order if isinstance(order, dict) else {}
         booking_status = str(
             order.get("BookingStatus")
-            or (order_info["data"].get("BookingStatus") if isinstance(order_info.get("data"), dict) else "")
+            or (
+                order_info["data"].get("BookingStatus")
+                if isinstance(order_info.get("data"), dict)
+                else ""
+            )
             or ""
         ).strip()
         status_l = booking_status.lower()
@@ -1261,9 +1295,7 @@ class CityTravelFlightProvider:
             raw = raw[0] if raw else ""
         return str(raw or "")
 
-    async def _recover_book_by_client_reference(
-        self, app_reference: str
-    ) -> dict[str, Any] | None:
+    async def _recover_book_by_client_reference(self, app_reference: str) -> dict[str, Any] | None:
         """OrderInfo recovery after AeroBook timeout / ambiguous failure."""
         today = timeutils.datetime_now().strftime("%d.%m.%Y")
         handle = self._soap_handle(
@@ -1286,9 +1318,7 @@ class CityTravelFlightProvider:
         if handle is None:
             return None
         raw = await self._execute_raw(handle)
-        order = ct_norm.extract_order_info_result(
-            CityTravelSoap.parse_response(raw) if raw else {}
-        )
+        order = ct_norm.extract_order_info_result(CityTravelSoap.parse_response(raw) if raw else {})
         if not order or not str(order.get("BookId") or "").strip():
             return None
         # Shape like AeroBook result for downstream mapping.

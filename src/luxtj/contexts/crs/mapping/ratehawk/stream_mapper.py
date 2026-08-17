@@ -7,9 +7,8 @@ import os
 from pathlib import Path
 from typing import Any
 
-from . import api_client, config, crs_promote, db, streaming_state
+from . import api_client, config, crs_promote, db, storage_cleanup, streaming_state
 from .parser import parse_for_staging
-from . import storage_cleanup
 from .zstd_lines import ZstLineReader, count_zst_lines, zst_compressed_size
 
 
@@ -189,7 +188,9 @@ class StreamMapper:
         if known > 0:
             return known
 
-        estimate = int(state.get("zst_lines_total_estimate") or 0) or config.stream_total_lines_estimate()
+        estimate = (
+            int(state.get("zst_lines_total_estimate") or 0) or config.stream_total_lines_estimate()
+        )
         if estimate > 0:
             streaming_state.save(
                 self.run_id,
@@ -510,7 +511,7 @@ class StreamMapper:
             while not stop_status.wait(5.0):
                 try:
                     publish()
-                except Exception as exc:  # noqa: BLE001
+                except Exception as exc:
                     _log(f"run #{self.run_id} status publish error: {exc}")
 
         def hotel_worker(worker_id: int) -> None:
@@ -529,7 +530,7 @@ class StreamMapper:
                     if crs_promote.count_unpromoted_hotels(self.run_id) <= 0:
                         break
                     time.sleep(0.1)
-            except BaseException as exc:  # noqa: BLE001
+            except BaseException as exc:
                 errors.append(exc)
                 raise
 
@@ -552,14 +553,12 @@ class StreamMapper:
                     if left_h <= 0 and left_r <= 0:
                         break
                     time.sleep(0.15)
-            except BaseException as exc:  # noqa: BLE001
+            except BaseException as exc:
                 errors.append(exc)
                 raise
 
         total_workers = hotel_workers + room_workers + 1
-        _log(
-            f"run #{self.run_id} promote parallel hotels={hotel_workers} rooms={room_workers}"
-        )
+        _log(f"run #{self.run_id} promote parallel hotels={hotel_workers} rooms={room_workers}")
         with ThreadPoolExecutor(max_workers=total_workers, thread_name_prefix="rh-promote") as pool:
             futures = [pool.submit(status_worker)]
             futures.extend(pool.submit(hotel_worker, i) for i in range(hotel_workers))
@@ -586,7 +585,7 @@ class StreamMapper:
         zst_next = int(state.get("zst_next_line") or 1)
         zst_path = str(state.get("zst_path") or "")
         # Heuristic: if last extract_done was 0 and we already cleaned, check EOF via reader
-        if self._zst_reader and self._zst_reader._eof:  # noqa: SLF001
+        if self._zst_reader and self._zst_reader._eof:
             streaming_state.save(
                 self.run_id,
                 {"current_batch": {"index": next_index, "phase": "complete"}},

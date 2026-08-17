@@ -7,9 +7,7 @@ from typing import Any
 
 
 class HotelMarkupRuleResolver:
-    def matching_rules(
-        self, active_rules: list[Any], context: dict[str, Any]
-    ) -> list[Any]:
+    def matching_rules(self, active_rules: list[Any], context: dict[str, Any]) -> list[Any]:
         return [r for r in active_rules if self.rule_matches(r, context)]
 
     def rule_matches(self, rule: Any, context: dict[str, Any]) -> bool:

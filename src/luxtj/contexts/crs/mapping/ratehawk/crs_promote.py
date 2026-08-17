@@ -257,7 +257,14 @@ def _sync_hotel_content_children(cur: Any, hotel_id: str, hotel: dict[str, Any],
                 ) VALUES (%s, %s, %s, %s, %s, %s)
                 ON CONFLICT (policy_item_id, attr_key) DO NOTHING
                 """,
-                (str(uuid4()), item_id, str(key)[:80], str(value) if value is not None else None, now, now),
+                (
+                    str(uuid4()),
+                    item_id,
+                    str(key)[:80],
+                    str(value) if value is not None else None,
+                    now,
+                    now,
+                ),
             )
 
     cur.execute(
@@ -281,7 +288,6 @@ def _sync_hotel_content_children(cur: Any, hotel_id: str, hotel: dict[str, Any],
                 now,
             ),
         )
-
 
 
 def _get_or_create_supplier(cur: Any, booking_source_id: str) -> str:
@@ -954,7 +960,9 @@ def count_rooms_promoted(run_id: str) -> int:
         return int(cur.fetchone()[0] or 0)
 
 
-def promote_hotels_batch(run_id: str, booking_source_id: str, limit: int | None = None) -> dict[str, int]:
+def promote_hotels_batch(
+    run_id: str, booking_source_id: str, limit: int | None = None
+) -> dict[str, int]:
     """Promote hotel rows only (rooms synced by parallel room workers)."""
     batch_size = limit or config.promote_batch_size()
 
@@ -982,9 +990,7 @@ def promote_hotels_batch(run_id: str, booking_source_id: str, limit: int | None 
         for region_id, hotels in by_region.items():
             if not region_id:
                 continue
-            stats = deduplicate_and_insert(
-                hotels, region_id, booking_source_id, sync_rooms=False
-            )
+            stats = deduplicate_and_insert(hotels, region_id, booking_source_id, sync_rooms=False)
             ins += int(stats.get("inserted") or 0)
             ex += int(stats.get("existing") or 0)
         return ins, ex
@@ -1076,7 +1082,9 @@ def _room_groups_for_staging_row(
     return list(by_code.values())
 
 
-def promote_rooms_batch(run_id: str, booking_source_id: str, limit: int | None = None) -> dict[str, int]:
+def promote_rooms_batch(
+    run_id: str, booking_source_id: str, limit: int | None = None
+) -> dict[str, int]:
     """Promote rooms/images/amenities for hotels already inserted into CRS.
 
     Commits one hotel at a time so amenity locks and deletes stay short-lived.
@@ -1123,12 +1131,8 @@ def promote_rooms_batch(run_id: str, booking_source_id: str, limit: int | None =
                 synced = 0
                 if map_row:
                     crs_hotel_id = str(map_row[0])
-                    room_groups = _room_groups_for_staging_row(
-                        cur, run_id=run_id, row=row
-                    )
-                    stats = _replace_rooms(
-                        cur, crs_hotel_id, room_groups, db._utc_now()
-                    )
+                    room_groups = _room_groups_for_staging_row(cur, run_id=run_id, row=row)
+                    stats = _replace_rooms(cur, crs_hotel_id, room_groups, db._utc_now())
                     synced = int(stats.get("roomGroupsSynced") or 0)
                 cur.execute(
                     """

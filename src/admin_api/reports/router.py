@@ -14,23 +14,17 @@ from luxtj.contexts.identity.presentation.http.dependencies import require_any_p
 reports_router = APIRouter(prefix="/reports", tags=["admin_reports"])
 reports_router.include_router(
     bookings_router,
-    dependencies=[
-        Depends(require_any_permission("reports.booking.view", "dashboard.view"))
-    ],
+    dependencies=[Depends(require_any_permission("reports.booking.view", "dashboard.view"))],
 )
 reports_router.include_router(flight_bookings_router)
 reports_router.include_router(hotel_bookings_router)
 reports_router.include_router(
     customers_router,
-    dependencies=[
-        Depends(require_any_permission("reports.customer.view", "dashboard.view"))
-    ],
+    dependencies=[Depends(require_any_permission("reports.customer.view", "dashboard.view"))],
 )
 reports_router.include_router(
     finance_router,
-    dependencies=[
-        Depends(require_any_permission("reports.finance.view", "dashboard.view"))
-    ],
+    dependencies=[Depends(require_any_permission("reports.finance.view", "dashboard.view"))],
 )
 reports_router.include_router(
     marketing_reports_router,
@@ -42,13 +36,9 @@ reports_router.include_router(
 )
 reports_router.include_router(
     partners_router,
-    dependencies=[
-        Depends(require_any_permission("reports.partner.view", "dashboard.view"))
-    ],
+    dependencies=[Depends(require_any_permission("reports.partner.view", "dashboard.view"))],
 )
 reports_router.include_router(
     sales_router,
-    dependencies=[
-        Depends(require_any_permission("reports.sales.view", "dashboard.view"))
-    ],
+    dependencies=[Depends(require_any_permission("reports.sales.view", "dashboard.view"))],
 )

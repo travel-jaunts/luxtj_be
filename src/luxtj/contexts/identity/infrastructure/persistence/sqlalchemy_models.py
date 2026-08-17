@@ -8,16 +8,13 @@ from sqlalchemy import (
     String,
     Text,
     UniqueConstraint,
-    select,
 )
-from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
 from luxtj.contexts.identity.domain.enums import UserStatusEnum, UserTypeEnum
 from luxtj.contexts.identity.domain.permission import Permission
 from luxtj.contexts.identity.domain.role import Role
 from luxtj.contexts.identity.domain.user import User
-from luxtj.shared_kernel.application.pagination import PaginationMeta
 
 
 class IdentityBase(DeclarativeBase):
@@ -57,7 +54,7 @@ class RoleRow(IdentityBase):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
 
-    permissions: Mapped[list["RolePermissionRow"]] = relationship(
+    permissions: Mapped[list[RolePermissionRow]] = relationship(
         back_populates="role",
         cascade="all, delete-orphan",
         lazy="selectin",
@@ -77,9 +74,7 @@ class RoleRow(IdentityBase):
 
 class RolePermissionRow(IdentityBase):
     __tablename__ = "identity_role_permissions"
-    __table_args__ = (
-        UniqueConstraint("role_id", "permission_code", name="uq_role_permission"),
-    )
+    __table_args__ = (UniqueConstraint("role_id", "permission_code", name="uq_role_permission"),)
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True)
     role_id: Mapped[str] = mapped_column(

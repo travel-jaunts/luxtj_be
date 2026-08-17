@@ -218,7 +218,7 @@ def _as_float(value: Any, default: float = 0.0) -> float:
         if value is None or value == "":
             return default
         return float(value)
-    except (TypeError, ValueError):
+    except TypeError, ValueError:
         return default
 
 
@@ -262,9 +262,7 @@ def format_utc_offset(delta: timedelta | None) -> str | None:
     return f"{sign}{hours:02d}:{minutes:02d}"
 
 
-def format_airport_local_datetime(
-    naive: datetime | None, iata: str
-) -> dict[str, str | None]:
+def format_airport_local_datetime(naive: datetime | None, iata: str) -> dict[str, str | None]:
     """
     City Travel ``Departure/Arrival/Date`` is already **local airport wall time**
     with no TZ. Look up the airport IANA zone (via IATA → airportsdata) only to
@@ -373,7 +371,7 @@ def format_baggage(raw: Any) -> str | None:
     count_n: int | None
     try:
         count_n = int(float(count_raw)) if count_raw not in (None, "") else None
-    except (TypeError, ValueError):
+    except TypeError, ValueError:
         count_n = None
 
     key = btype.lower()
@@ -453,7 +451,7 @@ def map_segment(
     seats_raw = seg.get("ResBookDesigQuantity")
     try:
         seats = int(float(seats_raw)) if seats_raw not in (None, "") else None
-    except (TypeError, ValueError):
+    except TypeError, ValueError:
         seats = seats_raw
     aircraft = seg.get("AirCraft")
     aircraft_code = None if str(aircraft or "").strip().upper() in {"", "NA", "N/A"} else aircraft
@@ -527,7 +525,9 @@ def build_baggage_allowance(
     adults = int((search_data or {}).get("adult_config") or 1)
     children = int((search_data or {}).get("child_config") or 0)
     infants = int((search_data or {}).get("infant_config") or 0)
-    pax_types = [code for code, n in (("ADT", adults), ("CHD", children), ("INF", infants)) if n > 0]
+    pax_types = [
+        code for code, n in (("ADT", adults), ("CHD", children), ("INF", infants)) if n > 0
+    ]
     if not pax_types:
         pax_types = ["ADT"]
 
@@ -604,10 +604,7 @@ def build_price_block(
     total_admin = to_admin(total_supplier) if total_supplier > 0 else 0.0
     if total_admin <= 0 and breakup:
         total_admin = round(
-            sum(
-                float(row["TotalPrice"]) * int(row["PassengerCount"])
-                for row in breakup.values()
-            ),
+            sum(float(row["TotalPrice"]) * int(row["PassengerCount"]) for row in breakup.values()),
             2,
         )
 
@@ -685,7 +682,9 @@ def build_price_block_from_total(
     total_admin = round(float(total_supplier) * conversion_rate, 2)
     prior = prior_price if isinstance(prior_price, dict) else {}
     prior_total = _as_float(prior.get("TotalDisplayFare"))
-    prior_breakup = prior.get("PassengerBreakup") if isinstance(prior.get("PassengerBreakup"), dict) else {}
+    prior_breakup = (
+        prior.get("PassengerBreakup") if isinstance(prior.get("PassengerBreakup"), dict) else {}
+    )
 
     if prior_total > 0 and prior_breakup and total_admin > 0:
         scale = total_admin / prior_total
@@ -829,7 +828,7 @@ def format_extra_services_for_api(
         route_indexes: list[int]
         try:
             rph_n = int(float(rph_raw)) if rph_raw not in (None, "") else None
-        except (TypeError, ValueError):
+        except TypeError, ValueError:
             rph_n = None
         if rph_n is not None and rph_n >= 1:
             idx = min(rph_n - 1, route_count - 1)
@@ -840,10 +839,14 @@ def format_extra_services_for_api(
             route_indexes = list(range(route_count))
 
         def _option(route_index: int | None) -> dict[str, Any]:
-            meta = routes[route_index] if route_index is not None and route_index < len(routes) else {
-                "origin": "",
-                "destination": "",
-            }
+            meta = (
+                routes[route_index]
+                if route_index is not None and route_index < len(routes)
+                else {
+                    "origin": "",
+                    "destination": "",
+                }
+            )
             prefix = {"meal": "ml", "baggage": "bg", "seat": "st"}.get(bucket, "ot")
             ri = route_index if route_index is not None else 0
             option_id = f"{prefix}_{ri}_{service_id}"
@@ -861,9 +864,7 @@ def format_extra_services_for_api(
                     "destination": meta.get("destination") or "",
                 }
             ]
-            encoded = base64.b64encode(
-                json.dumps(blob, separators=(",", ":")).encode()
-            ).decode()
+            encoded = base64.b64encode(json.dumps(blob, separators=(",", ":")).encode()).decode()
             option: dict[str, Any] = {
                 "OptionId": option_id,
                 "Description": description,

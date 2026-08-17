@@ -28,10 +28,16 @@ depends_on: str | Sequence[str] | None = None
 
 def upgrade() -> None:
     # --- hotel_crs_hotels: flat columns replacing JSON blobs ---
-    add_column_if_missing("hotel_crs_hotels", sa.Column("floors_count", sa.SmallInteger(), nullable=True))
+    add_column_if_missing(
+        "hotel_crs_hotels", sa.Column("floors_count", sa.SmallInteger(), nullable=True)
+    )
     add_column_if_missing("hotel_crs_hotels", sa.Column("rooms_count", sa.Integer(), nullable=True))
-    add_column_if_missing("hotel_crs_hotels", sa.Column("year_built", sa.SmallInteger(), nullable=True))
-    add_column_if_missing("hotel_crs_hotels", sa.Column("year_renovated", sa.SmallInteger(), nullable=True))
+    add_column_if_missing(
+        "hotel_crs_hotels", sa.Column("year_built", sa.SmallInteger(), nullable=True)
+    )
+    add_column_if_missing(
+        "hotel_crs_hotels", sa.Column("year_renovated", sa.SmallInteger(), nullable=True)
+    )
     add_column_if_missing(
         "hotel_crs_hotels",
         sa.Column("electricity_frequency", sa.String(length=100), nullable=True),
@@ -147,8 +153,12 @@ def upgrade() -> None:
         "hotel_crs_room_groups",
         sa.Column("gender", sa.String(length=30), nullable=True),
     )
-    add_column_if_missing("hotel_crs_room_groups", sa.Column("is_family", sa.Boolean(), nullable=True))
-    add_column_if_missing("hotel_crs_room_groups", sa.Column("is_club", sa.Boolean(), nullable=True))
+    add_column_if_missing(
+        "hotel_crs_room_groups", sa.Column("is_family", sa.Boolean(), nullable=True)
+    )
+    add_column_if_missing(
+        "hotel_crs_room_groups", sa.Column("is_club", sa.Boolean(), nullable=True)
+    )
     add_column_if_missing(
         "hotel_crs_room_groups",
         sa.Column("floor_type", sa.String(length=50), nullable=True),
@@ -180,9 +190,7 @@ def upgrade() -> None:
             sa.Column("sort_order", sa.Integer(), nullable=False, server_default="0"),
             sa.Column("created_at", sa.DateTime(timezone=True), nullable=False),
             sa.Column("updated_at", sa.DateTime(timezone=True), nullable=False),
-            sa.ForeignKeyConstraint(
-                ["hotel_id"], ["hotel_crs_hotels.id"], ondelete="CASCADE"
-            ),
+            sa.ForeignKeyConstraint(["hotel_id"], ["hotel_crs_hotels.id"], ondelete="CASCADE"),
         )
     create_index_if_missing(
         "ix_hotel_crs_hotel_description_sections_hotel_id",
@@ -199,9 +207,7 @@ def upgrade() -> None:
             sa.Column("method_code", sa.String(length=50), nullable=False),
             sa.Column("created_at", sa.DateTime(timezone=True), nullable=False),
             sa.Column("updated_at", sa.DateTime(timezone=True), nullable=False),
-            sa.ForeignKeyConstraint(
-                ["hotel_id"], ["hotel_crs_hotels.id"], ondelete="CASCADE"
-            ),
+            sa.ForeignKeyConstraint(["hotel_id"], ["hotel_crs_hotels.id"], ondelete="CASCADE"),
             sa.UniqueConstraint(
                 "hotel_id", "method_code", name="uq_hotel_crs_hotel_payment_methods"
             ),
@@ -221,9 +227,7 @@ def upgrade() -> None:
             sa.Column("tag", sa.String(length=100), nullable=False),
             sa.Column("created_at", sa.DateTime(timezone=True), nullable=False),
             sa.Column("updated_at", sa.DateTime(timezone=True), nullable=False),
-            sa.ForeignKeyConstraint(
-                ["hotel_id"], ["hotel_crs_hotels.id"], ondelete="CASCADE"
-            ),
+            sa.ForeignKeyConstraint(["hotel_id"], ["hotel_crs_hotels.id"], ondelete="CASCADE"),
             sa.UniqueConstraint("hotel_id", "tag", name="uq_hotel_crs_hotel_feature_tags"),
         )
     create_index_if_missing(
@@ -244,9 +248,7 @@ def upgrade() -> None:
             sa.Column("sort_order", sa.Integer(), nullable=False, server_default="0"),
             sa.Column("created_at", sa.DateTime(timezone=True), nullable=False),
             sa.Column("updated_at", sa.DateTime(timezone=True), nullable=False),
-            sa.ForeignKeyConstraint(
-                ["hotel_id"], ["hotel_crs_hotels.id"], ondelete="CASCADE"
-            ),
+            sa.ForeignKeyConstraint(["hotel_id"], ["hotel_crs_hotels.id"], ondelete="CASCADE"),
         )
     create_index_if_missing(
         "ix_hotel_crs_hotel_policy_sections_hotel_id",
@@ -264,9 +266,7 @@ def upgrade() -> None:
             sa.Column("sort_order", sa.Integer(), nullable=False, server_default="0"),
             sa.Column("created_at", sa.DateTime(timezone=True), nullable=False),
             sa.Column("updated_at", sa.DateTime(timezone=True), nullable=False),
-            sa.ForeignKeyConstraint(
-                ["hotel_id"], ["hotel_crs_hotels.id"], ondelete="CASCADE"
-            ),
+            sa.ForeignKeyConstraint(["hotel_id"], ["hotel_crs_hotels.id"], ondelete="CASCADE"),
         )
     create_index_if_missing(
         "ix_hotel_crs_hotel_policy_items_hotel_id",
@@ -280,7 +280,6 @@ def upgrade() -> None:
     )
 
     if not table_exists("hotel_crs_hotel_policy_item_attrs"):
-
         op.create_table(
             "hotel_crs_hotel_policy_item_attrs",
             sa.Column("id", sa.String(length=36), primary_key=True),
@@ -317,9 +316,7 @@ def upgrade() -> None:
             sa.Column("sort_order", sa.Integer(), nullable=False, server_default="0"),
             sa.Column("created_at", sa.DateTime(timezone=True), nullable=False),
             sa.Column("updated_at", sa.DateTime(timezone=True), nullable=False),
-            sa.ForeignKeyConstraint(
-                ["hotel_id"], ["hotel_crs_hotels.id"], ondelete="CASCADE"
-            ),
+            sa.ForeignKeyConstraint(["hotel_id"], ["hotel_crs_hotels.id"], ondelete="CASCADE"),
         )
     create_index_if_missing(
         "ix_hotel_crs_hotel_register_room_categories_hotel_id",
@@ -365,15 +362,11 @@ def downgrade() -> None:
     )
     add_column_if_missing(
         "hotel_crs_hotels",
-        sa.Column(
-            "payment_methods", postgresql.JSONB(astext_type=sa.Text()), nullable=True
-        ),
+        sa.Column("payment_methods", postgresql.JSONB(astext_type=sa.Text()), nullable=True),
     )
     add_column_if_missing(
         "hotel_crs_hotels",
-        sa.Column(
-            "star_certificate", postgresql.JSONB(astext_type=sa.Text()), nullable=True
-        ),
+        sa.Column("star_certificate", postgresql.JSONB(astext_type=sa.Text()), nullable=True),
     )
     add_column_if_missing(
         "hotel_crs_hotels",
@@ -385,9 +378,7 @@ def downgrade() -> None:
     )
     add_column_if_missing(
         "hotel_crs_hotels",
-        sa.Column(
-            "description_struct", postgresql.JSONB(astext_type=sa.Text()), nullable=True
-        ),
+        sa.Column("description_struct", postgresql.JSONB(astext_type=sa.Text()), nullable=True),
     )
     add_column_if_missing(
         "hotel_crs_hotels",

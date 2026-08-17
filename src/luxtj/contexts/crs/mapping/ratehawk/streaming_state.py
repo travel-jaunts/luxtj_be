@@ -6,7 +6,9 @@ from typing import Any
 from . import db
 
 
-def default_state(run_id: str, zst_path: str = "", total_estimate: int | None = None) -> dict[str, Any]:
+def default_state(
+    run_id: str, zst_path: str = "", total_estimate: int | None = None
+) -> dict[str, Any]:
     return {
         "version": 1,
         "run_id": run_id,
@@ -70,7 +72,9 @@ def mark_runs_streaming_wiped(booking_source_id: str, *, limit: int = 50) -> int
         rows = cur.fetchall()
     n = 0
     for rid, meta_raw in rows:
-        meta = meta_raw if isinstance(meta_raw, dict) else (json.loads(meta_raw) if meta_raw else {})
+        meta = (
+            meta_raw if isinstance(meta_raw, dict) else (json.loads(meta_raw) if meta_raw else {})
+        )
         meta["streaming_wiped"] = True
         meta["stream_phase"] = "wiped"
         meta["phase"] = "wiped"

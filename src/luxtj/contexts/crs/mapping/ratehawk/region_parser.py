@@ -9,7 +9,7 @@ from .parser import localized_string
 
 def build_dedupe_key(name: str, region_type: str, country_name: str, country_code: str) -> str:
     norm_name = re.sub(r"\s+", " ", name.strip().lower())
-    norm_type = (region_type.strip().lower() if region_type.strip() else "unknown")
+    norm_type = region_type.strip().lower() if region_type.strip() else "unknown"
     norm_country = country_name.strip().lower()
     norm_code = country_code.strip().lower()
     payload = f"{norm_name}|{norm_type}|{norm_country}|{norm_code}"

@@ -4,14 +4,17 @@ from __future__ import annotations
 
 from typing import Any
 
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from luxtj.contexts.currency.domain.admin_currency import AdminCurrency
 from luxtj.contexts.hotel.application.promo import HotelPromo
-from sqlalchemy.ext.asyncio import AsyncSession
 
 
 class HotelPreBookQuote:
     @staticmethod
-    def supplier_pricing_baseline(room: dict[str, Any], list_inner: dict[str, Any]) -> dict[str, Any]:
+    def supplier_pricing_baseline(
+        room: dict[str, Any], list_inner: dict[str, Any]
+    ) -> dict[str, Any]:
         # Prefer room.currency: BlockRoom amounts are already converted to admin currency.
         # list_inner.currency may still be the original search/supplier currency.
         currency = str(room.get("currency") or list_inner.get("currency") or "USD").upper()
@@ -92,7 +95,9 @@ class HotelPreBookQuote:
                 promo_code_applied = eval_result["promo_code"]
                 promo_discount_admin = float(eval_result["discount_amount_admin"])
                 promo_discount = (
-                    round(promo_discount_admin / rate, 2) if rate > 0 else round(promo_discount_admin, 2)
+                    round(promo_discount_admin / rate, 2)
+                    if rate > 0
+                    else round(promo_discount_admin, 2)
                 )
                 promo_discount = min(promo_discount, round(payable_after_supplier, 2))
                 promo_discount_type = eval_result["discount_type"]
@@ -103,9 +108,7 @@ class HotelPreBookQuote:
                     else (round(rule_val / rate, 2) if rate > 0 else round(rule_val, 2))
                 )
             else:
-                promo_message = str(
-                    eval_result.get("message") or "Promo code is not applicable"
-                )
+                promo_message = str(eval_result.get("message") or "Promo code is not applicable")
 
         payable_after_promo = max(0.0, round(payable_after_supplier - promo_discount, 2))
         # Payable already includes embedded markup (in room amount). Only add request markup.
@@ -129,7 +132,9 @@ class HotelPreBookQuote:
             "promo_code_applied": promo_code_applied,
             "promo_offer_valid": promo_offer_valid,
             "promo_discount_type": promo_discount_type,
-            "promo_rule_amount": round(promo_rule_amount, 2) if promo_rule_amount is not None else None,
+            "promo_rule_amount": round(promo_rule_amount, 2)
+            if promo_rule_amount is not None
+            else None,
             "promo_message": promo_message,
             "currency_conversion_rate": rate,
             "admin_currency": AdminCurrency.code(),

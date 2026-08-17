@@ -52,9 +52,7 @@ class IntegrationRegistryCache:
                 key = f"{parent.name}:{api.code}"
                 active_booking[key] = api
                 active_booking[api.code] = api
-        active_pg = {
-            g.code: g for g in payment_gateways if g.status and g.code in PAYMENT_GATEWAYS
-        }
+        active_pg = {g.code: g for g in payment_gateways if g.status and g.code in PAYMENT_GATEWAYS}
         active_other = {o.code: o for o in other_apis if o.status and o.code in OTHER_APIS}
         with self._lock:
             self.active_modules = active_modules

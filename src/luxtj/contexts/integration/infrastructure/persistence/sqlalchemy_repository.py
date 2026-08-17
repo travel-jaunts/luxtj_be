@@ -95,9 +95,7 @@ class SqlAlchemyIntegrationRepository:
         row.apply_domain(entity)
 
     async def list_booking_apis(self) -> list[BookingApi]:
-        result = await self._session.execute(
-            select(BookingApiRow).order_by(BookingApiRow.name)
-        )
+        result = await self._session.execute(select(BookingApiRow).order_by(BookingApiRow.name))
         return [row.to_domain() for row in result.scalars().all()]
 
     async def get_booking_api(self, booking_api_id: UUID) -> BookingApi | None:

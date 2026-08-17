@@ -110,7 +110,7 @@ OTHER_APIS: dict[str, OtherApiCatalogEntry] = {
 
 
 def normalize_config_key(label: str) -> str:
-    """Spaces → _; other non [A-Za-z0-9-_] → ._. """
+    """Spaces → _; other non [A-Za-z0-9-_] → ._."""
     out: list[str] = []
     for ch in label:
         if ch == " ":
@@ -149,4 +149,3 @@ def gateway_supports_refund_api(pg_code: str) -> bool:
     if entry is None:
         return False
     return str(entry.refund_api or "no").strip().lower() == "yes"
-

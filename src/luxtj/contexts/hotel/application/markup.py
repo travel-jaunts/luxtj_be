@@ -40,7 +40,11 @@ class HotelMarkup:
         if region_id in self._region_country_cache:
             return self._region_country_cache[region_id]
         region = await self._crs_session.get(NewCitiesNRegionRow, region_id)
-        iso = str(region.country_code).upper()[:2] if region is not None and region.country_code else None
+        iso = (
+            str(region.country_code).upper()[:2]
+            if region is not None and region.country_code
+            else None
+        )
         self._region_country_cache[region_id] = iso
         return iso
 
@@ -50,14 +54,14 @@ class HotelMarkup:
         if country is None and region_id:
             country = await self.country_code_for_region_id(region_id)
         check_in = (
-            params.get("check_in_date")
-            or params.get("checkin")
-            or params.get("checkin_date")
+            params.get("check_in_date") or params.get("checkin") or params.get("checkin_date")
         )
         star = params.get("star_rating")
         return {
             "supplier_code": HotelMarkupRuleResolver.normalize_supplier_code(
-                params.get("supplier_code") if isinstance(params.get("supplier_code"), str) else None
+                params.get("supplier_code")
+                if isinstance(params.get("supplier_code"), str)
+                else None
             ),
             "country_code": HotelMarkupRuleResolver.normalize_country_code(
                 country if isinstance(country, str) else None
@@ -67,7 +71,9 @@ class HotelMarkup:
                 params.get("hotel_code") if isinstance(params.get("hotel_code"), str) else None
             ),
             "star_rating": int(star) if star not in (None, "") else None,
-            "check_in_date": str(check_in).strip() if isinstance(check_in, str) and check_in.strip() else None,
+            "check_in_date": str(check_in).strip()
+            if isinstance(check_in, str) and check_in.strip()
+            else None,
         }
 
     async def get_markup_amount_for_hotel(

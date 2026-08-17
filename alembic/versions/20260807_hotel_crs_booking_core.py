@@ -146,9 +146,7 @@ def upgrade() -> None:
         sa.Column("meta", sa.JSON(), nullable=True),
         sa.Column("created_at", sa.DateTime(timezone=True), nullable=False),
         sa.Column("updated_at", sa.DateTime(timezone=True), nullable=False),
-        sa.ForeignKeyConstraint(
-            ["supplier_id"], ["hotel_crs_suppliers.id"], ondelete="CASCADE"
-        ),
+        sa.ForeignKeyConstraint(["supplier_id"], ["hotel_crs_suppliers.id"], ondelete="CASCADE"),
         sa.ForeignKeyConstraint(["hotel_id"], ["hotel_crs_hotels.id"], ondelete="CASCADE"),
         sa.UniqueConstraint(
             "supplier_id",
@@ -187,9 +185,7 @@ def upgrade() -> None:
         sa.Column("created_at", sa.DateTime(timezone=True), nullable=False),
         sa.Column("updated_at", sa.DateTime(timezone=True), nullable=False),
         sa.ForeignKeyConstraint(["hotel_id"], ["hotel_crs_hotels.id"], ondelete="CASCADE"),
-        sa.ForeignKeyConstraint(
-            ["amenity_id"], ["hotel_crs_amenities.id"], ondelete="RESTRICT"
-        ),
+        sa.ForeignKeyConstraint(["amenity_id"], ["hotel_crs_amenities.id"], ondelete="RESTRICT"),
         sa.UniqueConstraint(
             "hotel_id",
             "amenity_id",
@@ -266,9 +262,7 @@ def upgrade() -> None:
         sa.ForeignKeyConstraint(
             ["room_group_id"], ["hotel_crs_room_groups.id"], ondelete="CASCADE"
         ),
-        sa.ForeignKeyConstraint(
-            ["amenity_id"], ["hotel_crs_amenities.id"], ondelete="RESTRICT"
-        ),
+        sa.ForeignKeyConstraint(["amenity_id"], ["hotel_crs_amenities.id"], ondelete="RESTRICT"),
         sa.UniqueConstraint(
             "room_group_id",
             "amenity_id",

@@ -34,10 +34,14 @@ class FlightMarkup:
         travel = flight_params.get("travel_departure") or flight_params.get("travelDate")
         return {
             "airline": FlightMarkupRuleResolver.normalize_filter(
-                flight_params.get("airline") if isinstance(flight_params.get("airline"), str) else None
+                flight_params.get("airline")
+                if isinstance(flight_params.get("airline"), str)
+                else None
             ),
             "origin": FlightMarkupRuleResolver.normalize_filter(
-                flight_params.get("origin") if isinstance(flight_params.get("origin"), str) else None
+                flight_params.get("origin")
+                if isinstance(flight_params.get("origin"), str)
+                else None
             ),
             "destination": FlightMarkupRuleResolver.normalize_filter(
                 flight_params.get("destination")

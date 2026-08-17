@@ -275,7 +275,10 @@ def run_region(run_id: str) -> None:
 
 def main() -> int:
     if len(sys.argv) < 2:
-        print("Usage: python -m luxtj.contexts.crs.mapping.ratehawk.region_worker <run_id>", file=sys.stderr)
+        print(
+            "Usage: python -m luxtj.contexts.crs.mapping.ratehawk.region_worker <run_id>",
+            file=sys.stderr,
+        )
         return 1
     run_region(sys.argv[1])
     return 0

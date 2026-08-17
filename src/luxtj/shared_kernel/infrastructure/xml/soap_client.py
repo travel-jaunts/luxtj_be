@@ -36,7 +36,7 @@ class SoapRequest:
     operation: str
     envelope: str
     soap_action: str
-    content_type: str = 'application/soap+xml; charset=utf-8'
+    content_type: str = "application/soap+xml; charset=utf-8"
 
     def content_type_with_action(self) -> str:
         action = self.soap_action.strip().strip('"')

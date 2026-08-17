@@ -9,9 +9,7 @@ from typing import Any
 class FlightMarkupRuleResolver:
     AMOUNT_DECIMALS = 4
 
-    def matching_rules(
-        self, active_rules: list[Any], context: dict[str, Any]
-    ) -> list[Any]:
+    def matching_rules(self, active_rules: list[Any], context: dict[str, Any]) -> list[Any]:
         return [r for r in active_rules if self.rule_matches(r, context)]
 
     def rule_matches(self, rule: Any, context: dict[str, Any]) -> bool:
@@ -34,9 +32,7 @@ class FlightMarkupRuleResolver:
             return False
 
         cabin = self.normalize_cabin_slug(self.normalize_filter(getattr(rule, "cabin_class", None)))
-        ctx_cabin = self.normalize_cabin_slug(
-            self.normalize_filter(context.get("cabin_class"))
-        )
+        ctx_cabin = self.normalize_cabin_slug(self.normalize_filter(context.get("cabin_class")))
         if cabin is not None and cabin != ctx_cabin:
             return False
 
@@ -71,9 +67,10 @@ class FlightMarkupRuleResolver:
             score += 4
         if self.normalize_filter(getattr(rule, "destination", None)) is not None:
             score += 4
-        if self.normalize_cabin_slug(
-            self.normalize_filter(getattr(rule, "cabin_class", None))
-        ) is not None:
+        if (
+            self.normalize_cabin_slug(self.normalize_filter(getattr(rule, "cabin_class", None)))
+            is not None
+        ):
             score += 3
         if (
             getattr(rule, "travel_date_from", None) is not None

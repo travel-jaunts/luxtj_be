@@ -77,7 +77,9 @@ async def persist_pre_book(
     """Create booking + itinerary + pax + transaction draft (no supplier book)."""
     now = timeutils.datetime_now()
     price = token_data.get("Price") if isinstance(token_data.get("Price"), dict) else {}
-    details = token_data.get("FlightDetails") if isinstance(token_data.get("FlightDetails"), list) else []
+    details = (
+        token_data.get("FlightDetails") if isinstance(token_data.get("FlightDetails"), list) else []
+    )
     journeys = [j for j in details if isinstance(j, list) and j]
     first_seg = journeys[0][0] if journeys and isinstance(journeys[0][0], dict) else {}
     last_j = journeys[-1] if journeys else []

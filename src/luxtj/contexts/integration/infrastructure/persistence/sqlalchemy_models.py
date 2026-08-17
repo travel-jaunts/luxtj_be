@@ -70,7 +70,9 @@ class SubModuleRow(IntegrationBase):
 
 class BookingApiRow(IntegrationBase):
     __tablename__ = "booking_apis"
-    __table_args__ = (UniqueConstraint("sub_module_id", "code", name="uq_booking_apis_sub_module_code"),)
+    __table_args__ = (
+        UniqueConstraint("sub_module_id", "code", name="uq_booking_apis_sub_module_code"),
+    )
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True)
     sub_module_id: Mapped[str] = mapped_column(

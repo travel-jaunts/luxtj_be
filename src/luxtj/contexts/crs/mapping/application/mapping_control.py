@@ -25,7 +25,7 @@ def _spawn(module: str, *args: str) -> int:
     src = root / "src"
     env["PYTHONPATH"] = f"{src}{os.pathsep}{env.get('PYTHONPATH', '')}"
     cmd = [sys.executable, "-m", module, *args]
-    proc = subprocess.Popen(  # noqa: S603
+    proc = subprocess.Popen(
         cmd,
         cwd=str(root),
         env=env,
@@ -38,9 +38,9 @@ def _spawn(module: str, *args: str) -> int:
 
 def resolve_ratehawk_ready() -> dict[str, Any]:
     registry = get_integration_registry()
-    api = registry.resolve_booking_api("ratehawk", sub_module="HOTEL") or registry.resolve_booking_api(
-        "ratehawk"
-    )
+    api = registry.resolve_booking_api(
+        "ratehawk", sub_module="HOTEL"
+    ) or registry.resolve_booking_api("ratehawk")
     if api is None or not api.status:
         return {"ready": False, "bookingSourceId": None, "error": "RateHawk inactive"}
     return {"ready": True, "bookingSourceId": str(api.id), "error": ""}
@@ -71,9 +71,7 @@ def _serialize_run(run: dict[str, Any] | None) -> dict[str, Any] | None:
         "zst_path",
     ):
         if key in run:
-            camel = "".join(
-                w.capitalize() if i else w for i, w in enumerate(key.split("_"))
-            )
+            camel = "".join(w.capitalize() if i else w for i, w in enumerate(key.split("_")))
             out[camel] = run.get(key)
     return out
 
@@ -344,6 +342,8 @@ def _kill_stale_stream_workers(
     for rid, meta_raw in rows:
         if exclude_run_id and str(rid) == str(exclude_run_id):
             continue
-        meta = meta_raw if isinstance(meta_raw, dict) else (json.loads(meta_raw) if meta_raw else {})
+        meta = (
+            meta_raw if isinstance(meta_raw, dict) else (json.loads(meta_raw) if meta_raw else {})
+        )
         pids.extend(process_kill.pids_from_meta(meta))
     return process_kill.kill_pids(pids)

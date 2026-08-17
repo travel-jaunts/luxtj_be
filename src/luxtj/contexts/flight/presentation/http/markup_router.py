@@ -42,7 +42,7 @@ class FlightMarkupRuleSerializer(ApiSerializerBaseModel):
     is_percentage: bool
 
     @classmethod
-    def from_row(cls, row: FlightMarkupRuleRow) -> "FlightMarkupRuleSerializer":
+    def from_row(cls, row: FlightMarkupRuleRow) -> FlightMarkupRuleSerializer:
         return cls(
             id=row.id,
             name=row.name,
@@ -116,7 +116,9 @@ def _apply_body(row: FlightMarkupRuleRow, body: FlightMarkupRuleBody) -> None:
 
 @flight_markup_router.post("/list")
 async def list_rules(
-    _principal: Annotated[AuthenticatedPrincipal, Depends(require_permission("flight_markup.view"))],
+    _principal: Annotated[
+        AuthenticatedPrincipal, Depends(require_permission("flight_markup.view"))
+    ],
     session: Annotated[AsyncSession, Depends(database_session_handle)],
 ) -> ApiSuccessResponse[list[FlightMarkupRuleSerializer]]:
     rows = list(
@@ -134,7 +136,9 @@ async def list_rules(
 @flight_markup_router.post("/create")
 async def create_rule(
     body: Annotated[FlightMarkupRuleBody, Body(...)],
-    _principal: Annotated[AuthenticatedPrincipal, Depends(require_permission("flight_markup.edit"))],
+    _principal: Annotated[
+        AuthenticatedPrincipal, Depends(require_permission("flight_markup.edit"))
+    ],
     session: Annotated[AsyncSession, Depends(database_session_handle)],
 ) -> ApiSuccessResponse[FlightMarkupRuleSerializer]:
     now = timeutils.datetime_now()
@@ -162,7 +166,9 @@ async def create_rule(
 async def update_rule(
     rule_id: str,
     body: Annotated[FlightMarkupRuleBody, Body(...)],
-    _principal: Annotated[AuthenticatedPrincipal, Depends(require_permission("flight_markup.edit"))],
+    _principal: Annotated[
+        AuthenticatedPrincipal, Depends(require_permission("flight_markup.edit"))
+    ],
     session: Annotated[AsyncSession, Depends(database_session_handle)],
 ) -> ApiSuccessResponse[FlightMarkupRuleSerializer]:
     row = await session.get(FlightMarkupRuleRow, rule_id)
@@ -176,7 +182,9 @@ async def update_rule(
 @flight_markup_router.post("/{rule_id}/delete")
 async def delete_rule(
     rule_id: str,
-    _principal: Annotated[AuthenticatedPrincipal, Depends(require_permission("flight_markup.edit"))],
+    _principal: Annotated[
+        AuthenticatedPrincipal, Depends(require_permission("flight_markup.edit"))
+    ],
     session: Annotated[AsyncSession, Depends(database_session_handle)],
 ) -> ApiSuccessResponse[dict]:
     row = await session.get(FlightMarkupRuleRow, rule_id)
@@ -190,7 +198,9 @@ async def delete_rule(
 @flight_markup_router.post("/airports/search")
 async def airports_search(
     body: Annotated[AirportSearchBody, Body(...)],
-    _principal: Annotated[AuthenticatedPrincipal, Depends(require_permission("flight_markup.view"))],
+    _principal: Annotated[
+        AuthenticatedPrincipal, Depends(require_permission("flight_markup.view"))
+    ],
 ) -> ApiSuccessResponse[list[AirportSerializer]]:
     hits = search_airports(body.query, limit=body.limit)
     return ApiSuccessResponse(

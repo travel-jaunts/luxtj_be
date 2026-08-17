@@ -23,7 +23,7 @@ class Module:
         self.deleted_at = deleted_at
 
     @classmethod
-    def create(cls, *, name: str, now: datetime | None = None) -> "Module":
+    def create(cls, *, name: str, now: datetime | None = None) -> Module:
         ts = now or timeutils.datetime_now()
         return cls(id=uuid4(), name=name, status=True, created_at=ts, updated_at=ts)
 
@@ -49,7 +49,7 @@ class SubModule:
         self.updated_at = updated_at
 
     @classmethod
-    def create(cls, *, name: str, now: datetime | None = None) -> "SubModule":
+    def create(cls, *, name: str, now: datetime | None = None) -> SubModule:
         ts = now or timeutils.datetime_now()
         return cls(id=uuid4(), name=name, status=False, created_at=ts, updated_at=ts)
 
@@ -92,7 +92,7 @@ class BookingApi:
         code: str,
         name: str,
         now: datetime | None = None,
-    ) -> "BookingApi":
+    ) -> BookingApi:
         ts = now or timeutils.datetime_now()
         return cls(
             id=uuid4(),
@@ -169,7 +169,7 @@ class PaymentGateway:
         self.updated_at = updated_at
 
     @classmethod
-    def create(cls, *, code: str, name: str, now: datetime | None = None) -> "PaymentGateway":
+    def create(cls, *, code: str, name: str, now: datetime | None = None) -> PaymentGateway:
         ts = now or timeutils.datetime_now()
         return cls(
             id=uuid4(),
@@ -247,7 +247,7 @@ class OtherApi:
         self.updated_at = updated_at
 
     @classmethod
-    def create(cls, *, code: str, name: str, now: datetime | None = None) -> "OtherApi":
+    def create(cls, *, code: str, name: str, now: datetime | None = None) -> OtherApi:
         ts = now or timeutils.datetime_now()
         return cls(
             id=uuid4(),

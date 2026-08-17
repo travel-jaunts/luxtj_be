@@ -78,7 +78,11 @@ def redis_cache_put(namespace: str, key: str, value: Any, ttl_seconds: int) -> b
         return False
     ttl = max(1, int(ttl_seconds))
     try:
-        client.setex(namespaced_key(namespace, key), ttl, pickle.dumps(value, protocol=pickle.HIGHEST_PROTOCOL))
+        client.setex(
+            namespaced_key(namespace, key),
+            ttl,
+            pickle.dumps(value, protocol=pickle.HIGHEST_PROTOCOL),
+        )
         return True
     except Exception:
         logger.exception("redis_cache_put failed ns=%s key=%s", namespace, key)

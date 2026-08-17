@@ -18,7 +18,7 @@ def pids_from_meta(meta: dict[str, Any] | None) -> list[int]:
             continue
         try:
             pid = int(raw)
-        except (TypeError, ValueError):
+        except TypeError, ValueError:
             continue
         if pid > 1:
             out.append(pid)

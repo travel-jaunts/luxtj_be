@@ -137,8 +137,10 @@ async def get_booking_api_log(
         raise HTTPException(status_code=404, detail="Log not found")
     sub = str(detail.get("subModule") or "")
     code = str(detail.get("bookingApiCode") or "")
-    if not sub or not code or not _principal_can_view_api_logs(
-        principal, sub_module=sub, api_code=code
+    if (
+        not sub
+        or not code
+        or not _principal_can_view_api_logs(principal, sub_module=sub, api_code=code)
     ):
         raise HTTPException(status_code=403, detail="Missing permission for these API logs")
     return ApiSuccessResponse(output=detail)
@@ -158,8 +160,10 @@ async def download_booking_api_log_part(
         raise HTTPException(status_code=404, detail="Log not found")
     sub = str(detail.get("subModule") or "")
     code = str(detail.get("bookingApiCode") or "")
-    if not sub or not code or not _principal_can_view_api_logs(
-        principal, sub_module=sub, api_code=code
+    if (
+        not sub
+        or not code
+        or not _principal_can_view_api_logs(principal, sub_module=sub, api_code=code)
     ):
         raise HTTPException(status_code=403, detail="Missing permission for these API logs")
 
@@ -182,9 +186,7 @@ async def download_booking_api_log_part(
     response_model=ApiSuccessResponse[IntegrationsOverviewSerializer],
 )
 async def integrations_overview(
-    _principal: Annotated[
-        AuthenticatedPrincipal, Depends(require_permission("integrations.view"))
-    ],
+    _principal: Annotated[AuthenticatedPrincipal, Depends(require_permission("integrations.view"))],
     service: Annotated[IntegrationRegistryService, Depends(build_integration_registry_service)],
 ) -> ApiSuccessResponse[IntegrationsOverviewSerializer]:
     data = await service.list_overview()
@@ -217,9 +219,7 @@ async def integrations_overview(
     response_model=ApiSuccessResponse[dict],
 )
 async def sync_catalog(
-    _principal: Annotated[
-        AuthenticatedPrincipal, Depends(require_permission("integrations.edit"))
-    ],
+    _principal: Annotated[AuthenticatedPrincipal, Depends(require_permission("integrations.edit"))],
     service: Annotated[IntegrationRegistryService, Depends(build_integration_registry_service)],
 ) -> ApiSuccessResponse[dict]:
     await service.sync_catalog()
@@ -233,9 +233,7 @@ async def sync_catalog(
 async def update_module_status(
     module_id: UUID,
     body: Annotated[StatusBody, Body(...)],
-    _principal: Annotated[
-        AuthenticatedPrincipal, Depends(require_permission("integrations.edit"))
-    ],
+    _principal: Annotated[AuthenticatedPrincipal, Depends(require_permission("integrations.edit"))],
     service: Annotated[IntegrationRegistryService, Depends(build_integration_registry_service)],
 ) -> ApiSuccessResponse[ModuleSerializer]:
     try:
@@ -254,9 +252,7 @@ async def update_module_status(
 async def update_sub_module_status(
     sub_module_id: UUID,
     body: Annotated[StatusBody, Body(...)],
-    _principal: Annotated[
-        AuthenticatedPrincipal, Depends(require_permission("integrations.edit"))
-    ],
+    _principal: Annotated[AuthenticatedPrincipal, Depends(require_permission("integrations.edit"))],
     service: Annotated[IntegrationRegistryService, Depends(build_integration_registry_service)],
 ) -> ApiSuccessResponse[SubModuleSerializer]:
     try:
@@ -275,9 +271,7 @@ async def update_sub_module_status(
 async def update_booking_api(
     booking_api_id: UUID,
     body: Annotated[UpdateBookingApiBody, Body(...)],
-    _principal: Annotated[
-        AuthenticatedPrincipal, Depends(require_permission("integrations.edit"))
-    ],
+    _principal: Annotated[AuthenticatedPrincipal, Depends(require_permission("integrations.edit"))],
     service: Annotated[IntegrationRegistryService, Depends(build_integration_registry_service)],
 ) -> ApiSuccessResponse[BookingApiSerializer]:
     try:
@@ -306,9 +300,7 @@ async def update_booking_api(
 async def update_payment_gateway(
     gateway_id: UUID,
     body: Annotated[UpdatePaymentGatewayBody, Body(...)],
-    _principal: Annotated[
-        AuthenticatedPrincipal, Depends(require_permission("integrations.edit"))
-    ],
+    _principal: Annotated[AuthenticatedPrincipal, Depends(require_permission("integrations.edit"))],
     service: Annotated[IntegrationRegistryService, Depends(build_integration_registry_service)],
 ) -> ApiSuccessResponse[PaymentGatewaySerializer]:
     try:
@@ -339,9 +331,7 @@ async def update_payment_gateway(
 async def update_other_api(
     other_api_id: UUID,
     body: Annotated[UpdateOtherApiBody, Body(...)],
-    _principal: Annotated[
-        AuthenticatedPrincipal, Depends(require_permission("integrations.edit"))
-    ],
+    _principal: Annotated[AuthenticatedPrincipal, Depends(require_permission("integrations.edit"))],
     service: Annotated[IntegrationRegistryService, Depends(build_integration_registry_service)],
 ) -> ApiSuccessResponse[OtherApiSerializer]:
     try:

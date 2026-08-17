@@ -40,7 +40,7 @@ class BookingApiRequestResponseRow(SharedKernelBase):
         request_headers: str | None,
         request_body: str | None,
         now: datetime | None = None,
-    ) -> "BookingApiRequestResponseRow":
+    ) -> BookingApiRequestResponseRow:
         ts = now or timeutils.datetime_now()
         return cls(
             id=str(uuid4()),

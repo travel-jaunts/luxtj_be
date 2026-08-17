@@ -60,7 +60,6 @@ from luxtj.contexts.identity.presentation.http.schemas import (
 from luxtj.shared_kernel.presentation.http.schemas import (
     ApiSuccessResponse,
     PaginatedResult,
-    RequestProcessStatus,
 )
 
 public_auth_router = APIRouter(prefix="/auth", tags=["auth"])
@@ -200,9 +199,7 @@ async def admin_login(
             LoginCommand(
                 email=body.email,
                 password=body.password,
-                allowed_user_types=frozenset(
-                    {UserTypeEnum.SUPERADMIN, UserTypeEnum.ADMIN}
-                ),
+                allowed_user_types=frozenset({UserTypeEnum.SUPERADMIN, UserTypeEnum.ADMIN}),
             )
         )
     except IdentityError as exc:
@@ -219,9 +216,7 @@ async def admin_refresh(
         result = await service.refresh(
             RefreshCommand(
                 refresh_token=body.refresh_token,
-                allowed_user_types=frozenset(
-                    {UserTypeEnum.SUPERADMIN, UserTypeEnum.ADMIN}
-                ),
+                allowed_user_types=frozenset({UserTypeEnum.SUPERADMIN, UserTypeEnum.ADMIN}),
             )
         )
     except IdentityError as exc:
@@ -321,9 +316,7 @@ async def edit_role(
                 name=body.name,
                 description=body.description,
                 permission_codes=(
-                    frozenset(body.permission_codes)
-                    if body.permission_codes is not None
-                    else None
+                    frozenset(body.permission_codes) if body.permission_codes is not None else None
                 ),
                 is_active=body.is_active,
             )
@@ -352,9 +345,7 @@ async def list_permissions(
     service: Annotated[RoleService, Depends(build_role_service)],
 ) -> ApiSuccessResponse[list[PermissionSerializer]]:
     items = await service.list_permissions()
-    return ApiSuccessResponse(
-        output=[PermissionSerializer.from_domain(item) for item in items]
-    )
+    return ApiSuccessResponse(output=[PermissionSerializer.from_domain(item) for item in items])
 
 
 # ── Staff users ───────────────────────────────────────────────────────────────
@@ -365,9 +356,7 @@ async def list_permissions(
     response_model=ApiSuccessResponse[PaginatedResult[UserSerializer]],
 )
 async def list_admin_users(
-    _principal: Annotated[
-        AuthenticatedPrincipal, Depends(require_permission("admin_users.list"))
-    ],
+    _principal: Annotated[AuthenticatedPrincipal, Depends(require_permission("admin_users.list"))],
     service: Annotated[AdminUserService, Depends(build_admin_user_service)],
     page: int = Query(1, ge=1),
     size: int = Query(20, ge=1, le=200),
@@ -389,9 +378,7 @@ async def list_admin_users(
 )
 async def view_admin_user(
     user_id: UUID,
-    _principal: Annotated[
-        AuthenticatedPrincipal, Depends(require_permission("admin_users.view"))
-    ],
+    _principal: Annotated[AuthenticatedPrincipal, Depends(require_permission("admin_users.view"))],
     service: Annotated[AdminUserService, Depends(build_admin_user_service)],
 ) -> ApiSuccessResponse[UserSerializer]:
     try:
@@ -407,9 +394,7 @@ async def view_admin_user(
 )
 async def create_admin_user(
     body: Annotated[CreateAdminUserBody, Body(...)],
-    principal: Annotated[
-        AuthenticatedPrincipal, Depends(require_permission("admin_users.create"))
-    ],
+    principal: Annotated[AuthenticatedPrincipal, Depends(require_permission("admin_users.create"))],
     service: Annotated[AdminUserService, Depends(build_admin_user_service)],
 ) -> ApiSuccessResponse[UserSerializer]:
     if body.as_superadmin:
@@ -443,9 +428,7 @@ async def create_admin_user(
 async def edit_admin_user(
     user_id: UUID,
     body: Annotated[UpdateAdminUserBody, Body(...)],
-    principal: Annotated[
-        AuthenticatedPrincipal, Depends(require_permission("admin_users.edit"))
-    ],
+    principal: Annotated[AuthenticatedPrincipal, Depends(require_permission("admin_users.edit"))],
     service: Annotated[AdminUserService, Depends(build_admin_user_service)],
 ) -> ApiSuccessResponse[UserSerializer]:
     try:

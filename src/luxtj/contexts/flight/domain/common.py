@@ -221,8 +221,7 @@ class FlightCommon:
                     return f"Document expiry is required for passenger {pos}"
                 if travel_end_date and exp < travel_end_date:
                     return (
-                        f"Document expiry must be on or after the travel date "
-                        f"for passenger {pos}"
+                        f"Document expiry must be on or after the travel date for passenger {pos}"
                     )
         return ""
 
@@ -268,7 +267,9 @@ class FlightCommon:
         return str(code or "").strip().upper()
 
     @classmethod
-    def normalize_search_request(cls, body: dict[str, Any]) -> tuple[dict[str, Any] | None, str | None]:
+    def normalize_search_request(
+        cls, body: dict[str, Any]
+    ) -> tuple[dict[str, Any] | None, str | None]:
         """
         Normalize B2C PreSearch body → internal search_data.
 
@@ -282,8 +283,12 @@ class FlightCommon:
             str(body.get("CabinClass") or body.get("cabin_class") or "Economy")
         )
         adults = int(body.get("AdultCount") or body.get("adult_config") or body.get("adults") or 0)
-        children = int(body.get("ChildCount") or body.get("child_config") or body.get("children") or 0)
-        infants = int(body.get("InfantCount") or body.get("infant_config") or body.get("infants") or 0)
+        children = int(
+            body.get("ChildCount") or body.get("child_config") or body.get("children") or 0
+        )
+        infants = int(
+            body.get("InfantCount") or body.get("infant_config") or body.get("infants") or 0
+        )
 
         if adults < 1 or adults > 9:
             return None, "AdultCount must be between 1 and 9"
@@ -306,7 +311,9 @@ class FlightCommon:
 
         if isinstance(segments_raw, list) and segments_raw:
             if journey == "multicity":
-                origins = [cls.normalize_iata(s.get("Origin") or s.get("from")) for s in segments_raw]
+                origins = [
+                    cls.normalize_iata(s.get("Origin") or s.get("from")) for s in segments_raw
+                ]
                 dests = [
                     cls.normalize_iata(s.get("Destination") or s.get("to")) for s in segments_raw
                 ]
@@ -314,8 +321,13 @@ class FlightCommon:
                 for s in segments_raw:
                     d = str(s.get("DepartureDate") or s.get("departure") or s.get("date") or "")
                     deps.append(d.split("T")[0] if d else "")
-                if any(not o or not t or not d for o, t, d in zip(origins, dests, deps, strict=False)):
-                    return None, "Each multi-city segment requires Origin, Destination, DepartureDate"
+                if any(
+                    not o or not t or not d for o, t, d in zip(origins, dests, deps, strict=False)
+                ):
+                    return (
+                        None,
+                        "Each multi-city segment requires Origin, Destination, DepartureDate",
+                    )
                 clean["from"] = origins
                 clean["to"] = dests
                 clean["depature"] = deps
@@ -325,10 +337,10 @@ class FlightCommon:
                 ]
             else:
                 seg = segments_raw[0] if isinstance(segments_raw[0], dict) else {}
-                origin = cls.normalize_iata(seg.get("Origin") or seg.get("from") or body.get("from"))
-                dest = cls.normalize_iata(
-                    seg.get("Destination") or seg.get("to") or body.get("to")
+                origin = cls.normalize_iata(
+                    seg.get("Origin") or seg.get("from") or body.get("from")
                 )
+                dest = cls.normalize_iata(seg.get("Destination") or seg.get("to") or body.get("to"))
                 dep = str(
                     seg.get("DepartureDate")
                     or seg.get("departure")
@@ -343,10 +355,7 @@ class FlightCommon:
                 clean["depature"] = dep
                 if journey == "return":
                     ret = str(
-                        seg.get("ReturnDate")
-                        or body.get("return")
-                        or body.get("return_date")
-                        or ""
+                        seg.get("ReturnDate") or body.get("return") or body.get("return_date") or ""
                     ).split("T")[0]
                     if not ret:
                         return None, "ReturnDate is required for round-trip"
@@ -363,7 +372,9 @@ class FlightCommon:
             clean["to"] = dest
             clean["depature"] = dep
             if journey == "return":
-                ret = str(body.get("return") or body.get("return_date") or body.get("ReturnDate") or "")
+                ret = str(
+                    body.get("return") or body.get("return_date") or body.get("ReturnDate") or ""
+                )
                 ret = ret.split("T")[0]
                 if not ret:
                     return None, "return date is required for round-trip"

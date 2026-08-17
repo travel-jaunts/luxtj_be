@@ -140,8 +140,7 @@ def serialize_request_body(body: Any, request_format: str) -> str:
     if isinstance(body, (dict, list)):
         if request_format in {"xml", "soap"}:
             raise ValueError(
-                "XML/SOAP request body must be a pre-serialized string; "
-                f"got {type(body).__name__}"
+                f"XML/SOAP request body must be a pre-serialized string; got {type(body).__name__}"
             )
         return json.dumps(body, ensure_ascii=False, separators=(",", ":"))
     if isinstance(body, str):
@@ -246,8 +245,10 @@ def dict_handle_to_descriptor(handle: Mapping[str, Any] | HandleDescriptor) -> H
                 headers_raw = parsed
         except json.JSONDecodeError:
             headers_raw = [headers_raw]
-    if not header_map and isinstance(headers_raw, Sequence) and not isinstance(
-        headers_raw, (str, bytes)
+    if (
+        not header_map
+        and isinstance(headers_raw, Sequence)
+        and not isinstance(headers_raw, (str, bytes))
     ):
         for h in headers_raw:
             if not isinstance(h, str) or ":" not in h:

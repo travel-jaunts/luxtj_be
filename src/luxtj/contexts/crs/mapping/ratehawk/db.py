@@ -4,9 +4,10 @@ from __future__ import annotations
 
 import json
 import threading
+from collections.abc import Iterator
 from contextlib import contextmanager
 from datetime import UTC, datetime
-from typing import Any, Iterator
+from typing import Any
 from uuid import uuid4
 
 from . import config
@@ -340,7 +341,11 @@ def cancel_active_region_runs(booking_source_id: str) -> int:
         n = 0
         now = _utc_now()
         for run_id, meta_raw in rows:
-            meta = meta_raw if isinstance(meta_raw, dict) else (json.loads(meta_raw) if meta_raw else {})
+            meta = (
+                meta_raw
+                if isinstance(meta_raw, dict)
+                else (json.loads(meta_raw) if meta_raw else {})
+            )
             meta["cancelled"] = True
             meta["phase"] = "cancelled"
             cur.execute(
@@ -371,7 +376,11 @@ def cancel_active_hotel_runs(booking_source_id: str) -> int:
         n = 0
         now = _utc_now()
         for run_id, meta_raw in rows:
-            meta = meta_raw if isinstance(meta_raw, dict) else (json.loads(meta_raw) if meta_raw else {})
+            meta = (
+                meta_raw
+                if isinstance(meta_raw, dict)
+                else (json.loads(meta_raw) if meta_raw else {})
+            )
             to_kill.extend(process_kill.pids_from_meta(meta))
             meta["cancelled"] = True
             meta["phase"] = "cancelled"
@@ -482,7 +491,6 @@ def active_wipe_run(booking_source_id: str) -> dict[str, Any] | None:
             (booking_source_id,),
         )
         return _row_to_dict(cur, cur.fetchone())
-
 
 
 def count_staging_hotels(run_id: str) -> int:

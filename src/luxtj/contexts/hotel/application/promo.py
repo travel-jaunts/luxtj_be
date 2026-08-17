@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import timezone
+from datetime import UTC
 from typing import Any
 
 from sqlalchemy import func, select
@@ -91,12 +91,12 @@ class HotelPromo:
         now = timeutils.datetime_now()
         end = offer.validity_end
         if end.tzinfo is None:
-            end = end.replace(tzinfo=timezone.utc)
+            end = end.replace(tzinfo=UTC)
         if end < now:
             return HotelPromo._failure(REASON_EXPIRED, "This promo code has expired.")
         start = offer.validity_start
         if start.tzinfo is None:
-            start = start.replace(tzinfo=timezone.utc)
+            start = start.replace(tzinfo=UTC)
         if start > now:
             return HotelPromo._failure(REASON_INACTIVE, "This promo code is not active yet.")
         minimum = float(offer.min_booking_value or 0)

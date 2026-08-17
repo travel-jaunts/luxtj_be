@@ -18,7 +18,7 @@ class ModuleSerializer(ApiSerializerBaseModel):
     status: bool
 
     @classmethod
-    def from_domain(cls, entity: Module) -> "ModuleSerializer":
+    def from_domain(cls, entity: Module) -> ModuleSerializer:
         return cls(id=entity.id, name=entity.name, status=entity.status)
 
 
@@ -28,7 +28,7 @@ class SubModuleSerializer(ApiSerializerBaseModel):
     status: bool
 
     @classmethod
-    def from_domain(cls, entity: SubModule) -> "SubModuleSerializer":
+    def from_domain(cls, entity: SubModule) -> SubModuleSerializer:
         return cls(id=entity.id, name=entity.name, status=entity.status)
 
 
@@ -55,7 +55,7 @@ class BookingApiSerializer(ApiSerializerBaseModel):
     catalog: CatalogFieldSerializer | None = None
 
     @classmethod
-    def from_overview(cls, item: dict) -> "BookingApiSerializer":
+    def from_overview(cls, item: dict) -> BookingApiSerializer:
         entity: BookingApi = item["entity"]
         catalog = item.get("catalog")
         return cls(
@@ -85,7 +85,7 @@ class PaymentGatewaySerializer(ApiSerializerBaseModel):
     catalog: CatalogFieldSerializer | None = None
 
     @classmethod
-    def from_overview(cls, item: dict) -> "PaymentGatewaySerializer":
+    def from_overview(cls, item: dict) -> PaymentGatewaySerializer:
         entity: PaymentGateway = item["entity"]
         catalog = item.get("catalog")
         return cls(
@@ -111,7 +111,7 @@ class OtherApiSerializer(ApiSerializerBaseModel):
     catalog: CatalogFieldSerializer | None = None
 
     @classmethod
-    def from_overview(cls, item: dict) -> "OtherApiSerializer":
+    def from_overview(cls, item: dict) -> OtherApiSerializer:
         entity: OtherApi = item["entity"]
         catalog = item.get("catalog")
         return cls(

@@ -7,6 +7,5 @@ class NullSmsOtpSender:
         self, *, phone_identity: PhoneIdentity, otp: str, flow_type: AuthFlowType
     ) -> None:
         print(
-            f"OTP delivery fallback sender | phone={phone_identity.e164_like} "
-            f"flow={flow_type.value} otp={otp}"
+            f"OTP delivery test sender | flow={flow_type.value} | phone={phone_identity.dial_code}{phone_identity.phone_number} | otp={otp}"
         )
