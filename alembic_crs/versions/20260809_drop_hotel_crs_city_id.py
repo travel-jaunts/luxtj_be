@@ -9,8 +9,7 @@ from collections.abc import Sequence
 
 import sqlalchemy as sa
 from alembic import op
-
-from helpers import add_column_if_missing, drop_column_if_exists, create_index_if_missing
+from helpers import add_column_if_missing, create_index_if_missing, drop_column_if_exists
 
 revision: str = "20260809_drop_hotel_crs_city_id"
 down_revision: str | None = "20260807_crs_normalize_content"

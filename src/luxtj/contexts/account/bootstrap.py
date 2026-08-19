@@ -41,6 +41,7 @@ from luxtj.contexts.account.application.ports import (
 from luxtj.contexts.account.application.profile_use_cases import (
     AddFrequentTraveller,
     GetAccountProfile,
+    GetLuxuryAccommodationTypes,
     ListFrequentTravellers,
     RemoveFrequentTraveller,
     UpdateContactInfo,
@@ -338,6 +339,10 @@ def build_get_account_profile(
         object_storage=object_storage,
         clock=clock,
     )
+
+
+def build_get_luxury_accommodation_types() -> GetLuxuryAccommodationTypes:
+    return GetLuxuryAccommodationTypes()
 
 
 def build_update_personal_info(

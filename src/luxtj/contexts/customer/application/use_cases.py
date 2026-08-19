@@ -20,7 +20,10 @@ from luxtj.contexts.customer.application.ports import (
 )
 from luxtj.contexts.customer.application.queries import GetBucketListQuery
 from luxtj.contexts.customer.domain.bucket_list import BucketList, BucketListItem
-from luxtj.contexts.customer.domain.enums import PersonalCalendarEventTypeEnum
+from luxtj.contexts.customer.domain.enums import (
+    HolidayTypeEnum,
+    PersonalCalendarEventTypeEnum,
+)
 from luxtj.contexts.customer.domain.errors import InvalidPersonalCalendarEventError
 from luxtj.contexts.customer.domain.events import DestinationSuggestionResolved
 from luxtj.contexts.customer.domain.personal_calendar import (
@@ -464,9 +467,7 @@ class DeletePersonalCalendarPeriod:
 
 class GetPersonalCalendarHolidayTypes:
     async def __call__(self) -> HolidayTypeListDTO:
-        return HolidayTypeListDTO(
-            holiday_types=[item.value for item in PersonalCalendarEventTypeEnum]
-        )
+        return HolidayTypeListDTO(holiday_types=[item.value for item in HolidayTypeEnum])
 
 
 class GetPersonalCalendarConsolidatedView:

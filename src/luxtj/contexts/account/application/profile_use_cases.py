@@ -26,6 +26,7 @@ from luxtj.contexts.account.domain.errors import (
 from luxtj.contexts.account.domain.frequent_traveller import FrequentTraveller
 from luxtj.contexts.account.domain.patch import UnsetType
 from luxtj.contexts.account.domain.profile import AccountProfile
+from luxtj.contexts.account.domain.profile_enums import LuxuryAccommodationTypeEnum
 
 
 @dataclass(frozen=True)
@@ -36,6 +37,18 @@ class AccountProfileView:
     email: str | None
     completion_percentage: int
     profile_picture_url: str | None
+
+
+@dataclass(frozen=True)
+class LuxuryAccommodationTypeListDTO:
+    accommodation_types: list[str]
+
+
+class GetLuxuryAccommodationTypes:
+    async def __call__(self) -> LuxuryAccommodationTypeListDTO:
+        return LuxuryAccommodationTypeListDTO(
+            accommodation_types=[item.value for item in LuxuryAccommodationTypeEnum]
+        )
 
 
 class _ProfileLoader:
@@ -156,11 +169,7 @@ class UpdateTravelPreferences(_ProfileLoader):
         profile = await self.load_or_create(command.account_id)
         profile.update_preferences(
             now=self._clock.utcnow(),
-            stay_hotels=command.stay_hotels,
-            stay_villas=command.stay_villas,
-            stay_resorts=command.stay_resorts,
-            stay_boutique_hotels=command.stay_boutique_hotels,
-            stay_cruises=command.stay_cruises,
+            accommodation_types=command.accommodation_types,
             flight_class=command.flight_class,
             flight_priority=command.flight_priority,
             trip_pace=command.trip_pace,
@@ -208,6 +217,7 @@ class AddFrequentTraveller:
             gender=command.gender,
             birth_year=command.birth_year,
             birth_month=command.birth_month,
+            birth_day=command.birth_day,
             passport_number=command.passport_number,
             now=self._clock.utcnow(),
         )
@@ -235,6 +245,7 @@ class UpdateFrequentTraveller:
             gender=command.gender,
             birth_year=command.birth_year,
             birth_month=command.birth_month,
+            birth_day=command.birth_day,
             passport_number=command.passport_number,
         )
         await self._traveller_repository.save(traveller)

@@ -11,12 +11,10 @@ from collections.abc import Sequence
 
 import sqlalchemy as sa
 from alembic import op
-
 from helpers import (
     add_column_if_missing,
     create_index_if_missing,
     drop_column_if_exists,
-    drop_index_if_exists,
     table_exists,
 )
 

@@ -13,14 +13,13 @@ Idempotent: safe when ``crs_initial`` already created the current ORM schema.
 from collections.abc import Sequence
 
 import sqlalchemy as sa
-from sqlalchemy.dialects import postgresql
-
 from helpers import (
     add_column_if_missing,
     create_index_if_missing,
     drop_column_if_exists,
     drop_index_if_exists,
 )
+from sqlalchemy.dialects import postgresql
 
 revision: str = "20260807_crs_ratehawk_content"
 down_revision: str | None = "20260807_crs_inventory_indexes"

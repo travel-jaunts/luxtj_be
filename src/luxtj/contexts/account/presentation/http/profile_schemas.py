@@ -2,7 +2,10 @@ from datetime import date
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from luxtj.contexts.account.application.profile_use_cases import AccountProfileView
+from luxtj.contexts.account.application.profile_use_cases import (
+    AccountProfileView,
+    LuxuryAccommodationTypeListDTO,
+)
 from luxtj.contexts.account.domain.frequent_traveller import FrequentTraveller
 from luxtj.contexts.account.domain.patch import UNSET, Patch
 from luxtj.contexts.account.domain.profile import AccountProfile
@@ -11,6 +14,7 @@ from luxtj.contexts.account.domain.profile_enums import (
     FlightClass,
     FlightPriority,
     Gender,
+    LuxuryAccommodationTypeEnum,
     PreferredContactMethod,
     TripPace,
 )
@@ -69,11 +73,10 @@ class UpdateContactInfoBody(ProfileRequestBody):
 
 
 class UpdatePreferencesBody(ProfileRequestBody):
-    stay_hotels: bool = False
-    stay_villas: bool = False
-    stay_resorts: bool = False
-    stay_boutique_hotels: bool = False
-    stay_cruises: bool = False
+    accommodation_types: list[LuxuryAccommodationTypeEnum] = Field(
+        default_factory=list,
+        max_length=len(LuxuryAccommodationTypeEnum),
+    )
     flight_class: FlightClass = FlightClass.ECONOMY
     flight_priority: FlightPriority = FlightPriority.BEST_VALUE
     trip_pace: TripPace = TripPace.BALANCED
@@ -96,6 +99,7 @@ class AddFrequentTravellerBody(ProfileRequestBody):
     gender: Gender | None = None
     birth_year: int | None = Field(None, ge=1900, le=2200)
     birth_month: int | None = Field(None, ge=1, le=12)
+    birth_day: int = Field(1, ge=1, le=31)
     passport_number: str | None = Field(None, max_length=64)
 
 
@@ -148,15 +152,19 @@ class ContactInfoSerializer(ApiSerializerBaseModel):
 
 
 class PreferencesSerializer(ApiSerializerBaseModel):
-    stay_hotels: bool
-    stay_villas: bool
-    stay_resorts: bool
-    stay_boutique_hotels: bool
-    stay_cruises: bool
+    accommodation_types: list[LuxuryAccommodationTypeEnum]
     flight_class: FlightClass
     flight_priority: FlightPriority
     trip_pace: TripPace
     baggage_style: BaggageStyle
+
+
+class LuxuryAccommodationTypeListSerializer(ApiSerializerBaseModel):
+    accommodation_types: list[str]
+
+    @classmethod
+    def from_dto(cls, dto: LuxuryAccommodationTypeListDTO) -> LuxuryAccommodationTypeListSerializer:
+        return cls(accommodation_types=dto.accommodation_types)
 
 
 class DestinationsSerializer(ApiSerializerBaseModel):
@@ -176,6 +184,7 @@ class FrequentTravellerSerializer(ApiSerializerBaseModel):
     gender: Gender | None
     birth_year: int | None
     birth_month: int | None
+    birth_day: int | None
     passport_masked: str | None
 
     @classmethod
@@ -190,6 +199,7 @@ class FrequentTravellerSerializer(ApiSerializerBaseModel):
             gender=traveller.gender,
             birth_year=traveller.birth_year,
             birth_month=traveller.birth_month,
+            birth_day=traveller.birth_day,
             passport_masked=f"******{passport[-4:]}" if passport else None,
         )
 
@@ -205,11 +215,7 @@ class FrequentTravellerListSerializer(ApiSerializerBaseModel):
 def _preferences(profile: AccountProfile) -> PreferencesSerializer:
     preferences = profile.preferences
     return PreferencesSerializer(
-        stay_hotels=preferences.stay_hotels,
-        stay_villas=preferences.stay_villas,
-        stay_resorts=preferences.stay_resorts,
-        stay_boutique_hotels=preferences.stay_boutique_hotels,
-        stay_cruises=preferences.stay_cruises,
+        accommodation_types=list(preferences.accommodation_types),
         flight_class=preferences.flight_class,
         flight_priority=preferences.flight_priority,
         trip_pace=preferences.trip_pace,

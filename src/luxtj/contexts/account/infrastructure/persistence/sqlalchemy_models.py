@@ -3,7 +3,6 @@ from uuid import UUID
 
 from sqlalchemy import (
     JSON,
-    Boolean,
     Date,
     DateTime,
     Float,
@@ -29,6 +28,7 @@ from luxtj.contexts.account.domain.profile_enums import (
     FlightClass,
     FlightPriority,
     Gender,
+    LuxuryAccommodationTypeEnum,
     PreferredContactMethod,
     TripPace,
 )
@@ -246,11 +246,7 @@ class AccountProfileRow(AccountAuthBase):
     emergency_contact_first_name: Mapped[str | None] = mapped_column(String(120), nullable=True)
     emergency_contact_dial_code: Mapped[str | None] = mapped_column(String(8), nullable=True)
     emergency_contact_phone_number: Mapped[str | None] = mapped_column(String(32), nullable=True)
-    stay_hotels: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
-    stay_villas: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
-    stay_resorts: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
-    stay_boutique_hotels: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
-    stay_cruises: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    accommodation_types: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
     flight_class: Mapped[str] = mapped_column(String(24), nullable=False)
     flight_priority: Mapped[str] = mapped_column(String(24), nullable=False)
     trip_pace: Mapped[str] = mapped_column(String(24), nullable=False)
@@ -299,11 +295,7 @@ class AccountProfileRow(AccountAuthBase):
         self.emergency_contact_dial_code = emergency.dial_code if emergency else None
         self.emergency_contact_phone_number = emergency.phone_number if emergency else None
         preferences = profile.preferences
-        self.stay_hotels = preferences.stay_hotels
-        self.stay_villas = preferences.stay_villas
-        self.stay_resorts = preferences.stay_resorts
-        self.stay_boutique_hotels = preferences.stay_boutique_hotels
-        self.stay_cruises = preferences.stay_cruises
+        self.accommodation_types = [item.value for item in preferences.accommodation_types]
         self.flight_class = preferences.flight_class.value
         self.flight_priority = preferences.flight_priority.value
         self.trip_pace = preferences.trip_pace.value
@@ -364,11 +356,9 @@ class AccountProfileRow(AccountAuthBase):
                 else None
             ),
             preferences=TravelPreferences(
-                stay_hotels=self.stay_hotels,
-                stay_villas=self.stay_villas,
-                stay_resorts=self.stay_resorts,
-                stay_boutique_hotels=self.stay_boutique_hotels,
-                stay_cruises=self.stay_cruises,
+                accommodation_types=tuple(
+                    LuxuryAccommodationTypeEnum(value) for value in self.accommodation_types
+                ),
                 flight_class=FlightClass(self.flight_class),
                 flight_priority=FlightPriority(self.flight_priority),
                 trip_pace=TripPace(self.trip_pace),

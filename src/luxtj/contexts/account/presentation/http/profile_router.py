@@ -1,4 +1,4 @@
-from typing import Annotated
+from typing import Annotated, NoReturn
 from uuid import UUID
 
 from fastapi import APIRouter, Body, Depends, HTTPException
@@ -22,6 +22,7 @@ from luxtj.contexts.account.application.profile_commands import (
 from luxtj.contexts.account.application.profile_use_cases import (
     AddFrequentTraveller,
     GetAccountProfile,
+    GetLuxuryAccommodationTypes,
     ListFrequentTravellers,
     RemoveFrequentTraveller,
     UpdateContactInfo,
@@ -34,6 +35,7 @@ from luxtj.contexts.account.bootstrap import (
     build_add_frequent_traveller,
     build_clear_profile_picture,
     build_get_account_profile,
+    build_get_luxury_accommodation_types,
     build_list_frequent_travellers,
     build_remove_frequent_traveller,
     build_set_profile_picture,
@@ -61,6 +63,7 @@ from luxtj.contexts.account.presentation.http.profile_schemas import (
     AddFrequentTravellerBody,
     FrequentTravellerListSerializer,
     FrequentTravellerSerializer,
+    LuxuryAccommodationTypeListSerializer,
     ProfilePictureSerializer,
     SetProfilePictureBody,
     TravellerIdBody,
@@ -86,7 +89,7 @@ _NOT_FOUND_ERRORS = (
 )
 
 
-def _raise_for(exc: AccountProfileError) -> None:
+def _raise_for(exc: AccountProfileError) -> NoReturn:
     if isinstance(exc, _NOT_FOUND_ERRORS):
         raise HTTPException(status_code=404, detail=str(exc)) from exc
     if isinstance(exc, InvalidProfilePictureError):
@@ -116,9 +119,9 @@ async def get_profile(
 ) -> ApiSuccessResponse[AccountProfileSerializer] | ApiErrorResponse:
     try:
         output = await _full_profile(principal.account_id, get_profile_use_case, list_travellers)
+        return ApiSuccessResponse(status=RequestProcessStatus.OK, output=output)
     except AccountProfileError as exc:
         _raise_for(exc)
-    return ApiSuccessResponse(status=RequestProcessStatus.OK, output=output)
 
 
 @account_profile_router.post(
@@ -162,9 +165,9 @@ async def update_personal(
             )
         )
         output = await _full_profile(principal.account_id, get_profile_use_case, list_travellers)
+        return ApiSuccessResponse(status=RequestProcessStatus.OK, output=output)
     except AccountProfileError as exc:
         _raise_for(exc)
-    return ApiSuccessResponse(status=RequestProcessStatus.OK, output=output)
 
 
 @account_profile_router.post(
@@ -226,13 +229,9 @@ async def update_preferences(
         await use_case(
             UpdatePreferencesCommand(
                 account_id=principal.account_id,
-                stay_hotels=patched(body, "stay_hotels", body.stay_hotels),
-                stay_villas=patched(body, "stay_villas", body.stay_villas),
-                stay_resorts=patched(body, "stay_resorts", body.stay_resorts),
-                stay_boutique_hotels=patched(
-                    body, "stay_boutique_hotels", body.stay_boutique_hotels
+                accommodation_types=patched(
+                    body, "accommodation_types", tuple(dict.fromkeys(body.accommodation_types))
                 ),
-                stay_cruises=patched(body, "stay_cruises", body.stay_cruises),
                 flight_class=patched(body, "flight_class", body.flight_class),
                 flight_priority=patched(body, "flight_priority", body.flight_priority),
                 trip_pace=patched(body, "trip_pace", body.trip_pace),
@@ -243,6 +242,24 @@ async def update_preferences(
     except AccountProfileError as exc:
         _raise_for(exc)
     return ApiSuccessResponse(status=RequestProcessStatus.OK, output=output)
+
+
+@account_profile_router.post(
+    "/accommodation-types/view",
+    response_model=ApiSuccessResponse[LuxuryAccommodationTypeListSerializer],
+    status_code=200,
+)
+async def view_luxury_accommodation_types(
+    use_case: Annotated[
+        GetLuxuryAccommodationTypes,
+        Depends(build_get_luxury_accommodation_types),
+    ],
+) -> ApiSuccessResponse[LuxuryAccommodationTypeListSerializer]:
+    accommodation_types = await use_case()
+    return ApiSuccessResponse(
+        status=RequestProcessStatus.OK,
+        output=LuxuryAccommodationTypeListSerializer.from_dto(accommodation_types),
+    )
 
 
 @account_profile_router.post(
@@ -317,6 +334,7 @@ async def add_traveller(
                 gender=body.gender,
                 birth_year=body.birth_year,
                 birth_month=body.birth_month,
+                birth_day=body.birth_day,
                 passport_number=body.passport_number,
             )
         )
@@ -350,6 +368,7 @@ async def update_traveller(
                 gender=patched(body, "gender", body.gender),
                 birth_year=patched(body, "birth_year", body.birth_year),
                 birth_month=patched(body, "birth_month", body.birth_month),
+                birth_day=patched(body, "birth_day", body.birth_day),
                 passport_number=patched(body, "passport_number", body.passport_number),
             )
         )

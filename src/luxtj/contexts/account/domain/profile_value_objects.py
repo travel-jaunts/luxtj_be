@@ -7,6 +7,7 @@ from luxtj.contexts.account.domain.profile_enums import (
     BaggageStyle,
     FlightClass,
     FlightPriority,
+    LuxuryAccommodationTypeEnum,
     TripPace,
 )
 
@@ -86,24 +87,23 @@ class SocialLinks:
 
 @dataclass(frozen=True)
 class TravelPreferences:
-    stay_hotels: bool
-    stay_villas: bool
-    stay_resorts: bool
-    stay_boutique_hotels: bool
-    stay_cruises: bool
+    accommodation_types: tuple[LuxuryAccommodationTypeEnum, ...]
     flight_class: FlightClass
     flight_priority: FlightPriority
     trip_pace: TripPace
     baggage_style: BaggageStyle
 
+    def __post_init__(self) -> None:
+        unique_types: list[LuxuryAccommodationTypeEnum] = []
+        for accommodation_type in self.accommodation_types:
+            if accommodation_type not in unique_types:
+                unique_types.append(accommodation_type)
+        object.__setattr__(self, "accommodation_types", tuple(unique_types))
+
     @classmethod
     def default(cls) -> TravelPreferences:
         return cls(
-            stay_hotels=False,
-            stay_villas=False,
-            stay_resorts=False,
-            stay_boutique_hotels=False,
-            stay_cruises=False,
+            accommodation_types=(),
             flight_class=FlightClass.ECONOMY,
             flight_priority=FlightPriority.BEST_VALUE,
             trip_pace=TripPace.BALANCED,
