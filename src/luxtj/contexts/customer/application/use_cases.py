@@ -11,6 +11,8 @@ from luxtj.contexts.customer.application.commands import (
     DeletePersonalCalendarPeriodCommand,
     SuggestDestinationsCommand,
     UpdateBucketListItemCommand,
+    UpdatePersonalCalendarEventCommand,
+    UpdatePersonalCalendarPeriodCommand,
 )
 from luxtj.contexts.customer.application.ports import (
     BucketListRepository,
@@ -383,12 +385,14 @@ class AddPersonalCalendarEvent:
                 event_date=command.event_date,
                 holiday_types=command.holiday_types,
             )
-        else:
+        elif command.event_type == PersonalCalendarEventTypeEnum.SPECIAL_OCCASION:
             item = calendar.add_special_occasion_event(
                 event_name=command.event_name or "",
                 event_date=command.event_date,
                 holiday_types=command.holiday_types,
             )
+        else:
+            raise InvalidPersonalCalendarEventError(f"Invalid event type: {command.event_type}")
 
         await self._repository.save(calendar)
         return PersonalCalendarEventItemDTO.from_domain(item)
@@ -424,6 +428,62 @@ class AddPersonalCalendarPeriod:
         if calendar is None:
             calendar = PersonalCalendar.create(account_id=account_id)
             await self._repository.add(calendar)
+        return calendar
+
+
+class UpdatePersonalCalendarEvent:
+    def __init__(self, repository: PersonalCalendarRepository) -> None:
+        self._repository = repository
+
+    async def __call__(
+        self, command: UpdatePersonalCalendarEventCommand
+    ) -> PersonalCalendarEventItemDTO:
+        calendar = await self._must_get(command.account_id)
+        item = calendar.update_event(
+            item_id=command.item_id,
+            event_type=command.event_type,
+            event_date=command.event_date,
+            holiday_types=command.holiday_types,
+            birthday_for=command.birthday_for,
+            anniversary_for=command.anniversary_for,
+            person_name=command.person_name,
+            person1_name=command.person1_name,
+            person2_name=command.person2_name,
+            event_name=command.event_name,
+        )
+        await self._repository.save(calendar)
+        return PersonalCalendarEventItemDTO.from_domain(item)
+
+    async def _must_get(self, account_id: UUID) -> PersonalCalendar:
+        calendar = await self._repository.get_by_account_id(account_id)
+        if calendar is None:
+            raise KeyError(str(account_id))
+        return calendar
+
+
+class UpdatePersonalCalendarPeriod:
+    def __init__(self, repository: PersonalCalendarRepository) -> None:
+        self._repository = repository
+
+    async def __call__(
+        self, command: UpdatePersonalCalendarPeriodCommand
+    ) -> PersonalCalendarPeriodItemDTO:
+        calendar = await self._must_get(command.account_id)
+        item = calendar.update_period(
+            item_id=command.item_id,
+            period_name=command.period_name,
+            period_start=command.period_start,
+            period_end=command.period_end,
+            is_date_flexible=command.is_date_flexible,
+            holiday_types=command.holiday_types,
+        )
+        await self._repository.save(calendar)
+        return PersonalCalendarPeriodItemDTO.from_domain(item)
+
+    async def _must_get(self, account_id: UUID) -> PersonalCalendar:
+        calendar = await self._repository.get_by_account_id(account_id)
+        if calendar is None:
+            raise KeyError(str(account_id))
         return calendar
 
 

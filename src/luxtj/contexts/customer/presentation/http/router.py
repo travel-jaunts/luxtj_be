@@ -13,6 +13,8 @@ from luxtj.contexts.customer.application.commands import (
     DeletePersonalCalendarPeriodCommand,
     SuggestDestinationsCommand,
     UpdateBucketListItemCommand,
+    UpdatePersonalCalendarEventCommand,
+    UpdatePersonalCalendarPeriodCommand,
 )
 from luxtj.contexts.customer.application.queries import GetBucketListQuery
 from luxtj.contexts.customer.application.use_cases import (
@@ -27,6 +29,8 @@ from luxtj.contexts.customer.application.use_cases import (
     GetPersonalCalendarHolidayTypes,
     SuggestDestinations,
     UpdateBucketListItem,
+    UpdatePersonalCalendarEvent,
+    UpdatePersonalCalendarPeriod,
 )
 from luxtj.contexts.customer.bootstrap import (
     build_add_bucket_list_item,
@@ -40,6 +44,8 @@ from luxtj.contexts.customer.bootstrap import (
     build_get_personal_calendar_holiday_types,
     build_suggest_destinations,
     build_update_bucket_list_item,
+    build_update_personal_calendar_event,
+    build_update_personal_calendar_period,
 )
 from luxtj.contexts.customer.domain.errors import (
     CustomerBucketListError,
@@ -58,6 +64,8 @@ from luxtj.contexts.customer.presentation.http.schemas import (
     PersonalCalendarPeriodItemSerializer,
     SuggestDestinationsBody,
     UpdateBucketListItemBody,
+    UpdatePersonalCalendarEventBody,
+    UpdatePersonalCalendarPeriodBody,
 )
 from luxtj.shared_kernel.presentation.http.schemas import (
     ApiErrorResponse,
@@ -263,6 +271,84 @@ async def add_personal_calendar_period(
             )
         )
     except CustomerPersonalCalendarError as exc:
+        return ApiErrorResponse(error_message=str(exc))
+
+    return ApiSuccessResponse(
+        status=RequestProcessStatus.OK,
+        output=PersonalCalendarPeriodItemSerializer.from_dto(item),
+    )
+
+
+@customer_personal_calendar_router.post(
+    "/{account_id}/events/{item_id}/update",
+    dependencies=[Depends(require_account_owner)],
+    response_model=ApiSuccessResponse[PersonalCalendarEventItemSerializer] | ApiErrorResponse,
+    responses={404: {"description": "Item not found or does not belong to account"}},
+    status_code=200,
+)
+async def update_personal_calendar_event(
+    account_id: UUID,
+    item_id: UUID,
+    use_case: Annotated[
+        UpdatePersonalCalendarEvent,
+        Depends(build_update_personal_calendar_event),
+    ],
+    body: Annotated[UpdatePersonalCalendarEventBody, Body(...)],
+) -> ApiSuccessResponse[PersonalCalendarEventItemSerializer] | ApiErrorResponse:
+    try:
+        item = await use_case(
+            UpdatePersonalCalendarEventCommand(
+                account_id=account_id,
+                item_id=item_id,
+                event_type=body.event_type,
+                event_date=body.event_date,
+                holiday_types=body.holiday_types,
+                birthday_for=body.birthday_for,
+                anniversary_for=body.anniversary_for,
+                person_name=body.person_name,
+                person1_name=body.person1_name,
+                person2_name=body.person2_name,
+                event_name=body.event_name,
+            )
+        )
+    except (CustomerPersonalCalendarError, KeyError) as exc:
+        return ApiErrorResponse(error_message=str(exc))
+
+    return ApiSuccessResponse(
+        status=RequestProcessStatus.OK,
+        output=PersonalCalendarEventItemSerializer.from_dto(item),
+    )
+
+
+@customer_personal_calendar_router.post(
+    "/{account_id}/periods/{item_id}/update",
+    dependencies=[Depends(require_account_owner)],
+    response_model=ApiSuccessResponse[PersonalCalendarPeriodItemSerializer] | ApiErrorResponse,
+    responses={404: {"description": "Item not found or does not belong to account"}},
+    status_code=200,
+)
+async def update_personal_calendar_period(
+    account_id: UUID,
+    item_id: UUID,
+    use_case: Annotated[
+        UpdatePersonalCalendarPeriod,
+        Depends(build_update_personal_calendar_period),
+    ],
+    body: Annotated[UpdatePersonalCalendarPeriodBody, Body(...)],
+) -> ApiSuccessResponse[PersonalCalendarPeriodItemSerializer] | ApiErrorResponse:
+    try:
+        item = await use_case(
+            UpdatePersonalCalendarPeriodCommand(
+                account_id=account_id,
+                item_id=item_id,
+                period_name=body.period_name,
+                period_start=body.period_start,
+                period_end=body.period_end,
+                is_date_flexible=body.is_date_flexible,
+                holiday_types=body.holiday_types,
+            )
+        )
+    except (CustomerPersonalCalendarError, KeyError) as exc:
         return ApiErrorResponse(error_message=str(exc))
 
     return ApiSuccessResponse(

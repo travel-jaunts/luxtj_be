@@ -195,6 +195,84 @@ class PersonalCalendar:
         self.updated_at = now
         return item
 
+    def update_event(
+        self,
+        *,
+        item_id: UUID,
+        event_type: PersonalCalendarEventTypeEnum,
+        event_date: date,
+        holiday_types: list[HolidayTypeEnum],
+        birthday_for: BirthdayForEnum | None = None,
+        anniversary_for: AnniversaryForEnum | None = None,
+        person_name: str | None = None,
+        person1_name: str | None = None,
+        person2_name: str | None = None,
+        event_name: str | None = None,
+    ) -> PersonalCalendarEventItem:
+        item = self._find_active_event(item_id)
+        if event_type == PersonalCalendarEventTypeEnum.BIRTHDAY:
+            if birthday_for is None:
+                raise InvalidPersonalCalendarEventError(
+                    "birthday_for is required for birthday event"
+                )
+            item.birthday_for = birthday_for
+            item.anniversary_for = None
+            item.person_name = _clean_text(person_name or "", field_name="person_name")
+            item.person1_name = None
+            item.person2_name = None
+            item.event_name = None
+        elif event_type == PersonalCalendarEventTypeEnum.ANNIVERSARY:
+            if anniversary_for is None:
+                raise InvalidPersonalCalendarEventError(
+                    "anniversary_for is required for anniversary event"
+                )
+            item.birthday_for = None
+            item.anniversary_for = anniversary_for
+            item.person_name = None
+            item.person1_name = _clean_text(person1_name or "", field_name="person1_name")
+            item.person2_name = _clean_text(person2_name or "", field_name="person2_name")
+            item.event_name = None
+        elif event_type == PersonalCalendarEventTypeEnum.SPECIAL_OCCASION:
+            item.birthday_for = None
+            item.anniversary_for = None
+            item.person_name = None
+            item.person1_name = None
+            item.person2_name = None
+            item.event_name = _clean_text(event_name or "", field_name="event_name")
+        else:
+            raise InvalidPersonalCalendarEventError(f"Invalid event type: {event_type}")
+
+        now = timeutils.datetime_now()
+        item.event_type = event_type
+        item.event_date = event_date
+        item.holiday_types = normalize_holiday_types(holiday_types)
+        item.updated_at = now
+        self.updated_at = now
+        return item
+
+    def update_period(
+        self,
+        *,
+        item_id: UUID,
+        period_name: str,
+        period_start: date,
+        period_end: date,
+        is_date_flexible: bool,
+        holiday_types: list[HolidayTypeEnum],
+    ) -> PersonalCalendarPeriodItem:
+        if period_end < period_start:
+            raise InvalidPeriodDateRangeError("period_end must be on or after period_start")
+        item = self._find_active_period(item_id)
+        now = timeutils.datetime_now()
+        item.period_name = _clean_text(period_name, field_name="period_name")
+        item.period_start = period_start
+        item.period_end = period_end
+        item.is_date_flexible = is_date_flexible
+        item.holiday_types = normalize_holiday_types(holiday_types)
+        item.updated_at = now
+        self.updated_at = now
+        return item
+
     def delete_event(self, *, item_id: UUID) -> PersonalCalendarEventItem:
         item = self._find_active_event(item_id)
         now = timeutils.datetime_now()

@@ -69,6 +69,32 @@ class AddPersonalCalendarPeriodCommand:
 
 
 @dataclass(frozen=True)
+class UpdatePersonalCalendarEventCommand:
+    account_id: UUID
+    item_id: UUID
+    event_type: PersonalCalendarEventTypeEnum
+    event_date: date
+    holiday_types: list[HolidayTypeEnum]
+    birthday_for: BirthdayForEnum | None = None
+    anniversary_for: AnniversaryForEnum | None = None
+    person_name: str | None = None
+    person1_name: str | None = None
+    person2_name: str | None = None
+    event_name: str | None = None
+
+
+@dataclass(frozen=True)
+class UpdatePersonalCalendarPeriodCommand:
+    account_id: UUID
+    item_id: UUID
+    period_name: str
+    period_start: date
+    period_end: date
+    is_date_flexible: bool
+    holiday_types: list[HolidayTypeEnum]
+
+
+@dataclass(frozen=True)
 class DeletePersonalCalendarEventCommand:
     account_id: UUID
     item_id: UUID
