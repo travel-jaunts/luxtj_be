@@ -10,6 +10,7 @@ from luxtj.contexts.account.application.gallery_commands import (
     RemoveAlbumCommand,
     RemoveGalleryImageCommand,
     RequestImageUploadCommand,
+    SetProfileBannerCommand,
     SetProfilePictureCommand,
     UpdateAlbumCommand,
     UpdateGalleryImageCommand,
@@ -316,6 +317,9 @@ class RemoveGalleryImage(_GalleryService):
         if profile is not None and profile.profile_picture_image_id == image.id:
             profile.clear_profile_picture(now=now)
             await self._profile_repository.save(profile)
+        if profile is not None and profile.profile_banner_image_id == image.id:
+            profile.clear_profile_banner(now=now)
+            await self._profile_repository.save(profile)
 
 
 class SetProfilePicture(_GalleryService):
@@ -362,5 +366,53 @@ class ClearProfilePicture:
         if profile is None:
             raise ProfileNotFoundError("profile not found")
         profile.clear_profile_picture(now=self._clock.utcnow())
+        await self._profile_repository.save(profile)
+        return profile
+
+
+class SetProfileBanner(_GalleryService):
+    def __init__(
+        self,
+        *,
+        album_repository: AlbumRepository,
+        image_repository: GalleryImageRepository,
+        object_storage: ObjectStorage,
+        profile_repository: AccountProfileRepository,
+        clock: Clock,
+    ) -> None:
+        super().__init__(
+            album_repository=album_repository,
+            image_repository=image_repository,
+            object_storage=object_storage,
+            clock=clock,
+        )
+        self._profile_repository = profile_repository
+
+    async def __call__(self, command: SetProfileBannerCommand) -> AccountProfile:
+        system_albums = await self._ensure_system_albums(command.account_id)
+        image = await self._require_image(account_id=command.account_id, image_id=command.image_id)
+        if image.status is not ImageStatus.READY:
+            raise InvalidProfilePictureError("image upload has not been confirmed")
+        if image.album_id != system_albums[AlbumKind.PROFILE].id:
+            raise InvalidProfilePictureError("image must be in the Profile album")
+
+        profile = await self._profile_repository.get(command.account_id)
+        if profile is None:
+            raise ProfileNotFoundError("profile not found")
+        profile.set_profile_banner(image_id=image.id, now=self._clock.utcnow())
+        await self._profile_repository.save(profile)
+        return profile
+
+
+class ClearProfileBanner:
+    def __init__(self, *, profile_repository: AccountProfileRepository, clock: Clock) -> None:
+        self._profile_repository = profile_repository
+        self._clock = clock
+
+    async def __call__(self, account_id: UUID) -> AccountProfile:
+        profile = await self._profile_repository.get(account_id)
+        if profile is None:
+            raise ProfileNotFoundError("profile not found")
+        profile.clear_profile_banner(now=self._clock.utcnow())
         await self._profile_repository.save(profile)
         return profile

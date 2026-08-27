@@ -22,6 +22,8 @@ from luxtj.contexts.customer.application.use_cases import (
     InitializeCustomerProfile,
     SuggestDestinations,
     UpdateBucketListItem,
+    UpdatePersonalCalendarEvent,
+    UpdatePersonalCalendarPeriod,
 )
 from luxtj.contexts.customer.infrastructure.persistence.sqlalchemy_repository import (
     SqlAlchemyBucketListRepository,
@@ -137,6 +139,18 @@ def build_delete_personal_calendar_period(
     repository: Annotated[PersonalCalendarRepository, Depends(build_personal_calendar_repository)],
 ) -> DeletePersonalCalendarPeriod:
     return DeletePersonalCalendarPeriod(repository=repository)
+
+
+def build_update_personal_calendar_event(
+    repository: Annotated[PersonalCalendarRepository, Depends(build_personal_calendar_repository)],
+) -> UpdatePersonalCalendarEvent:
+    return UpdatePersonalCalendarEvent(repository=repository)
+
+
+def build_update_personal_calendar_period(
+    repository: Annotated[PersonalCalendarRepository, Depends(build_personal_calendar_repository)],
+) -> UpdatePersonalCalendarPeriod:
+    return UpdatePersonalCalendarPeriod(repository=repository)
 
 
 def build_get_personal_calendar_holiday_types() -> GetPersonalCalendarHolidayTypes:

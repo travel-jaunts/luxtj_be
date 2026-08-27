@@ -9,6 +9,7 @@ from twilio.http.async_http_client import AsyncTwilioHttpClient
 
 from luxtj.bootstrap import config
 from luxtj.contexts.account.application.gallery_use_cases import (
+    ClearProfileBanner,
     ClearProfilePicture,
     ConfirmImageUpload,
     CreateAlbum,
@@ -18,6 +19,7 @@ from luxtj.contexts.account.application.gallery_use_cases import (
     RemoveAlbum,
     RemoveGalleryImage,
     RequestImageUpload,
+    SetProfileBanner,
     SetProfilePicture,
     UpdateAlbum,
     UpdateGalleryImage,
@@ -41,6 +43,7 @@ from luxtj.contexts.account.application.ports import (
 from luxtj.contexts.account.application.profile_use_cases import (
     AddFrequentTraveller,
     GetAccountProfile,
+    GetLuxuryAccommodationTypes,
     ListFrequentTravellers,
     RemoveFrequentTraveller,
     UpdateContactInfo,
@@ -340,6 +343,10 @@ def build_get_account_profile(
     )
 
 
+def build_get_luxury_accommodation_types() -> GetLuxuryAccommodationTypes:
+    return GetLuxuryAccommodationTypes()
+
+
 def build_update_personal_info(
     profile_repository: Annotated[
         AccountProfileRepository, Depends(build_account_profile_repository)
@@ -584,3 +591,30 @@ def build_clear_profile_picture(
     clock: Annotated[Clock, Depends(build_clock)],
 ) -> ClearProfilePicture:
     return ClearProfilePicture(profile_repository=profile_repository, clock=clock)
+
+
+def build_set_profile_banner(
+    album_repository: Annotated[AlbumRepository, Depends(build_album_repository)],
+    image_repository: Annotated[GalleryImageRepository, Depends(build_gallery_image_repository)],
+    object_storage: Annotated[ObjectStorage, Depends(build_object_storage)],
+    profile_repository: Annotated[
+        AccountProfileRepository, Depends(build_account_profile_repository)
+    ],
+    clock: Annotated[Clock, Depends(build_clock)],
+) -> SetProfileBanner:
+    return SetProfileBanner(
+        album_repository=album_repository,
+        image_repository=image_repository,
+        object_storage=object_storage,
+        profile_repository=profile_repository,
+        clock=clock,
+    )
+
+
+def build_clear_profile_banner(
+    profile_repository: Annotated[
+        AccountProfileRepository, Depends(build_account_profile_repository)
+    ],
+    clock: Annotated[Clock, Depends(build_clock)],
+) -> ClearProfileBanner:
+    return ClearProfileBanner(profile_repository=profile_repository, clock=clock)

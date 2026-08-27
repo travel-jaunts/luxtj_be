@@ -149,6 +149,14 @@ class AddPersonalCalendarPeriodBody(ApiSerializerBaseModel):
     holiday_types: list[HolidayTypeEnum]
 
 
+class UpdatePersonalCalendarEventBody(AddPersonalCalendarEventBody):
+    pass
+
+
+class UpdatePersonalCalendarPeriodBody(AddPersonalCalendarPeriodBody):
+    pass
+
+
 class PersonalCalendarEventItemSerializer(ApiSerializerBaseModel):
     item_id: UUID
     event_type: str

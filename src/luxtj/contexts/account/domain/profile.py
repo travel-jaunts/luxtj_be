@@ -10,6 +10,7 @@ from luxtj.contexts.account.domain.profile_enums import (
     FlightClass,
     FlightPriority,
     Gender,
+    LuxuryAccommodationTypeEnum,
     PreferredContactMethod,
     TripPace,
 )
@@ -46,6 +47,7 @@ class AccountProfile:
     tier: CustomerTierEnum
     badges: tuple[str, ...]
     profile_picture_image_id: UUID | None
+    profile_banner_image_id: UUID | None
     created_at: datetime
     updated_at: datetime
 
@@ -70,6 +72,7 @@ class AccountProfile:
             tier=CustomerTierEnum.NOVUS,
             badges=(),
             profile_picture_image_id=None,
+            profile_banner_image_id=None,
             created_at=now,
             updated_at=now,
         )
@@ -124,11 +127,7 @@ class AccountProfile:
         self,
         *,
         now: datetime,
-        stay_hotels: Patch[bool] = UNSET,
-        stay_villas: Patch[bool] = UNSET,
-        stay_resorts: Patch[bool] = UNSET,
-        stay_boutique_hotels: Patch[bool] = UNSET,
-        stay_cruises: Patch[bool] = UNSET,
+        accommodation_types: Patch[tuple[LuxuryAccommodationTypeEnum, ...]] = UNSET,
         flight_class: Patch[FlightClass] = UNSET,
         flight_priority: Patch[FlightPriority] = UNSET,
         trip_pace: Patch[TripPace] = UNSET,
@@ -136,11 +135,7 @@ class AccountProfile:
     ) -> None:
         current = self.preferences
         self.preferences = TravelPreferences(
-            stay_hotels=applied(stay_hotels, current.stay_hotels),
-            stay_villas=applied(stay_villas, current.stay_villas),
-            stay_resorts=applied(stay_resorts, current.stay_resorts),
-            stay_boutique_hotels=applied(stay_boutique_hotels, current.stay_boutique_hotels),
-            stay_cruises=applied(stay_cruises, current.stay_cruises),
+            accommodation_types=applied(accommodation_types, current.accommodation_types),
             flight_class=applied(flight_class, current.flight_class),
             flight_priority=applied(flight_priority, current.flight_priority),
             trip_pace=applied(trip_pace, current.trip_pace),
@@ -176,19 +171,10 @@ class AccountProfile:
         self.profile_picture_image_id = None
         self.updated_at = now
 
-    def completion_percentage(self) -> int:
-        """Percentage of the eleven optional profile fields the customer has filled in."""
-        filled = [
-            self.first_name is not None,
-            self.last_name is not None,
-            self.gender is not None,
-            self.date_of_birth is not None,
-            self.nationality is not None,
-            self.location is not None,
-            bool(self.description),
-            not self.social_links.is_empty(),
-            self.alternative_phone is not None,
-            self.emergency_contact is not None,
-            self.profile_picture_image_id is not None,
-        ]
-        return round(sum(filled) * 100 / len(filled))
+    def set_profile_banner(self, *, image_id: UUID, now: datetime) -> None:
+        self.profile_banner_image_id = image_id
+        self.updated_at = now
+
+    def clear_profile_banner(self, *, now: datetime) -> None:
+        self.profile_banner_image_id = None
+        self.updated_at = now

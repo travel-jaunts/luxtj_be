@@ -8,6 +8,7 @@ from luxtj.contexts.account.domain.profile_enums import (
     FlightClass,
     FlightPriority,
     Gender,
+    LuxuryAccommodationTypeEnum,
     PreferredContactMethod,
     TripPace,
 )
@@ -43,11 +44,7 @@ class UpdateContactInfoCommand:
 @dataclass(frozen=True)
 class UpdatePreferencesCommand:
     account_id: UUID
-    stay_hotels: Patch[bool] = UNSET
-    stay_villas: Patch[bool] = UNSET
-    stay_resorts: Patch[bool] = UNSET
-    stay_boutique_hotels: Patch[bool] = UNSET
-    stay_cruises: Patch[bool] = UNSET
+    accommodation_types: Patch[tuple[LuxuryAccommodationTypeEnum, ...]] = UNSET
     flight_class: Patch[FlightClass] = UNSET
     flight_priority: Patch[FlightPriority] = UNSET
     trip_pace: Patch[TripPace] = UNSET
@@ -74,6 +71,7 @@ class AddFrequentTravellerCommand:
     gender: Gender | None = None
     birth_year: int | None = None
     birth_month: int | None = None
+    birth_day: int = 1
     passport_number: str | None = None
 
 
@@ -88,6 +86,7 @@ class UpdateFrequentTravellerCommand:
     gender: Patch[Gender | None] = UNSET
     birth_year: Patch[int | None] = UNSET
     birth_month: Patch[int | None] = UNSET
+    birth_day: Patch[int | None] = UNSET
     passport_number: Patch[str | None] = UNSET
 
 
