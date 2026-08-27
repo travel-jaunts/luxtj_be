@@ -47,6 +47,7 @@ class AccountProfile:
     tier: CustomerTierEnum
     badges: tuple[str, ...]
     profile_picture_image_id: UUID | None
+    profile_banner_image_id: UUID | None
     created_at: datetime
     updated_at: datetime
 
@@ -71,6 +72,7 @@ class AccountProfile:
             tier=CustomerTierEnum.NOVUS,
             badges=(),
             profile_picture_image_id=None,
+            profile_banner_image_id=None,
             created_at=now,
             updated_at=now,
         )
@@ -169,19 +171,10 @@ class AccountProfile:
         self.profile_picture_image_id = None
         self.updated_at = now
 
-    def completion_percentage(self) -> int:
-        """Percentage of the eleven optional profile fields the customer has filled in."""
-        filled = [
-            self.first_name is not None,
-            self.last_name is not None,
-            self.gender is not None,
-            self.date_of_birth is not None,
-            self.nationality is not None,
-            self.location is not None,
-            bool(self.description),
-            not self.social_links.is_empty(),
-            self.alternative_phone is not None,
-            self.emergency_contact is not None,
-            self.profile_picture_image_id is not None,
-        ]
-        return round(sum(filled) * 100 / len(filled))
+    def set_profile_banner(self, *, image_id: UUID, now: datetime) -> None:
+        self.profile_banner_image_id = image_id
+        self.updated_at = now
+
+    def clear_profile_banner(self, *, now: datetime) -> None:
+        self.profile_banner_image_id = None
+        self.updated_at = now

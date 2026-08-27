@@ -35,8 +35,8 @@ class AccountProfileView:
     dial_code: str
     phone_number: str
     email: str | None
-    completion_percentage: int
     profile_picture_url: str | None
+    profile_banner_url: str | None
 
 
 @dataclass(frozen=True)
@@ -101,13 +101,24 @@ class GetAccountProfile(_ProfileLoader):
                     expires_in=config.S3_DOWNLOAD_URL_TTL_SECONDS,
                 )
 
+        banner_url = None
+        if profile.profile_banner_image_id is not None:
+            image = await self._image_repository.get(
+                account_id=account_id, image_id=profile.profile_banner_image_id
+            )
+            if image is not None:
+                banner_url = await self._object_storage.presigned_get_url(
+                    object_key=image.object_key,
+                    expires_in=config.S3_DOWNLOAD_URL_TTL_SECONDS,
+                )
+
         return AccountProfileView(
             profile=profile,
             dial_code=account.phone_identity.dial_code,
             phone_number=account.phone_identity.phone_number,
             email=account.email,
-            completion_percentage=profile.completion_percentage(),
             profile_picture_url=picture_url,
+            profile_banner_url=banner_url,
         )
 
 

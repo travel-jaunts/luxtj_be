@@ -259,6 +259,7 @@ class AccountProfileRow(AccountAuthBase):
     tier: Mapped[str] = mapped_column(String(16), nullable=False, default=CustomerTierEnum.NOVUS)
     badges: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
     profile_picture_image_id: Mapped[str | None] = mapped_column(String(36), nullable=True)
+    profile_banner_image_id: Mapped[str | None] = mapped_column(String(36), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
 
@@ -310,6 +311,9 @@ class AccountProfileRow(AccountAuthBase):
         self.badges = list(profile.badges)
         self.profile_picture_image_id = (
             str(profile.profile_picture_image_id) if profile.profile_picture_image_id else None
+        )
+        self.profile_banner_image_id = (
+            str(profile.profile_banner_image_id) if profile.profile_banner_image_id else None
         )
         self.updated_at = profile.updated_at
 
@@ -375,6 +379,9 @@ class AccountProfileRow(AccountAuthBase):
             badges=tuple(self.badges),
             profile_picture_image_id=(
                 UUID(self.profile_picture_image_id) if self.profile_picture_image_id else None
+            ),
+            profile_banner_image_id=(
+                UUID(self.profile_banner_image_id) if self.profile_banner_image_id else None
             ),
             created_at=self.created_at,
             updated_at=self.updated_at,

@@ -116,6 +116,10 @@ class SetProfilePictureBody(ProfileRequestBody):
     image_id: str
 
 
+class SetProfileBannerBody(ProfileRequestBody):
+    image_id: str
+
+
 # serializers -------------------------------------------------------------------------------------
 class LocationSerializer(ApiSerializerBaseModel):
     city_name: str
@@ -265,7 +269,7 @@ class AccountProfileSerializer(ApiSerializerBaseModel):
     tier: str
     badges: list[str]
     profile_picture_url: str | None
-    completion_percentage: int
+    profile_banner_url: str | None
 
     @classmethod
     def from_dto(
@@ -308,7 +312,7 @@ class AccountProfileSerializer(ApiSerializerBaseModel):
             tier=profile.tier.value,
             badges=list(profile.badges),
             profile_picture_url=view.profile_picture_url,
-            completion_percentage=view.completion_percentage,
+            profile_banner_url=view.profile_banner_url,
         )
 
 
@@ -320,5 +324,17 @@ class ProfilePictureSerializer(ApiSerializerBaseModel):
         return cls(
             profile_picture_image_id=(
                 str(profile.profile_picture_image_id) if profile.profile_picture_image_id else None
+            )
+        )
+
+
+class ProfileBannerSerializer(ApiSerializerBaseModel):
+    profile_banner_image_id: str | None
+
+    @classmethod
+    def from_dto(cls, profile: AccountProfile) -> ProfileBannerSerializer:
+        return cls(
+            profile_banner_image_id=(
+                str(profile.profile_banner_image_id) if profile.profile_banner_image_id else None
             )
         )

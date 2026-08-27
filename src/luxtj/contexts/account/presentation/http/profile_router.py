@@ -4,10 +4,13 @@ from uuid import UUID
 from fastapi import APIRouter, Body, Depends, HTTPException
 
 from luxtj.contexts.account.application.gallery_commands import (
+    SetProfileBannerCommand,
     SetProfilePictureCommand,
 )
 from luxtj.contexts.account.application.gallery_use_cases import (
+    ClearProfileBanner,
     ClearProfilePicture,
+    SetProfileBanner,
     SetProfilePicture,
 )
 from luxtj.contexts.account.application.profile_commands import (
@@ -33,11 +36,13 @@ from luxtj.contexts.account.application.profile_use_cases import (
 )
 from luxtj.contexts.account.bootstrap import (
     build_add_frequent_traveller,
+    build_clear_profile_banner,
     build_clear_profile_picture,
     build_get_account_profile,
     build_get_luxury_accommodation_types,
     build_list_frequent_travellers,
     build_remove_frequent_traveller,
+    build_set_profile_banner,
     build_set_profile_picture,
     build_update_contact_info,
     build_update_frequent_traveller,
@@ -64,7 +69,9 @@ from luxtj.contexts.account.presentation.http.profile_schemas import (
     FrequentTravellerListSerializer,
     FrequentTravellerSerializer,
     LuxuryAccommodationTypeListSerializer,
+    ProfileBannerSerializer,
     ProfilePictureSerializer,
+    SetProfileBannerBody,
     SetProfilePictureBody,
     TravellerIdBody,
     UpdateContactInfoBody,
@@ -447,4 +454,48 @@ async def clear_profile_picture(
         _raise_for(exc)
     return ApiSuccessResponse(
         status=RequestProcessStatus.OK, output=ProfilePictureSerializer.from_dto(profile)
+    )
+
+
+@account_profile_router.post(
+    "/banner/set",
+    response_model=ApiSuccessResponse[ProfileBannerSerializer] | ApiErrorResponse,
+    status_code=200,
+)
+async def set_profile_banner(
+    principal: Annotated[AccountPrincipal, Depends(get_current_account_principal)],
+    use_case: Annotated[SetProfileBanner, Depends(build_set_profile_banner)],
+    body: Annotated[SetProfileBannerBody, Body(...)],
+) -> ApiSuccessResponse[ProfileBannerSerializer] | ApiErrorResponse:
+    try:
+        profile = await use_case(
+            SetProfileBannerCommand(
+                account_id=principal.account_id,
+                image_id=UUID(body.image_id),
+            )
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail="invalid image id") from exc
+    except AccountProfileError as exc:
+        _raise_for(exc)
+    return ApiSuccessResponse(
+        status=RequestProcessStatus.OK, output=ProfileBannerSerializer.from_dto(profile)
+    )
+
+
+@account_profile_router.post(
+    "/banner/clear",
+    response_model=ApiSuccessResponse[ProfileBannerSerializer] | ApiErrorResponse,
+    status_code=200,
+)
+async def clear_profile_banner(
+    principal: Annotated[AccountPrincipal, Depends(get_current_account_principal)],
+    use_case: Annotated[ClearProfileBanner, Depends(build_clear_profile_banner)],
+) -> ApiSuccessResponse[ProfileBannerSerializer] | ApiErrorResponse:
+    try:
+        profile = await use_case(principal.account_id)
+    except AccountProfileError as exc:
+        _raise_for(exc)
+    return ApiSuccessResponse(
+        status=RequestProcessStatus.OK, output=ProfileBannerSerializer.from_dto(profile)
     )

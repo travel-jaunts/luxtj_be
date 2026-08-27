@@ -81,3 +81,9 @@ class RemoveGalleryImageCommand:
 class SetProfilePictureCommand:
     account_id: UUID
     image_id: UUID
+
+
+@dataclass(frozen=True)
+class SetProfileBannerCommand:
+    account_id: UUID
+    image_id: UUID
